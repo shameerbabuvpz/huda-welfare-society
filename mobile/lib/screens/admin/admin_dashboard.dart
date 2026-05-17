@@ -55,12 +55,24 @@ class _DashboardHome extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
+        leading: Padding(
+          padding: const EdgeInsets.all(8),
+          child: org?.logoUrl != null
+              ? CircleAvatar(
+                  backgroundImage: NetworkImage(org!.logoUrl!),
+                  backgroundColor: Colors.white,
+                )
+              : const CircleAvatar(
+                  backgroundColor: Colors.white,
+                  child: Icon(Icons.business, color: AppTheme.primary),
+                ),
+        ),
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               'Welcome, ${user?.name ?? 'Admin'}',
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             if (user?.lastLoginAt != null)
               Text(
@@ -98,29 +110,18 @@ class _DashboardHome extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            if (org?.logoUrl != null)
-              ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: Image.network(org!.logoUrl!, width: double.infinity, height: 150, fit: BoxFit.cover),
-              )
-            else
-              ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: Image.asset('assets/images/ayalkoottam.png', width: double.infinity, fit: BoxFit.cover),
-              ),
             if (org != null)
               Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8),
+                padding: const EdgeInsets.only(bottom: 12),
                 child: Text(
                   '${org.name}${org.place != null ? ' • ${org.place}' : ''}',
                   style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
                     color: AppTheme.primaryDark,
                   ),
                 ),
               ),
-            const SizedBox(height: 8),
             GridView.count(
               crossAxisCount: 3,
               mainAxisSpacing: 12,
