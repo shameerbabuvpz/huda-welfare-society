@@ -19,9 +19,9 @@ class AppNotification {
 
   factory AppNotification.fromJson(Map<String, dynamic> json) {
     return AppNotification(
-      id: json['id'],
-      title: json['title'],
-      body: json['body'],
+      id: json['id'] ?? 0,
+      title: json['title'] ?? '',
+      body: json['body'] ?? '',
       audienceType: json['audience_type'],
       createdAt: json['created_at'],
       sentAt: json['sent_at'],

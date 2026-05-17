@@ -1,7 +1,9 @@
+const path = require('path');
 const authService = require('../services/auth.service');
 const db = require('../config/database');
 const ApiError = require('../utils/ApiError');
 const { buildPublicUploadUrl, deleteManagedPhoto } = require('../config/uploads');
+const { compressProfilePhoto } = require('../utils/imageCompression');
 
 const authController = {
   async requestOtp(req, res, next) {
@@ -87,8 +89,12 @@ const authController = {
     try {
       if (!req.file) throw ApiError.badRequest('Photo file is required');
 
+      // Compress the uploaded photo
+      const compressedPath = await compressProfilePhoto(req.file.path);
+      const compressedFilename = path.basename(compressedPath);
+
       const existingUser = await db('users').where({ id: req.user.id }).first();
-      const photoUrl = buildPublicUploadUrl(req, `uploads/profile-photos/${req.file.filename}`);
+      const photoUrl = buildPublicUploadUrl(req, `uploads/profile-photos/${compressedFilename}`);
 
       const [user] = await db('users')
         .where({ id: req.user.id })

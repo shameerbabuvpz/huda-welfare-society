@@ -5,6 +5,7 @@ import '../../../config/theme.dart';
 import '../../../providers/member_provider.dart';
 import '../../../providers/ayalkoottam_provider.dart';
 import '../../../services/member_service.dart';
+import '../../../utils/ak_name_helper.dart';
 import '../../../widgets/app_bottom_sheet.dart';
 
 class AddMemberScreen extends StatefulWidget {
@@ -26,7 +27,7 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() => context.read<AyalkoottamProvider>().loadDropdown());
+    context.read<AyalkoottamProvider>().loadDropdown();
   }
 
   @override
@@ -39,6 +40,7 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
 
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
+    final memberProvider = context.read<MemberProvider>();
     if (_selectedAyalkoottamId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         AppTheme.errorSnackBar('Select an Ayalkoottam'),
@@ -56,12 +58,23 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
           initialChildSize: 0.3,
           body: Padding(
             padding: const EdgeInsets.symmetric(vertical: 8),
-            child: Text('${check} is currently the ${_designation}. Replace?'),
+            child: Text('$check is currently the $_designation. Replace?'),
           ),
           actions: [
-            OutlinedButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: AppTheme.error),
+            OutlinedButton(
+              onPressed: () => Navigator.pop(context, false),
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              ),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              style: FilledButton.styleFrom(
+                backgroundColor: AppTheme.error,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              ),
               onPressed: () => Navigator.pop(context, true),
               child: const Text('Replace'),
             ),
@@ -81,7 +94,7 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
       if (_designation != null) 'designation': _designation,
     };
 
-    final success = await context.read<MemberProvider>().createMember(data);
+    final success = await memberProvider.createMember(data);
     setState(() => _saving = false);
 
     if (!mounted) return;
@@ -90,7 +103,7 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
       Navigator.pop(context);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        AppTheme.errorSnackBar(context.read<MemberProvider>().error ?? 'Failed'),
+        AppTheme.errorSnackBar(memberProvider.error ?? 'Failed'),
       );
     }
   }
@@ -112,8 +125,9 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
                   return DropdownButtonFormField<int>(
                     decoration: const InputDecoration(labelText: 'Ayalkoottam *', prefixIcon: Icon(Icons.groups_2)),
                     value: _selectedAyalkoottamId,
+                    isExpanded: true,
                     items: akProvider.dropdownList.map((ak) {
-                      return DropdownMenuItem(value: ak.id, child: Text('${ak.name}${ak.place != null ? ' - ${ak.place}' : ''}'));
+                      return DropdownMenuItem(value: ak.id, child: Text(shortAkName(ak.name), overflow: TextOverflow.ellipsis));
                     }).toList(),
                     onChanged: (v) => setState(() {
                       _selectedAyalkoottamId = v;

@@ -24,14 +24,13 @@ class _IssueAssetScreenState extends State<IssueAssetScreen> {
   List<Member> _filteredMembers = [];
   bool _loadingMembers = true;
   final _memberSearchCtrl = TextEditingController();
+  String? _selectedAyalkoottam;
 
   @override
   void initState() {
     super.initState();
-    Future.microtask(() {
-      context.read<AssetProvider>().loadAvailableAssets();
-      _loadMembers();
-    });
+    context.read<AssetProvider>().loadAvailableAssets();
+    _loadMembers();
   }
 
   @override
@@ -59,10 +58,21 @@ class _IssueAssetScreenState extends State<IssueAssetScreen> {
 
   void _filterMembers(String query) {
     setState(() {
-      _filteredMembers = _members
-          .where((m) => m.name.toLowerCase().contains(query.toLowerCase()) || (m.phone ?? '').contains(query))
-          .toList();
+      _filteredMembers = _members.where((m) {
+        final matchesSearch = query.isEmpty ||
+            m.name.toLowerCase().contains(query.toLowerCase()) ||
+            (m.phone ?? '').contains(query);
+        final matchesAyalkoottam = _selectedAyalkoottam == null || m.ayalkoottamName == _selectedAyalkoottam;
+        return matchesSearch && matchesAyalkoottam;
+      }).toList();
     });
+  }
+
+  void _onAyalkoottamFilterChanged(String? value) {
+    setState(() {
+      _selectedAyalkoottam = value;
+    });
+    _filterMembers(_memberSearchCtrl.text);
   }
 
   Future<void> _pickDueDate() async {
@@ -170,6 +180,26 @@ class _IssueAssetScreenState extends State<IssueAssetScreen> {
             // Step 2: Select Member
             const Text('2. Select Member', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
+            DropdownButtonFormField<String>(
+              initialValue: _selectedAyalkoottam,
+              decoration: const InputDecoration(
+                hintText: 'Filter by Ayalkoottam',
+                prefixIcon: Icon(Icons.groups),
+                border: OutlineInputBorder(),
+                contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              ),
+              isExpanded: true,
+              items: [
+                const DropdownMenuItem<String>(value: null, child: Text('All Ayalkoottams')),
+                ..._members
+                    .map((m) => m.ayalkoottamName)
+                    .whereType<String>()
+                    .toSet()
+                    .map((name) => DropdownMenuItem<String>(value: name, child: Text(name))),
+              ],
+              onChanged: _onAyalkoottamFilterChanged,
+            ),
+            const SizedBox(height: 8),
             TextField(
               controller: _memberSearchCtrl,
               decoration: const InputDecoration(
@@ -202,7 +232,7 @@ class _IssueAssetScreenState extends State<IssueAssetScreen> {
                                 child: Text(m.name[0].toUpperCase(), style: TextStyle(color: selected ? Colors.white : Colors.black, fontSize: 12)),
                               ),
                               title: Text(m.name, style: const TextStyle(fontSize: 14)),
-                              subtitle: Text(m.phone ?? '', style: const TextStyle(fontSize: 12)),
+                              subtitle: Text(m.ayalkoottamName ?? m.phone ?? '', style: const TextStyle(fontSize: 12)),
                               trailing: selected ? const Icon(Icons.check_circle, color: AppTheme.primary) : null,
                               onTap: () => setState(() => _selectedMember = m),
                             );

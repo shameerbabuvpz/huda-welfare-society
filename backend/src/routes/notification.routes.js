@@ -20,6 +20,14 @@ router.post(
 );
 
 router.get('/', authorize('admin', 'super_admin'), ctrl.list);
+router.put(
+  '/:id',
+  authorize('admin', 'super_admin'),
+  [body('title').optional().trim(), body('body').optional()],
+  validate,
+  ctrl.update
+);
+router.delete('/:id', authorize('admin', 'super_admin'), ctrl.delete);
 router.get('/:id/logs', authorize('admin', 'super_admin'), ctrl.deliveryLogs);
 
 module.exports = router;

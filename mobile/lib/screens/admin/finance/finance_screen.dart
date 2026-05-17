@@ -72,9 +72,9 @@ class _FinanceScreenState extends State<FinanceScreen> with SingleTickerProvider
         bottom: TabBar(
           controller: _tabController,
           tabs: const [
-            Tab(text: 'All'),
-            Tab(text: 'Income'),
-            Tab(text: 'Expense'),
+            Tab(child: Text('All', maxLines: 2, textAlign: TextAlign.center)),
+            Tab(child: Text('Income', maxLines: 2, textAlign: TextAlign.center)),
+            Tab(child: Text('Expense', maxLines: 2, textAlign: TextAlign.center)),
           ],
         ),
       ),
@@ -84,7 +84,7 @@ class _FinanceScreenState extends State<FinanceScreen> with SingleTickerProvider
           Expanded(
             child: TabBarView(
               controller: _tabController,
-              children: [
+              children: const [
                 _TransactionList(type: null),
                 _TransactionList(type: 'income'),
                 _TransactionList(type: 'expense'),
@@ -95,20 +95,19 @@ class _FinanceScreenState extends State<FinanceScreen> with SingleTickerProvider
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
+          final provider = context.read<FinanceProvider>();
           final result = await Navigator.push<bool>(
             context,
             MaterialPageRoute(builder: (_) => const AddTransactionScreen()),
           );
-          if (result == true && mounted) {
-            final provider = context.read<FinanceProvider>();
-            final type = _tabController.index == 0
-                ? null
-                : _tabController.index == 1
-                    ? 'income'
-                    : 'expense';
-            provider.loadTransactions(type: type);
-            provider.loadSummary();
-          }
+          if (result != true || !context.mounted) return;
+          final type = _tabController.index == 0
+              ? null
+              : _tabController.index == 1
+                  ? 'income'
+                  : 'expense';
+          provider.loadTransactions(type: type);
+          provider.loadSummary();
         },
         child: const Icon(Icons.add),
       ),
@@ -263,9 +262,20 @@ class _TransactionTile extends StatelessWidget {
             child: Text('Are you sure you want to delete this transaction?'),
           ),
           actions: [
-            OutlinedButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: AppTheme.error),
+            OutlinedButton(
+              onPressed: () => Navigator.pop(context, false),
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              ),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              style: FilledButton.styleFrom(
+                backgroundColor: AppTheme.error,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              ),
               onPressed: () => Navigator.pop(context, true),
               child: const Text('Delete'),
             ),
@@ -277,6 +287,7 @@ class _TransactionTile extends StatelessWidget {
       },
       child: Card(
         child: ListTile(
+          onTap: () => _showEditSheet(context),
           leading: CircleAvatar(
             backgroundColor: isIncome
                 ? Theme.of(context).colorScheme.primaryContainer
@@ -304,6 +315,100 @@ class _TransactionTile extends StatelessWidget {
             ),
           ),
           isThreeLine: txn.description != null && txn.description!.isNotEmpty,
+        ),
+      ),
+    );
+  }
+
+  void _showEditSheet(BuildContext context) {
+    final amountCtrl = TextEditingController(text: txn.amount.toStringAsFixed(2));
+    final descCtrl = TextEditingController(text: txn.description ?? '');
+    DateTime selectedDate = DateTime.tryParse(txn.date) ?? DateTime.now();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setSheetState) => SafeArea(
+          child: Container(
+            margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+            decoration: BoxDecoration(color: AppTheme.surface, borderRadius: BorderRadius.circular(24)),
+            padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(24, 20, 24, 20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(width: 40, height: 4, decoration: BoxDecoration(color: AppTheme.outline, borderRadius: BorderRadius.circular(99))),
+                  const SizedBox(height: 20),
+                  Text('Edit Transaction', style: Theme.of(ctx).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: amountCtrl,
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    decoration: const InputDecoration(labelText: 'Amount (₹)', border: OutlineInputBorder(), prefixText: '₹ '),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: descCtrl,
+                    decoration: const InputDecoration(labelText: 'Description (optional)', border: OutlineInputBorder()),
+                  ),
+                  const SizedBox(height: 12),
+                  InkWell(
+                    onTap: () async {
+                      final picked = await showDatePicker(
+                        context: ctx,
+                        initialDate: selectedDate,
+                        firstDate: DateTime(2020),
+                        lastDate: DateTime.now().add(const Duration(days: 30)),
+                      );
+                      if (picked != null) setSheetState(() => selectedDate = picked);
+                    },
+                    child: InputDecorator(
+                      decoration: const InputDecoration(labelText: 'Date', border: OutlineInputBorder(), suffixIcon: Icon(Icons.calendar_today)),
+                      child: Text('${selectedDate.year}-${selectedDate.month.toString().padLeft(2, '0')}-${selectedDate.day.toString().padLeft(2, '0')}'),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () => Navigator.pop(ctx),
+                          style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))),
+                          child: const Text('Cancel'),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: FilledButton(
+                          onPressed: () async {
+                            final amount = double.tryParse(amountCtrl.text);
+                            if (amount == null || amount <= 0) return;
+                            final data = <String, dynamic>{
+                              'amount': amount,
+                              'description': descCtrl.text.trim(),
+                              'date': '${selectedDate.year}-${selectedDate.month.toString().padLeft(2, '0')}-${selectedDate.day.toString().padLeft(2, '0')}',
+                            };
+                            Navigator.pop(ctx);
+                            final success = await context.read<FinanceProvider>().updateTransaction(txn.id, data);
+                            if (!success && context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                AppTheme.errorSnackBar(context.read<FinanceProvider>().error ?? 'Failed'),
+                              );
+                            }
+                          },
+                          style: FilledButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))),
+                          child: const Text('Save'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
         ),
       ),
     );

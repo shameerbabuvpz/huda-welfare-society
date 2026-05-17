@@ -23,6 +23,13 @@ const financeController = {
     } catch (err) { next(err); }
   },
 
+  async updateCategory(req, res, next) {
+    try {
+      const result = await financeService.updateCategory(req.organizationId, parseInt(req.params.id, 10), req.body);
+      res.json(result);
+    } catch (err) { next(err); }
+  },
+
   // ─── Transactions ─────────────────────────────────────────────
   async createTransaction(req, res, next) {
     try {
@@ -41,6 +48,13 @@ const financeController = {
   async deleteTransaction(req, res, next) {
     try {
       const result = await financeService.deleteTransaction(req.organizationId, parseInt(req.params.id, 10), req.user.id);
+      res.json(result);
+    } catch (err) { next(err); }
+  },
+
+  async updateTransaction(req, res, next) {
+    try {
+      const result = await financeService.updateTransaction(req.organizationId, parseInt(req.params.id, 10), req.body, req.user.id);
       res.json(result);
     } catch (err) { next(err); }
   },

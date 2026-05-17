@@ -6,6 +6,7 @@ class PrivilegeCard {
   final String? qrData;
   final String status;
   final String? memberName;
+  final String? photoUrl;
   final String? organizationName;
   final int? ayalkoottamId;
   final String? ayalkoottamName;
@@ -18,6 +19,7 @@ class PrivilegeCard {
     this.qrData,
     required this.status,
     this.memberName,
+    this.photoUrl,
     this.organizationName,
     this.ayalkoottamId,
     this.ayalkoottamName,
@@ -32,6 +34,7 @@ class PrivilegeCard {
       qrData: json['qr_data'],
       status: json['status'],
       memberName: json['member_name'],
+      photoUrl: json['photo_url'],
       organizationName: json['organization_name'],
       ayalkoottamId: json['ayalkoottam_id'],
       ayalkoottamName: json['ayalkoottam_name'],

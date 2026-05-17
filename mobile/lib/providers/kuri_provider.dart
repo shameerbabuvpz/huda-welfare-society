@@ -97,6 +97,18 @@ class KuriProvider extends ChangeNotifier {
     }
   }
 
+  Future<bool> removeMember(int groupId, int memberId) async {
+    try {
+      await KuriService.removeMember(groupId, memberId);
+      await loadGroupDetail(groupId);
+      return true;
+    } catch (e) {
+      _error = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }
+
   Future<bool> recordCollection(int groupId, {required int memberId, required int monthNumber, double? amount}) async {
     try {
       await KuriService.recordCollection(groupId, memberId: memberId, monthNumber: monthNumber, amount: amount);
@@ -123,6 +135,18 @@ class KuriProvider extends ChangeNotifier {
   Future<bool> recordPayout(int groupId, {required int winnerId, required double amount, String? reference}) async {
     try {
       await KuriService.recordPayout(groupId, winnerId: winnerId, amount: amount, reference: reference);
+      await loadGroupDetail(groupId);
+      return true;
+    } catch (e) {
+      _error = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> updateGroup(int groupId, Map<String, dynamic> data) async {
+    try {
+      await KuriService.updateGroup(groupId, data);
       await loadGroupDetail(groupId);
       return true;
     } catch (e) {

@@ -17,7 +17,7 @@ class _PrivilegeOfferListScreenState extends State<PrivilegeOfferListScreen> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() => context.read<PrivilegeOfferProvider>().loadOffers());
+    context.read<PrivilegeOfferProvider>().loadOffers();
   }
 
   @override
@@ -32,9 +32,8 @@ class _PrivilegeOfferListScreenState extends State<PrivilegeOfferListScreen> {
             context,
             MaterialPageRoute(builder: (_) => const PrivilegeOfferFormScreen()),
           );
-          if (created == true && mounted) {
-            context.read<PrivilegeOfferProvider>().loadOffers();
-          }
+          if (created != true || !context.mounted) return;
+          context.read<PrivilegeOfferProvider>().loadOffers();
         },
         icon: const Icon(Icons.add),
         label: const Text('Add Offer'),

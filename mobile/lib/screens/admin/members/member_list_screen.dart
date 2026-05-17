@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../config/theme.dart';
 import '../../../providers/member_provider.dart';
+import '../../../providers/ayalkoottam_provider.dart';
 import '../../../models/member.dart';
 import '../../../config/routes.dart';
+import '../../../services/export_service.dart';
+import '../../../utils/ak_name_helper.dart';
 import '../../../widgets/app_bottom_sheet.dart';
 
 class MemberListScreen extends StatefulWidget {
@@ -16,11 +19,14 @@ class MemberListScreen extends StatefulWidget {
 class _MemberListScreenState extends State<MemberListScreen> {
   final _searchController = TextEditingController();
   final _scrollController = ScrollController();
+  int? _filterAyalkoottamId;
+  String? _filterAyalkoottamName;
 
   @override
   void initState() {
     super.initState();
-    Future.microtask(() => context.read<MemberProvider>().loadMembers());
+    context.read<MemberProvider>().loadMembers();
+    context.read<AyalkoottamProvider>().loadDropdown();
     _scrollController.addListener(_onScroll);
   }
 
@@ -38,7 +44,58 @@ class _MemberListScreenState extends State<MemberListScreen> {
   }
 
   void _search(String v) {
-    context.read<MemberProvider>().loadMembers(search: v.isEmpty ? null : v);
+    context.read<MemberProvider>().loadMembers(search: v.isEmpty ? null : v, ayalkoottamId: _filterAyalkoottamId);
+  }
+
+  void _applyFilter(int? id, String? name) {
+    setState(() {
+      _filterAyalkoottamId = id;
+      _filterAyalkoottamName = name;
+    });
+    final search = _searchController.text.isEmpty ? null : _searchController.text;
+    context.read<MemberProvider>().loadMembers(search: search, ayalkoottamId: id);
+  }
+
+  void _showFilterSheet() {
+    final akProvider = context.read<AyalkoottamProvider>();
+    showAppBottomSheet(
+      context: context,
+      title: 'Filter by Ayalkoottam',
+      initialChildSize: 0.5,
+      bodyBuilder: (ctx, sc) => ListView(
+        controller: sc,
+        children: [
+          ListTile(
+            leading: const Icon(Icons.clear_all),
+            title: const Text('All Members'),
+            selected: _filterAyalkoottamId == null,
+            onTap: () {
+              Navigator.pop(ctx);
+              _applyFilter(null, null);
+            },
+          ),
+          const Divider(),
+          ...akProvider.dropdownList.map((ak) => ListTile(
+            leading: const Icon(Icons.group_outlined),
+            title: Text(shortAkName(ak.name)),
+            selected: _filterAyalkoottamId == ak.id,
+            onTap: () {
+              Navigator.pop(ctx);
+              _applyFilter(ak.id, shortAkName(ak.name));
+            },
+          )),
+        ],
+      ),
+    );
+  }
+
+  void _exportMembers() async {
+    try {
+      await ExportService.membersExcel(ayalkoottamId: _filterAyalkoottamId);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Export failed: $e')));
+    }
   }
 
   @override
@@ -48,33 +105,67 @@ class _MemberListScreenState extends State<MemberListScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Members'),
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(56),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: TextField(
-              controller: _searchController,
-              decoration: InputDecoration(
-                hintText: 'Search members...',
-                prefixIcon: const Icon(Icons.search),
-                suffixIcon: IconButton(
-                  icon: const Icon(Icons.clear, size: 18),
-                  onPressed: () { _searchController.clear(); _search(''); },
-                ),
-                filled: true,
-                fillColor: Theme.of(context).colorScheme.surface,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
-                contentPadding: const EdgeInsets.symmetric(vertical: 0),
-              ),
-              onChanged: _search,
+        actions: [
+          IconButton(
+            icon: Badge(
+              isLabelVisible: _filterAyalkoottamId != null,
+              child: const Icon(Icons.filter_list),
             ),
+            tooltip: 'Filter by Ayalkoottam',
+            onPressed: _showFilterSheet,
+          ),
+          IconButton(
+            icon: const Icon(Icons.file_download_outlined),
+            tooltip: 'Export to Excel',
+            onPressed: _exportMembers,
+          ),
+        ],
+        bottom: PreferredSize(
+          preferredSize: Size.fromHeight(_filterAyalkoottamId != null ? 92 : 56),
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: TextField(
+                  controller: _searchController,
+                  decoration: InputDecoration(
+                    hintText: 'Search members...',
+                    prefixIcon: const Icon(Icons.search),
+                    suffixIcon: IconButton(
+                      icon: const Icon(Icons.clear, size: 18),
+                      onPressed: () { _searchController.clear(); _search(''); },
+                    ),
+                    filled: true,
+                    fillColor: Theme.of(context).colorScheme.surface,
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
+                    contentPadding: const EdgeInsets.symmetric(vertical: 0),
+                  ),
+                  onChanged: _search,
+                ),
+              ),
+              if (_filterAyalkoottamId != null)
+                Padding(
+                  padding: const EdgeInsets.only(left: 16, right: 16, bottom: 8),
+                  child: Row(
+                    children: [
+                      Chip(
+                        label: Text(_filterAyalkoottamName ?? 'Filtered'),
+                        deleteIcon: const Icon(Icons.close, size: 16),
+                        onDeleted: () => _applyFilter(null, null),
+                        visualDensity: VisualDensity.compact,
+                      ),
+                    ],
+                  ),
+                ),
+            ],
           ),
         ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
           await Navigator.pushNamed(context, AppRoutes.addMember);
-          if (mounted) context.read<MemberProvider>().loadMembers();
+          if (!context.mounted) return;
+          context.read<MemberProvider>().loadMembers();
         },
         child: const Icon(Icons.add),
       ),
@@ -112,7 +203,12 @@ class _MemberTile extends StatelessWidget {
       child: ListTile(
         leading: CircleAvatar(
           backgroundColor: isActive ? null : Colors.grey.shade200,
-          child: Text(member.name[0].toUpperCase(), style: TextStyle(color: isActive ? null : Colors.grey)),
+          backgroundImage: member.photoUrl != null && member.photoUrl!.isNotEmpty
+              ? NetworkImage(member.photoUrl!)
+              : null,
+          child: member.photoUrl == null || member.photoUrl!.isEmpty
+              ? Text(member.name[0].toUpperCase(), style: TextStyle(color: isActive ? null : Colors.grey))
+              : null,
         ),
         title: Row(
           children: [
@@ -154,9 +250,13 @@ class _MemberTile extends StatelessWidget {
             const PopupMenuItem(value: 'delete', child: Text('Remove', style: TextStyle(color: AppTheme.error))),
           ],
           onSelected: (v) {
-            if (v == 'edit') _showEditDialog(context);
-            else if (v == 'toggle_status') _confirmToggle(context);
-            else if (v == 'delete') _confirmDelete(context);
+            if (v == 'edit') {
+              _showEditDialog(context);
+            } else if (v == 'toggle_status') {
+              _confirmToggle(context);
+            } else if (v == 'delete') {
+              _confirmDelete(context);
+            }
           },
         ),
       ),
@@ -174,9 +274,20 @@ class _MemberTile extends StatelessWidget {
         child: Text('Change ${member.name} status to ${isActive ? "inactive" : "active"}?'),
       ),
       actions: [
-        OutlinedButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
-        ElevatedButton(
-          style: ElevatedButton.styleFrom(backgroundColor: isActive ? AppTheme.error : AppTheme.primary),
+        OutlinedButton(
+          onPressed: () => Navigator.pop(context),
+          style: OutlinedButton.styleFrom(
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          ),
+          child: const Text('Cancel'),
+        ),
+        FilledButton(
+          style: FilledButton.styleFrom(
+            backgroundColor: isActive ? AppTheme.error : AppTheme.primary,
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          ),
           onPressed: () {
             Navigator.pop(context);
             context.read<MemberProvider>().updateMember(member.id, {'status': isActive ? 'inactive' : 'active'});
@@ -197,9 +308,20 @@ class _MemberTile extends StatelessWidget {
         child: Text('Remove ${member.name}? This action cannot be undone.'),
       ),
       actions: [
-        OutlinedButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
-        ElevatedButton(
-          style: ElevatedButton.styleFrom(backgroundColor: AppTheme.error),
+        OutlinedButton(
+          onPressed: () => Navigator.pop(context),
+          style: OutlinedButton.styleFrom(
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          ),
+          child: const Text('Cancel'),
+        ),
+        FilledButton(
+          style: FilledButton.styleFrom(
+            backgroundColor: AppTheme.error,
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          ),
           onPressed: () {
             Navigator.pop(context);
             context.read<MemberProvider>().deleteMember(member.id);
@@ -214,42 +336,57 @@ class _MemberTile extends StatelessWidget {
     final nameCtrl = TextEditingController(text: member.name);
     final phoneCtrl = TextEditingController(text: member.phone ?? '');
     final addressCtrl = TextEditingController(text: member.address ?? '');
+    int? selectedAkId = member.ayalkoottamId;
+    final akProvider = context.read<AyalkoottamProvider>();
 
     showAppBottomSheet(
       context: context,
       title: 'Edit Member',
-      initialChildSize: 0.5,
-      bodyBuilder: (ctx, sc) => SingleChildScrollView(
-        controller: sc,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            TextField(controller: nameCtrl, decoration: const InputDecoration(labelText: 'Name', border: OutlineInputBorder())),
-            const SizedBox(height: 12),
-            TextField(controller: phoneCtrl, decoration: const InputDecoration(labelText: 'Phone', border: OutlineInputBorder()), keyboardType: TextInputType.phone),
-            const SizedBox(height: 12),
-            TextField(controller: addressCtrl, decoration: const InputDecoration(labelText: 'Address', border: OutlineInputBorder()), maxLines: 2),
-            const SizedBox(height: 20),
-            Row(
-              children: [
-                Expanded(child: OutlinedButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel'))),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.pop(ctx);
-                      final data = <String, dynamic>{};
-                      if (nameCtrl.text.trim().isNotEmpty) data['name'] = nameCtrl.text.trim();
-                      if (phoneCtrl.text.trim().isNotEmpty) data['phone'] = phoneCtrl.text.trim();
-                      data['address'] = addressCtrl.text.trim();
-                      context.read<MemberProvider>().updateMember(member.id, data);
-                    },
-                    child: const Text('Save'),
+      initialChildSize: 0.6,
+      bodyBuilder: (ctx, sc) => StatefulBuilder(
+        builder: (ctx, setSheetState) => SingleChildScrollView(
+          controller: sc,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              DropdownButtonFormField<int>(
+                decoration: const InputDecoration(labelText: 'Ayalkoottam', border: OutlineInputBorder(), prefixIcon: Icon(Icons.groups_2)),
+                value: selectedAkId,
+                isExpanded: true,
+                items: akProvider.dropdownList.map((ak) {
+                  return DropdownMenuItem(value: ak.id, child: Text(shortAkName(ak.name), overflow: TextOverflow.ellipsis));
+                }).toList(),
+                onChanged: (v) => setSheetState(() => selectedAkId = v),
+              ),
+              const SizedBox(height: 12),
+              TextField(controller: nameCtrl, decoration: const InputDecoration(labelText: 'Name', border: OutlineInputBorder())),
+              const SizedBox(height: 12),
+              TextField(controller: phoneCtrl, decoration: const InputDecoration(labelText: 'Phone', border: OutlineInputBorder()), keyboardType: TextInputType.phone),
+              const SizedBox(height: 12),
+              TextField(controller: addressCtrl, decoration: const InputDecoration(labelText: 'Address', border: OutlineInputBorder()), maxLines: 2),
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  Expanded(child: OutlinedButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel'))),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.pop(ctx);
+                        final data = <String, dynamic>{};
+                        if (nameCtrl.text.trim().isNotEmpty) data['name'] = nameCtrl.text.trim();
+                        if (phoneCtrl.text.trim().isNotEmpty) data['phone'] = phoneCtrl.text.trim();
+                        data['address'] = addressCtrl.text.trim();
+                        if (selectedAkId != member.ayalkoottamId) data['ayalkoottam_id'] = selectedAkId;
+                        context.read<MemberProvider>().updateMember(member.id, data);
+                      },
+                      child: const Text('Save'),
+                    ),
                   ),
-                ),
-              ],
-            ),
-          ],
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

@@ -104,7 +104,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             children: [
                               _ProfileAvatar(
                                 name: _member!.name,
-                                photoUrl: user?.photoUrl,
+                                photoUrl: _member!.photoUrl ?? user?.photoUrl,
                               ),
                               Positioned(
                                 right: 0,

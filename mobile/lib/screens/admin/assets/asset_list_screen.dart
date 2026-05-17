@@ -23,12 +23,10 @@ class _AssetListScreenState extends State<AssetListScreen> with SingleTickerProv
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
-    Future.microtask(() {
-      final provider = context.read<AssetProvider>();
-      provider.loadAssets();
-      provider.loadStats();
-      provider.loadIssueRegister();
-    });
+    final provider = context.read<AssetProvider>();
+    provider.loadAssets();
+    provider.loadStats();
+    provider.loadIssueRegister();
   }
 
   @override
@@ -46,9 +44,9 @@ class _AssetListScreenState extends State<AssetListScreen> with SingleTickerProv
           controller: _tabController,
           indicatorColor: Colors.white,
           tabs: const [
-            Tab(text: 'Items'),
-            Tab(text: 'Issue Register'),
-            Tab(text: 'Report'),
+            Tab(child: Text('Items', maxLines: 2, textAlign: TextAlign.center)),
+            Tab(child: Text('Issue Register', maxLines: 2, textAlign: TextAlign.center)),
+            Tab(child: Text('Report', maxLines: 2, textAlign: TextAlign.center)),
           ],
         ),
         actions: [
@@ -183,7 +181,7 @@ class _AssetTile extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: _statusColor().withOpacity(0.1),
+          backgroundColor: _statusColor().withValues(alpha: 0.1),
           child: Icon(_conditionIcon(), color: _statusColor()),
         ),
         title: Text(asset.name, style: const TextStyle(fontWeight: FontWeight.w500)),
@@ -193,7 +191,10 @@ class _AssetTile extends StatelessWidget {
           children: [
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-              decoration: BoxDecoration(color: _statusColor().withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
+              decoration: BoxDecoration(
+                color: _statusColor().withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
               child: Text(asset.status.toUpperCase(), style: TextStyle(fontSize: 10, color: _statusColor(), fontWeight: FontWeight.w600)),
             ),
             const SizedBox(width: 4),
@@ -206,9 +207,13 @@ class _AssetTile extends StatelessWidget {
                 const PopupMenuItem(value: 'condition', child: Text('Change Condition')),
               ],
               onSelected: (v) {
-                if (v == 'issue') _showIssueDialog(context);
-                else if (v == 'return') _showReturnDialog(context);
-                else if (v == 'condition') _showConditionDialog(context);
+                if (v == 'issue') {
+                  _showIssueDialog(context);
+                } else if (v == 'return') {
+                  _showReturnDialog(context);
+                } else if (v == 'condition') {
+                  _showConditionDialog(context);
+                }
               },
             ),
           ],
@@ -218,25 +223,59 @@ class _AssetTile extends StatelessWidget {
   }
 
   void _showConditionDialog(BuildContext context) {
-    showDialog(
+    showModalBottomSheet(
       context: context,
-      builder: (ctx) => SimpleDialog(
-        title: const Text('Item Condition'),
-        children: [
-          SimpleDialogOption(
-            onPressed: () { Navigator.pop(ctx); provider.updateAsset(asset.id, {'condition': 'working', 'status': 'available'}); },
-            child: const Text('✅ Working'),
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => SafeArea(
+        child: Container(
+          margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+          decoration: BoxDecoration(
+            color: AppTheme.surface,
+            borderRadius: BorderRadius.circular(24),
           ),
-          SimpleDialogOption(
-            onPressed: () { Navigator.pop(ctx); provider.updateAsset(asset.id, {'condition': 'damaged', 'status': 'damaged'}); },
-            child: const Text('⚠️ Damaged'),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(24, 20, 24, 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: AppTheme.outline,
+                    borderRadius: BorderRadius.circular(99),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text('Item Condition', style: Theme.of(ctx).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
+                const SizedBox(height: 16),
+                _conditionTile(ctx, Icons.check_circle_outline, 'Working', Colors.green, () {
+                  Navigator.pop(ctx);
+                  provider.updateAsset(asset.id, {'condition': 'working', 'status': 'available'});
+                }),
+                _conditionTile(ctx, Icons.warning_amber_rounded, 'Damaged', Colors.orange, () {
+                  Navigator.pop(ctx);
+                  provider.updateAsset(asset.id, {'condition': 'damaged', 'status': 'damaged'});
+                }),
+                _conditionTile(ctx, Icons.cancel_outlined, 'Missing', AppTheme.error, () {
+                  Navigator.pop(ctx);
+                  provider.updateAsset(asset.id, {'condition': 'missing', 'status': 'missing'});
+                }),
+                const SizedBox(height: 8),
+              ],
+            ),
           ),
-          SimpleDialogOption(
-            onPressed: () { Navigator.pop(ctx); provider.updateAsset(asset.id, {'condition': 'missing', 'status': 'missing'}); },
-            child: const Text('❌ Missing'),
-          ),
-        ],
+        ),
       ),
+    );
+  }
+
+  Widget _conditionTile(BuildContext context, IconData icon, String label, Color color, VoidCallback onTap) {
+    return ListTile(
+      leading: Icon(icon, color: color),
+      title: Text(label, style: TextStyle(fontWeight: FontWeight.w600, color: color)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      onTap: onTap,
     );
   }
 
@@ -407,13 +446,27 @@ class _IssueAssetSheetState extends State<_IssueAssetSheet> {
                       itemCount: _filtered.length,
                       itemBuilder: (ctx, i) {
                         final m = _filtered[i];
-                        return RadioListTile<int>(
-                          value: m.id,
-                          groupValue: _selectedMemberId,
-                          onChanged: (v) => setState(() => _selectedMemberId = v),
+                        final selected = _selectedMemberId == m.id;
+                        return ListTile(
+                          dense: true,
+                          selected: selected,
+                          selectedTileColor: Theme.of(context).colorScheme.primaryContainer,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          leading: CircleAvatar(
+                            radius: 16,
+                            backgroundColor: selected ? AppTheme.primary : Colors.grey.shade200,
+                            child: Text(
+                              m.name[0].toUpperCase(),
+                              style: TextStyle(
+                                color: selected ? Colors.white : AppTheme.ink,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
                           title: Text(m.name),
                           subtitle: Text(m.phone ?? ''),
-                          dense: true,
+                          trailing: selected ? const Icon(Icons.check_circle, color: AppTheme.primary) : null,
+                          onTap: () => setState(() => _selectedMemberId = m.id),
                         );
                       },
                     ),
@@ -499,7 +552,10 @@ class _IssueRegisterTile extends StatelessWidget {
                 Expanded(child: Text(txn.assetName ?? 'Unknown Item', style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15))),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                  decoration: BoxDecoration(color: _statusColor().withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
+                  decoration: BoxDecoration(
+                    color: _statusColor().withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                   child: Text(_statusLabel(), style: TextStyle(fontSize: 10, color: _statusColor(), fontWeight: FontWeight.w600)),
                 ),
               ],

@@ -16,8 +16,18 @@ class NotificationApiService {
     });
   }
 
-  static Future<Map<String, dynamic>> list({int page = 1}) async {
-    return await ApiService.get('/notifications', queryParams: {'page': '$page'});
+  static Future<List<AppNotification>> list({int page = 1}) async {
+    final data = await ApiService.get('/notifications', queryParams: {'page': '$page'});
+    return (data['data'] as List).map((n) => AppNotification.fromJson(n)).toList();
+  }
+
+  static Future<AppNotification> update(int id, {required String title, required String body}) async {
+    final data = await ApiService.put('/notifications/$id', {'title': title, 'body': body});
+    return AppNotification.fromJson(data);
+  }
+
+  static Future<void> delete(int id) async {
+    await ApiService.delete('/notifications/$id');
   }
 
   static Future<List<AppNotification>> myNotifications({int page = 1}) async {

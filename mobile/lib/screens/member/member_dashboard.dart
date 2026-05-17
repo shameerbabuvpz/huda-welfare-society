@@ -9,6 +9,7 @@ import '../../models/kuri_group.dart';
 import '../../models/member.dart';
 import '../../models/notification_model.dart';
 import '../../models/privilege_card.dart';
+import '../../models/banner.dart' as app;
 import '../../providers/auth_provider.dart';
 import '../../services/asset_service.dart';
 import '../../services/kaneev_service.dart';
@@ -16,6 +17,7 @@ import '../../services/kuri_service.dart';
 import '../../services/member_service.dart';
 import '../../services/notification_service.dart';
 import '../../services/privilege_card_service.dart';
+import '../../services/banner_service.dart';
 import '../../widgets/app_bottom_sheet.dart';
 
 class MemberDashboard extends StatefulWidget {
@@ -51,6 +53,7 @@ class _MemberDashboardState extends State<MemberDashboard> {
       final equipmentsFuture = _loadEquipments();
       final kuriFuture = _loadKuri();
       final kaneevFuture = _loadKaneev();
+      final bannersFuture = _loadBanners();
 
       final profile = await profileFuture;
       final card = await cardFuture;
@@ -58,6 +61,7 @@ class _MemberDashboardState extends State<MemberDashboard> {
       final equipments = await equipmentsFuture;
       final kuriEntries = await kuriFuture;
       final kaneev = await kaneevFuture;
+      final banners = await bannersFuture;
 
       if (!mounted) return;
 
@@ -69,6 +73,7 @@ class _MemberDashboardState extends State<MemberDashboard> {
           equipments: equipments,
           kuriEntries: kuriEntries,
           kaneev: kaneev,
+          banners: banners,
         );
         _loading = false;
       });
@@ -113,6 +118,14 @@ class _MemberDashboardState extends State<MemberDashboard> {
     }
   }
 
+  Future<List<app.Banner>> _loadBanners() async {
+    try {
+      return await BannerService.listActive();
+    } catch (_) {
+      return [];
+    }
+  }
+
   Future<void> _openNotifications() async {
     await Navigator.pushNamed(context, AppRoutes.myNotifications);
     if (!mounted) return;
@@ -126,6 +139,21 @@ class _MemberDashboardState extends State<MemberDashboard> {
   }
 
   Future<void> _logout() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Logout'),
+        content: const Text('Do you want to logout?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Logout', style: TextStyle(color: AppTheme.error)),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
     await context.read<AuthProvider>().logout();
     if (!mounted) return;
     Navigator.pushReplacementNamed(context, AppRoutes.login);
@@ -151,52 +179,19 @@ class _MemberDashboardState extends State<MemberDashboard> {
                       padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
                       children: [
                         Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
                           children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Member Home',
-                                    style: TextStyle(
-                                      color: Colors.grey.shade700,
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w600,
-                                      letterSpacing: 0.4,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 6),
-                                  Text(
-                                    data?.profile.name ?? user?.name ?? 'Member',
-                                    style: const TextStyle(
-                                      fontSize: 28,
-                                      fontWeight: FontWeight.w700,
-                                      color: AppTheme.ink,
-                                      height: 1.05,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 6),
-                                  Text(
-                                    data?.profile.ayalkoottamName ?? data?.card.organizationName ?? '',
-                                    style: TextStyle(
-                                      color: Colors.grey.shade700,
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
                             _HeaderAction(
                               icon: Icons.account_circle_outlined,
                               onTap: _openProfile,
                             ),
-                            const SizedBox(width: 10),
+                            const SizedBox(width: 8),
                             _HeaderAction(
                               icon: Icons.notifications_none_rounded,
                               activeCount: data?.notifications.length ?? 0,
                               onTap: _openNotifications,
                             ),
-                            const SizedBox(width: 10),
+                            const SizedBox(width: 8),
                             _HeaderAction(
                               icon: Icons.logout_rounded,
                               onTap: _logout,
@@ -204,13 +199,17 @@ class _MemberDashboardState extends State<MemberDashboard> {
                           ],
                         ),
                         const SizedBox(height: 22),
+                        if (data != null && data.banners.isNotEmpty)
+                          _BannerCarousel(banners: data.banners),
+                        if (data != null && data.banners.isNotEmpty)
+                          const SizedBox(height: 16),
                         if (data != null)
                           MemberPrivilegeCard(
                             card: data.card,
                             memberName: data.profile.name,
-                            organizationName: data.card.organizationName ?? 'Sangamam',
+                            organizationName: data.card.organizationName,
                             ayalkoottamName: data.profile.ayalkoottamName ?? data.card.ayalkoottamName,
-                            photoUrl: user?.photoUrl,
+                            photoUrl: data.card.photoUrl ?? user?.photoUrl,
                           ),
                         if (latestNotification != null) ...[
                           const SizedBox(height: 18),
@@ -328,6 +327,7 @@ class _MemberHomeData {
   final List<AssetTransaction> equipments;
   final List<KuriPaymentStatus> kuriEntries;
   final KaneevMemberSummary? kaneev;
+  final List<app.Banner> banners;
 
   const _MemberHomeData({
     required this.profile,
@@ -336,6 +336,7 @@ class _MemberHomeData {
     required this.equipments,
     required this.kuriEntries,
     required this.kaneev,
+    required this.banners,
   });
 }
 
@@ -356,15 +357,21 @@ class _HeaderAction extends StatelessWidget {
       clipBehavior: Clip.none,
       children: [
         Material(
-          color: Colors.white.withValues(alpha: 0.88),
-          borderRadius: BorderRadius.circular(18),
-          child: InkWell(
-            borderRadius: BorderRadius.circular(18),
-            onTap: onTap,
-            child: SizedBox(
-              width: 52,
-              height: 52,
-              child: Icon(icon, color: AppTheme.ink),
+          color: AppTheme.surface,
+          borderRadius: BorderRadius.circular(14),
+          child: Ink(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: AppTheme.outline),
+            ),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(14),
+              onTap: onTap,
+              child: SizedBox(
+                width: 38,
+                height: 38,
+                child: Icon(icon, color: AppTheme.ink, size: 20),
+              ),
             ),
           ),
         ),
@@ -373,8 +380,8 @@ class _HeaderAction extends StatelessWidget {
             top: -2,
             right: -2,
             child: Container(
-              width: 20,
-              height: 20,
+              width: 16,
+              height: 16,
               decoration: const BoxDecoration(
                 color: AppTheme.error,
                 shape: BoxShape.circle,
@@ -384,7 +391,7 @@ class _HeaderAction extends StatelessWidget {
                 activeCount > 9 ? '9+' : '$activeCount',
                 style: const TextStyle(
                   color: Colors.white,
-                  fontSize: 10,
+                  fontSize: 9,
                   fontWeight: FontWeight.w700,
                 ),
               ),
@@ -419,6 +426,13 @@ class _NotificationStrip extends StatelessWidget {
             color: AppTheme.surfaceWarm,
             borderRadius: BorderRadius.circular(20),
             border: Border.all(color: Theme.of(context).colorScheme.secondaryContainer),
+            boxShadow: [
+              BoxShadow(
+                color: AppTheme.primaryDark.withValues(alpha: 0.04),
+                blurRadius: 14,
+                offset: const Offset(0, 8),
+              ),
+            ],
           ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -526,18 +540,29 @@ class _ServiceSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.9),
-        borderRadius: BorderRadius.circular(24),
+        color: AppTheme.surface,
+        borderRadius: BorderRadius.circular(28),
         border: Border.all(color: AppTheme.outline),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 18,
+            color: AppTheme.primaryDark.withValues(alpha: 0.05),
+            blurRadius: 20,
             offset: const Offset(0, 10),
           ),
         ],
       ),
-      child: Column(children: children),
+      child: Column(
+        children: [
+          for (var index = 0; index < children.length; index++) ...[
+            children[index],
+            if (index != children.length - 1)
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 18),
+                child: Divider(height: 1),
+              ),
+          ],
+        ],
+      ),
     );
   }
 }
@@ -563,12 +588,12 @@ class _ServiceRow extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(24),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
         child: Row(
           children: [
             Container(
-              width: 48,
-              height: 48,
+              width: 52,
+              height: 52,
               decoration: BoxDecoration(
                 color: color.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(16),
@@ -601,7 +626,11 @@ class _ServiceRow extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 8),
-            const Icon(Icons.arrow_forward_ios_rounded, size: 16, color: Color(0xFF8A8A8A)),
+            Icon(
+              Icons.arrow_forward_ios_rounded,
+              size: 16,
+              color: AppTheme.ink.withValues(alpha: 0.40),
+            ),
           ],
         ),
       ),
@@ -721,8 +750,9 @@ class _KaneevMetric extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.78),
+        color: AppTheme.surface,
         borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppTheme.outline.withValues(alpha: 0.8)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -745,6 +775,74 @@ class _KaneevMetric extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _BannerCarousel extends StatefulWidget {
+  final List<app.Banner> banners;
+
+  const _BannerCarousel({required this.banners});
+
+  @override
+  State<_BannerCarousel> createState() => _BannerCarouselState();
+}
+
+class _BannerCarouselState extends State<_BannerCarousel> {
+  final PageController _pageController = PageController();
+  int _currentPage = 0;
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final banners = widget.banners;
+    return Column(
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(16),
+          child: SizedBox(
+            height: 140,
+            child: PageView.builder(
+              controller: _pageController,
+              itemCount: banners.length,
+              onPageChanged: (i) => setState(() => _currentPage = i),
+              itemBuilder: (ctx, i) {
+                return Image.network(
+                  banners[i].imageUrl,
+                  fit: BoxFit.cover,
+                  width: double.infinity,
+                  errorBuilder: (_, __, ___) => Container(
+                    color: Colors.grey.shade200,
+                    child: const Center(child: Icon(Icons.broken_image, size: 40)),
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+        if (banners.length > 1) ...[
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(banners.length, (i) {
+              return Container(
+                width: _currentPage == i ? 18 : 6,
+                height: 6,
+                margin: const EdgeInsets.symmetric(horizontal: 2),
+                decoration: BoxDecoration(
+                  color: _currentPage == i ? AppTheme.primary : Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(3),
+                ),
+              );
+            }),
+          ),
+        ],
+      ],
     );
   }
 }

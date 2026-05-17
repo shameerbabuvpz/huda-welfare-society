@@ -19,7 +19,7 @@ class _AyalkoottamListScreenState extends State<AyalkoottamListScreen> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() => context.read<AyalkoottamProvider>().load());
+    context.read<AyalkoottamProvider>().load();
     _scrollController.addListener(_onScroll);
   }
 
@@ -73,7 +73,8 @@ class _AyalkoottamListScreenState extends State<AyalkoottamListScreen> {
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
           await Navigator.pushNamed(context, '/admin/ayalkoottam/add');
-          if (mounted) context.read<AyalkoottamProvider>().load();
+          if (!context.mounted) return;
+          context.read<AyalkoottamProvider>().load();
         },
         child: const Icon(Icons.add),
       ),
@@ -158,8 +159,11 @@ class _AyalkoottamTile extends StatelessWidget {
                 PopupMenuItem(value: 'toggle', child: Text(isActive ? 'Deactivate' : 'Activate')),
               ],
               onSelected: (v) {
-                if (v == 'edit') _showEditDialog(context);
-                else if (v == 'toggle') _confirmToggle(context);
+                if (v == 'edit') {
+                  _showEditDialog(context);
+                } else if (v == 'toggle') {
+                  _confirmToggle(context);
+                }
               },
             ),
           ],
@@ -180,9 +184,20 @@ class _AyalkoottamTile extends StatelessWidget {
         child: Text('"${ak.name}" — ${isActive ? "deactivate" : "activate"}?'),
       ),
       actions: [
-        OutlinedButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
-        ElevatedButton(
-          style: ElevatedButton.styleFrom(backgroundColor: isActive ? AppTheme.error : AppTheme.primary),
+        OutlinedButton(
+          onPressed: () => Navigator.pop(context),
+          style: OutlinedButton.styleFrom(
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          ),
+          child: const Text('Cancel'),
+        ),
+        FilledButton(
+          style: FilledButton.styleFrom(
+            backgroundColor: isActive ? AppTheme.error : AppTheme.primary,
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          ),
           onPressed: () {
             Navigator.pop(context);
             if (isActive) {

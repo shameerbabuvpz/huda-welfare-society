@@ -69,7 +69,7 @@ class _PrivilegeOfferFormScreenState extends State<PrivilegeOfferFormScreen> {
 
   Future<void> _pickLogo() async {
     final picker = ImagePicker();
-    final picked = await picker.pickImage(source: ImageSource.gallery, maxWidth: 512);
+    final picked = await picker.pickImage(source: ImageSource.gallery, maxWidth: 512, imageQuality: 70);
     if (picked == null) return;
     final bytes = await picked.readAsBytes();
     setState(() {
@@ -80,7 +80,7 @@ class _PrivilegeOfferFormScreenState extends State<PrivilegeOfferFormScreen> {
 
   Future<void> _pickImage() async {
     final picker = ImagePicker();
-    final picked = await picker.pickImage(source: ImageSource.gallery, maxWidth: 1200);
+    final picked = await picker.pickImage(source: ImageSource.gallery, maxWidth: 1200, imageQuality: 70);
     if (picked == null) return;
     final bytes = await picked.readAsBytes();
     setState(() {
@@ -185,7 +185,7 @@ class _PrivilegeOfferFormScreenState extends State<PrivilegeOfferFormScreen> {
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(
-                value: _offerType,
+                initialValue: _offerType,
                 decoration: const InputDecoration(
                   labelText: 'Offer Type',
                   prefixIcon: Icon(Icons.local_offer),
@@ -242,7 +242,7 @@ class _PrivilegeOfferFormScreenState extends State<PrivilegeOfferFormScreen> {
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(
-                value: _status,
+                initialValue: _status,
                 decoration: const InputDecoration(
                   labelText: 'Status',
                   prefixIcon: Icon(Icons.toggle_on),

@@ -18,7 +18,7 @@ class _KuriListScreenState extends State<KuriListScreen> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() => context.read<KuriProvider>().loadGroups());
+    context.read<KuriProvider>().loadGroups();
     _scrollController.addListener(_onScroll);
   }
 
@@ -72,7 +72,8 @@ class _KuriListScreenState extends State<KuriListScreen> {
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
           await Navigator.pushNamed(context, AppRoutes.createKuri);
-          if (mounted) context.read<KuriProvider>().loadGroups();
+          if (!context.mounted) return;
+          context.read<KuriProvider>().loadGroups();
         },
         child: const Icon(Icons.add),
       ),

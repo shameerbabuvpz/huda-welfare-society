@@ -43,9 +43,11 @@ class _SuperAdminDashboardState extends State<SuperAdminDashboard> {
   }
 
   Future<void> _createOrg() async {
-    final result = await showDialog<Map<String, String>>(
+    final result = await showModalBottomSheet<Map<String, String>>(
       context: context,
-      builder: (ctx) => const _CreateOrgDialog(),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => const _CreateOrgSheet(),
     );
     if (result == null) return;
 
@@ -156,14 +158,14 @@ class _SuperAdminDashboardState extends State<SuperAdminDashboard> {
   }
 }
 
-class _CreateOrgDialog extends StatefulWidget {
-  const _CreateOrgDialog();
+class _CreateOrgSheet extends StatefulWidget {
+  const _CreateOrgSheet();
 
   @override
-  State<_CreateOrgDialog> createState() => _CreateOrgDialogState();
+  State<_CreateOrgSheet> createState() => _CreateOrgSheetState();
 }
 
-class _CreateOrgDialogState extends State<_CreateOrgDialog> {
+class _CreateOrgSheetState extends State<_CreateOrgSheet> {
   final _nameController = TextEditingController();
   final _placeController = TextEditingController();
 
@@ -176,36 +178,55 @@ class _CreateOrgDialogState extends State<_CreateOrgDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('Create Organization'),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          TextField(
-            controller: _nameController,
-            decoration: const InputDecoration(labelText: 'Organization Name *'),
-            autofocus: true,
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: _placeController,
-            decoration: const InputDecoration(labelText: 'Place'),
-          ),
-        ],
+    return Container(
+      decoration: const BoxDecoration(
+        color: AppTheme.surface,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
-      actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
-        FilledButton(
-          onPressed: () {
-            if (_nameController.text.trim().isEmpty) return;
-            Navigator.pop(context, {
-              'name': _nameController.text.trim(),
-              'place': _placeController.text.trim(),
-            });
-          },
-          child: const Text('Create'),
+      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+      child: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(width: 40, height: 4, decoration: BoxDecoration(color: AppTheme.outline, borderRadius: BorderRadius.circular(99))),
+              const SizedBox(height: 20),
+              Text('Create Organization', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700)),
+              const SizedBox(height: 24),
+              TextField(
+                controller: _nameController,
+                decoration: const InputDecoration(labelText: 'Organization Name *'),
+                autofocus: true,
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _placeController,
+                decoration: const InputDecoration(labelText: 'Place'),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(child: OutlinedButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))),
+                    child: const Text('Cancel'),
+                  )),
+                  const SizedBox(width: 12),
+                  Expanded(child: FilledButton(
+                    onPressed: () {
+                      if (_nameController.text.trim().isEmpty) return;
+                      Navigator.pop(context, {'name': _nameController.text.trim(), 'place': _placeController.text.trim()});
+                    },
+                    style: FilledButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))),
+                    child: const Text('Create'),
+                  )),
+                ],
+              ),
+            ],
+          ),
         ),
-      ],
+      ),
     );
   }
 }

@@ -64,6 +64,18 @@ class FinanceProvider extends ChangeNotifier {
     }
   }
 
+  Future<bool> updateCategory(int id, String name) async {
+    try {
+      await FinanceService.updateCategory(id, {'name': name});
+      await loadCategories();
+      return true;
+    } catch (e) {
+      _error = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }
+
   // ─── Transactions ──────────────────────────────────────────
   Future<void> loadTransactions({String? type, int page = 1}) async {
     _loading = true;
@@ -121,6 +133,19 @@ class FinanceProvider extends ChangeNotifier {
   Future<bool> deleteTransaction(int id) async {
     try {
       await FinanceService.deleteTransaction(id);
+      await loadTransactions(type: _currentType);
+      await loadSummary();
+      return true;
+    } catch (e) {
+      _error = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> updateTransaction(int id, Map<String, dynamic> data) async {
+    try {
+      await FinanceService.updateTransaction(id, data);
       await loadTransactions(type: _currentType);
       await loadSummary();
       return true;

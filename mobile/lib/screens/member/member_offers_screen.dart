@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../config/theme.dart';
 import '../../models/privilege_offer.dart';
 import '../../services/privilege_offer_service.dart';
+import '../../widgets/app_bottom_sheet.dart';
 
 class MemberOffersScreen extends StatefulWidget {
   const MemberOffersScreen({super.key});
@@ -47,35 +48,46 @@ class _MemberOffersScreenState extends State<MemberOffersScreen> with SingleTick
   }
 
   Future<void> _scanQr() async {
-    // Show a dialog to enter QR code manually (since web doesn't support camera)
+    // Show a bottom sheet to enter QR code manually (since web doesn't support camera)
     // On mobile, you'd use a QR scanner package
-    final code = await showDialog<String>(
+    final ctrl = TextEditingController();
+    final code = await showAppSheet<String>(
       context: context,
-      builder: (ctx) {
-        final ctrl = TextEditingController();
-        return AlertDialog(
-          title: const Text('Scan Privilege QR'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text('Scan the QR code at the partner shop or enter the code manually:'),
-              const SizedBox(height: 16),
-              TextField(
-                controller: ctrl,
-                decoration: const InputDecoration(
-                  labelText: 'QR Code',
-                  hintText: 'PO-XXXXXXXXXX',
-                  prefixIcon: Icon(Icons.qr_code),
-                ),
-              ),
-            ],
+      title: 'Scan Privilege QR',
+      initialChildSize: 0.4,
+      body: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Text('Scan the QR code at the partner shop or enter the code manually:'),
+          const SizedBox(height: 16),
+          TextField(
+            controller: ctrl,
+            decoration: const InputDecoration(
+              labelText: 'QR Code',
+              hintText: 'PO-XXXXXXXXXX',
+              prefixIcon: Icon(Icons.qr_code),
+            ),
           ),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-            FilledButton(onPressed: () => Navigator.pop(ctx, ctrl.text.trim()), child: const Text('Redeem')),
-          ],
-        );
-      },
+        ],
+      ),
+      actions: [
+        OutlinedButton(
+          onPressed: () => Navigator.pop(context),
+          style: OutlinedButton.styleFrom(
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          ),
+          child: const Text('Cancel'),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.pop(context, ctrl.text.trim()),
+          style: FilledButton.styleFrom(
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          ),
+          child: const Text('Redeem'),
+        ),
+      ],
     );
 
     if (code == null || code.isEmpty) return;
@@ -116,8 +128,8 @@ class _MemberOffersScreenState extends State<MemberOffersScreen> with SingleTick
         bottom: TabBar(
           controller: _tabCtrl,
           tabs: const [
-            Tab(text: 'Available Offers'),
-            Tab(text: 'My Redemptions'),
+            Tab(child: Text('Available Offers', maxLines: 2, textAlign: TextAlign.center)),
+            Tab(child: Text('My Redemptions', maxLines: 2, textAlign: TextAlign.center)),
           ],
         ),
       ),

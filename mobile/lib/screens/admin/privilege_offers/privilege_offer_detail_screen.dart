@@ -5,6 +5,7 @@ import '../../../config/theme.dart';
 import '../../../models/privilege_offer.dart';
 import '../../../providers/privilege_offer_provider.dart';
 import '../../../services/api_service.dart';
+import '../../../widgets/app_bottom_sheet.dart';
 import 'privilege_offer_form_screen.dart';
 
 class PrivilegeOfferDetailScreen extends StatefulWidget {
@@ -57,29 +58,24 @@ class _PrivilegeOfferDetailScreenState extends State<PrivilegeOfferDetailScreen>
   }
 
   Future<void> _deleteOffer() async {
-    final confirm = await showDialog<bool>(
+    final confirm = await showConfirmSheet(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Delete Offer?'),
-        content: const Text('This cannot be undone.'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
-          FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: AppTheme.error),
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
+      title: 'Delete Offer?',
+      message: 'This action cannot be undone. The privilege offer will be permanently removed.',
+      confirmLabel: 'Delete',
+      isDestructive: true,
     );
     if (confirm != true) return;
+    if (!mounted) return;
     final provider = context.read<PrivilegeOfferProvider>();
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
     try {
       await provider.deleteOffer(widget.offerId);
       if (!mounted) return;
       Navigator.pop(context, true);
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(AppTheme.errorSnackBar(e.toString()));
+      if (!mounted) return;
+      scaffoldMessenger.showSnackBar(AppTheme.errorSnackBar(e.toString()));
     }
   }
 

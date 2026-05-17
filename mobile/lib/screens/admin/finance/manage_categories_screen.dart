@@ -94,18 +94,18 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
             padding: const EdgeInsets.all(12),
             children: [
               if (incomeCategories.isNotEmpty) ...[
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 8),
                   child: Text('Income Categories',
-                      style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.primary, fontSize: 16)),
+                      style: TextStyle(fontWeight: FontWeight.bold, color: AppTheme.primary, fontSize: 16)),
                 ),
                 ...incomeCategories.map((c) => _CategoryTile(category: c)),
               ],
               if (expenseCategories.isNotEmpty) ...[
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 8),
                   child: Text('Expense Categories',
-                      style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.error, fontSize: 16)),
+                      style: TextStyle(fontWeight: FontWeight.bold, color: AppTheme.error, fontSize: 16)),
                 ),
                 ...expenseCategories.map((c) => _CategoryTile(category: c)),
               ],
@@ -148,37 +148,122 @@ class _CategoryTile extends StatelessWidget {
           ),
         ),
         title: Text(category.name),
-        trailing: IconButton(
-          icon: const Icon(Icons.delete_outline, color: AppTheme.error),
-          onPressed: () async {
-            final confirm = await showAppSheet<bool>(
-              context: context,
-              title: 'Delete Category',
-              initialChildSize: 0.3,
-              body: const Padding(
-                padding: EdgeInsets.symmetric(vertical: 8),
-                child: Text('Are you sure? Categories with transactions cannot be deleted.'),
-              ),
-              actions: [
-                OutlinedButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(backgroundColor: AppTheme.error),
-                  onPressed: () => Navigator.pop(context, true),
-                  child: const Text('Delete'),
-                ),
-              ],
-            );
-            if (confirm == true && context.mounted) {
-              final success = await context.read<FinanceProvider>().deleteCategory(category.id);
-              if (!success && context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  AppTheme.errorSnackBar(context.read<FinanceProvider>().error ?? 'Cannot delete'),
-                );
-              }
-            }
-          },
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              icon: const Icon(Icons.edit_outlined, size: 20),
+              onPressed: () => _showEditDialog(context),
+            ),
+            IconButton(
+              icon: const Icon(Icons.delete_outline, color: AppTheme.error),
+              onPressed: () => _confirmDelete(context),
+            ),
+          ],
         ),
       ),
     );
+  }
+
+  void _showEditDialog(BuildContext context) {
+    final controller = TextEditingController(text: category.name);
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => SafeArea(
+        child: Container(
+          margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+          decoration: BoxDecoration(color: AppTheme.surface, borderRadius: BorderRadius.circular(24)),
+          padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(24, 20, 24, 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(width: 40, height: 4, decoration: BoxDecoration(color: AppTheme.outline, borderRadius: BorderRadius.circular(99))),
+                const SizedBox(height: 20),
+                Text('Rename Category', style: Theme.of(ctx).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: controller,
+                  autofocus: true,
+                  decoration: const InputDecoration(labelText: 'Category Name', border: OutlineInputBorder()),
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.pop(ctx),
+                        style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))),
+                        child: const Text('Cancel'),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: FilledButton(
+                        onPressed: () async {
+                          final newName = controller.text.trim();
+                          if (newName.isEmpty || newName == category.name) return;
+                          Navigator.pop(ctx);
+                          final success = await context.read<FinanceProvider>().updateCategory(category.id, newName);
+                          if (!success && context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              AppTheme.errorSnackBar(context.read<FinanceProvider>().error ?? 'Failed'),
+                            );
+                          }
+                        },
+                        style: FilledButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))),
+                        child: const Text('Save'),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _confirmDelete(BuildContext context) async {
+    final confirm = await showAppSheet<bool>(
+      context: context,
+      title: 'Delete Category',
+      initialChildSize: 0.3,
+      body: const Padding(
+        padding: EdgeInsets.symmetric(vertical: 8),
+        child: Text('Are you sure? Categories with transactions cannot be deleted.'),
+      ),
+      actions: [
+        OutlinedButton(
+          onPressed: () => Navigator.pop(context, false),
+          style: OutlinedButton.styleFrom(
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          ),
+          child: const Text('Cancel'),
+        ),
+        FilledButton(
+          style: FilledButton.styleFrom(
+            backgroundColor: AppTheme.error,
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          ),
+          onPressed: () => Navigator.pop(context, true),
+          child: const Text('Delete'),
+        ),
+      ],
+    );
+    if (confirm == true && context.mounted) {
+      final success = await context.read<FinanceProvider>().deleteCategory(category.id);
+      if (!success && context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          AppTheme.errorSnackBar(context.read<FinanceProvider>().error ?? 'Cannot delete'),
+        );
+      }
+    }
   }
 }

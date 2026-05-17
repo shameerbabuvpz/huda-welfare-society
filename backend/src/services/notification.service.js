@@ -125,13 +125,44 @@ const notificationService = {
     const rows = await db('notification_logs')
       .where({ 'notification_logs.organization_id': orgId, 'notification_logs.member_id': memberId })
       .join('notifications', 'notification_logs.notification_id', 'notifications.id')
-      .select('notifications.title', 'notifications.body', 'notification_logs.sent_at', 'notification_logs.status')
+      .select(
+        'notifications.id',
+        'notifications.title',
+        'notifications.body',
+        'notifications.audience_type',
+        'notifications.created_at',
+        'notification_logs.sent_at',
+        'notification_logs.status'
+      )
       .orderBy('notification_logs.id', 'desc')
       .limit(l)
       .offset((p - 1) * l);
 
     const { paginationMeta } = require('../utils/pagination');
     return { data: rows, pagination: paginationMeta(parseInt(total.count, 10), p, l) };
+  },
+
+  async update(orgId, notificationId, { title, body }) {
+    const allowed = {};
+    if (title !== undefined) allowed.title = title;
+    if (body !== undefined) allowed.body = body;
+    if (!Object.keys(allowed).length) throw ApiError.badRequest('Nothing to update');
+
+    const [notification] = await db('notifications')
+      .where({ id: notificationId, organization_id: orgId })
+      .update({ ...allowed, updated_at: db.fn.now() })
+      .returning('*');
+    if (!notification) throw ApiError.notFound('Notification not found');
+    return notification;
+  },
+
+  async delete(orgId, notificationId) {
+    const notification = await db('notifications').where({ id: notificationId, organization_id: orgId }).first();
+    if (!notification) throw ApiError.notFound('Notification not found');
+
+    await db('notification_logs').where({ notification_id: notificationId, organization_id: orgId }).del();
+    await db('notifications').where({ id: notificationId, organization_id: orgId }).del();
+    return { deleted: true };
   },
 };
 

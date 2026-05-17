@@ -47,6 +47,23 @@ const financeService = {
     return { message: 'Category deleted' };
   },
 
+  async updateCategory(orgId, categoryId, data) {
+    const category = await db('finance_categories')
+      .where({ id: categoryId, organization_id: orgId })
+      .first();
+    if (!category) throw new ApiError(404, 'Category not found');
+
+    const updates = {};
+    if (data.name) updates.name = data.name;
+    if (Object.keys(updates).length === 0) throw new ApiError(400, 'Nothing to update');
+
+    const [updated] = await db('finance_categories')
+      .where({ id: categoryId, organization_id: orgId })
+      .update(updates)
+      .returning('*');
+    return updated;
+  },
+
   // ─── Transactions ─────────────────────────────────────────────
   async createTransaction(orgId, data, actorId) {
     // Verify category belongs to this org and matches type
@@ -103,6 +120,36 @@ const financeService = {
     });
 
     return { message: 'Transaction deleted' };
+  },
+
+  async updateTransaction(orgId, txnId, data, actorId) {
+    const txn = await db('finance_transactions').where({ id: txnId, organization_id: orgId }).first();
+    if (!txn) throw new ApiError(404, 'Transaction not found');
+
+    const updates = {};
+    if (data.amount !== undefined) updates.amount = data.amount;
+    if (data.date) updates.date = data.date;
+    if (data.description !== undefined) updates.description = data.description;
+    if (data.category_id) {
+      const category = await db('finance_categories')
+        .where({ id: data.category_id, organization_id: orgId })
+        .first();
+      if (!category) throw new ApiError(404, 'Category not found');
+      updates.category_id = data.category_id;
+    }
+    if (Object.keys(updates).length === 0) throw new ApiError(400, 'Nothing to update');
+
+    const [updated] = await db('finance_transactions')
+      .where({ id: txnId, organization_id: orgId })
+      .update(updates)
+      .returning('*');
+
+    await auditService.log({
+      organizationId: orgId, actorId, action: `finance.transaction.update`,
+      entityType: 'finance_transaction', entityId: txnId, details: updates,
+    });
+
+    return updated;
   },
 
   async getSummary(orgId, { from_date, to_date } = {}) {

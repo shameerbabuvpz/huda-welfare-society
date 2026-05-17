@@ -12,6 +12,7 @@ class Member {
   final String status;
   final String? ayalkoottamName;
   final String? designation;
+  final String? photoUrl;
 
   Member({
     required this.id,
@@ -27,6 +28,7 @@ class Member {
     required this.status,
     this.ayalkoottamName,
     this.designation,
+    this.photoUrl,
   });
 
   factory Member.fromJson(Map<String, dynamic> json) {
@@ -44,6 +46,7 @@ class Member {
       status: json['status'],
       ayalkoottamName: json['ayalkoottam_name'],
       designation: json['designation'],
+      photoUrl: json['photo_url'],
     );
   }
 }

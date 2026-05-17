@@ -24,6 +24,24 @@ const notificationController = {
     } catch (err) { next(err); }
   },
 
+  async update(req, res, next) {
+    try {
+      const result = await notificationService.update(
+        req.organizationId,
+        parseInt(req.params.id, 10),
+        { title: req.body.title, body: req.body.body }
+      );
+      res.json(result);
+    } catch (err) { next(err); }
+  },
+
+  async delete(req, res, next) {
+    try {
+      const result = await notificationService.delete(req.organizationId, parseInt(req.params.id, 10));
+      res.json(result);
+    } catch (err) { next(err); }
+  },
+
   async deliveryLogs(req, res, next) {
     try {
       const logs = await notificationService.getDeliveryLogs(req.organizationId, parseInt(req.params.id, 10));

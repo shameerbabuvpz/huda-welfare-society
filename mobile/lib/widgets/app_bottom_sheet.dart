@@ -96,35 +96,43 @@ class _AppBottomSheetContent<T> extends StatelessWidget {
       minChildSize: minChildSize,
       expand: false,
       builder: (ctx, scrollController) => Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        decoration: BoxDecoration(
+          color: AppTheme.surface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+          border: Border.all(color: AppTheme.outline),
+          boxShadow: [
+            BoxShadow(
+              color: AppTheme.primaryDark.withValues(alpha: 0.10),
+              blurRadius: 28,
+              offset: const Offset(0, -8),
+            ),
+          ],
         ),
         child: Column(
           children: [
             // Drag handle
             Padding(
-              padding: const EdgeInsets.only(top: 12, bottom: 8),
+              padding: const EdgeInsets.only(top: 14, bottom: 10),
               child: Center(
                 child: Container(
-                  width: 40,
-                  height: 4,
+                  width: 46,
+                  height: 5,
                   decoration: BoxDecoration(
-                    color: Colors.grey.shade300,
-                    borderRadius: BorderRadius.circular(2),
+                    color: AppTheme.outline,
+                    borderRadius: BorderRadius.circular(999),
                   ),
                 ),
               ),
             ),
             // Title + close
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Row(
                 children: [
                   Expanded(
                     child: Text(
                       title,
-                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      style: Theme.of(context).textTheme.titleLarge,
                     ),
                   ),
                   IconButton(
@@ -139,7 +147,7 @@ class _AppBottomSheetContent<T> extends StatelessWidget {
             // Body
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                padding: const EdgeInsets.fromLTRB(20, 14, 20, 0),
                 child: bodyBuilder(ctx, scrollController),
               ),
             ),
@@ -147,7 +155,7 @@ class _AppBottomSheetContent<T> extends StatelessWidget {
             if (actions != null)
               SafeArea(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+                  padding: const EdgeInsets.fromLTRB(20, 10, 20, 14),
                   child: Row(
                     children: actions!
                         .map((a) => Expanded(
@@ -167,10 +175,139 @@ class _AppBottomSheetContent<T> extends StatelessWidget {
   }
 }
 
+/// Confirmation bottom sheet for destructive/important actions.
+/// Returns `true` if confirmed, `null` or `false` otherwise.
+Future<bool?> showConfirmSheet({
+  required BuildContext context,
+  required String title,
+  required String message,
+  String confirmLabel = 'Confirm',
+  String cancelLabel = 'Cancel',
+  bool isDestructive = false,
+  IconData? icon,
+}) {
+  return showModalBottomSheet<bool>(
+    context: context,
+    backgroundColor: Colors.transparent,
+    isScrollControlled: true,
+    builder: (ctx) => SafeArea(
+      child: Container(
+        margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+        decoration: BoxDecoration(
+          color: AppTheme.surface,
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: [
+            BoxShadow(
+              color: AppTheme.primaryDark.withValues(alpha: 0.08),
+              blurRadius: 24,
+              offset: const Offset(0, -4),
+            ),
+          ],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 20, 24, 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Drag indicator
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppTheme.outline,
+                  borderRadius: BorderRadius.circular(99),
+                ),
+              ),
+              const SizedBox(height: 20),
+              // Icon
+              Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  color: isDestructive
+                      ? AppTheme.error.withValues(alpha: 0.1)
+                      : AppTheme.primary.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  icon ?? (isDestructive ? Icons.delete_outline_rounded : Icons.info_outline_rounded),
+                  color: isDestructive ? AppTheme.error : AppTheme.primary,
+                  size: 28,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                title,
+                style: Theme.of(ctx).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                message,
+                style: Theme.of(ctx).textTheme.bodyMedium?.copyWith(
+                      color: AppTheme.ink.withValues(alpha: 0.7),
+                    ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(ctx, false),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        side: const BorderSide(color: AppTheme.outline),
+                      ),
+                      child: Text(cancelLabel),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: FilledButton(
+                      onPressed: () => Navigator.pop(ctx, true),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: isDestructive ? AppTheme.error : AppTheme.primary,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      ),
+                      child: Text(confirmLabel),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
+/// Form bottom sheet — a modern bottom sheet for simple form inputs.
+/// Returns the result from [onSubmit] or null if dismissed.
+Future<T?> showFormSheet<T>({
+  required BuildContext context,
+  required String title,
+  required Widget Function(BuildContext context) bodyBuilder,
+  double initialChildSize = 0.55,
+}) {
+  return showAppBottomSheet<T>(
+    context: context,
+    title: title,
+    initialChildSize: initialChildSize,
+    bodyBuilder: (ctx, sc) => SingleChildScrollView(
+      controller: sc,
+      child: bodyBuilder(ctx),
+    ),
+  );
+}
+
 class MemberPrivilegeCard extends StatelessWidget {
   final PrivilegeCard card;
   final String memberName;
-  final String organizationName;
+  final String? organizationName;
   final String? ayalkoottamName;
   final String? photoUrl;
 
@@ -185,8 +322,14 @@ class MemberPrivilegeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final titleText = (organizationName != null && organizationName!.trim().isNotEmpty)
+        ? organizationName!.trim()
+        : (ayalkoottamName != null && ayalkoottamName!.trim().isNotEmpty)
+            ? ayalkoottamName!.trim()
+            : 'Privilege Card';
+
     return AspectRatio(
-      aspectRatio: 2.12,
+      aspectRatio: 1.94,
       child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(28),
@@ -244,58 +387,81 @@ class MemberPrivilegeCard extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            Text(
+                              titleText,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 0.2,
+                                height: 1.2,
+                              ),
+                            ),
+                            const Spacer(),
                             Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
+                                Container(
+                                  width: 52,
+                                  height: 52,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    border: Border.all(color: Colors.white.withValues(alpha: 0.6), width: 2),
+                                    color: Colors.white.withValues(alpha: 0.15),
+                                  ),
+                                  child: ClipOval(
+                                    child: photoUrl != null && photoUrl!.isNotEmpty
+                                        ? Image.network(
+                                            photoUrl!,
+                                            fit: BoxFit.cover,
+                                            errorBuilder: (_, __, ___) => const Icon(
+                                              Icons.person,
+                                              color: Colors.white,
+                                              size: 28,
+                                            ),
+                                          )
+                                        : const Icon(
+                                            Icons.person,
+                                            color: Colors.white,
+                                            size: 28,
+                                          ),
+                                  ),
+                                ),
+                                const SizedBox(width: 10),
                                 Expanded(
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      const Text(
-                                        'സംഗമം',
-                                        style: TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w700,
-                                          letterSpacing: 0.2,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 4),
                                       Text(
-                                        organizationName,
+                                        memberName,
                                         maxLines: 2,
                                         overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.w700,
+                                          height: 1.1,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        'MEMBER',
                                         style: TextStyle(
-                                          color: Colors.white.withValues(alpha: 0.84),
-                                          fontSize: 11.5,
-                                          height: 1.25,
+                                          color: Colors.white.withValues(alpha: 0.68),
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w600,
+                                          letterSpacing: 1.2,
                                         ),
                                       ),
                                     ],
                                   ),
                                 ),
-                                const SizedBox(width: 8),
-                                Container(
-                                  width: 36,
-                                  height: 36,
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withValues(alpha: 0.14),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  clipBehavior: Clip.antiAlias,
-                                  child: photoUrl != null
-                                      ? Image.network(
-                                          photoUrl!,
-                                          fit: BoxFit.cover,
-                                          errorBuilder: (_, __, ___) => _CardAvatarFallback(label: memberName),
-                                        )
-                                      : _CardAvatarFallback(label: memberName),
-                                ),
                               ],
                             ),
-                            const Spacer(),
+                            const SizedBox(height: 6),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                               decoration: BoxDecoration(
                                 color: Colors.white.withValues(alpha: 0.13),
                                 borderRadius: BorderRadius.circular(14),
@@ -312,35 +478,13 @@ class MemberPrivilegeCard extends StatelessWidget {
                                 ),
                               ),
                             ),
-                            const SizedBox(height: 10),
-                            Text(
-                              memberName,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 21,
-                                fontWeight: FontWeight.w700,
-                                height: 1.05,
-                              ),
-                            ),
-                            const SizedBox(height: 6),
-                            Text(
-                              'AYALKOOTTAM PRIVILEGE',
-                              style: TextStyle(
-                                color: Colors.white.withValues(alpha: 0.68),
-                                fontSize: 10.5,
-                                fontWeight: FontWeight.w600,
-                                letterSpacing: 1.2,
-                              ),
-                            ),
                           ],
                         ),
                       ),
                       const SizedBox(width: 14),
                       Container(
                         width: 96,
-                        padding: const EdgeInsets.all(8),
+                        padding: const EdgeInsets.fromLTRB(8, 10, 8, 8),
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.16),
                           borderRadius: BorderRadius.circular(20),
@@ -368,6 +512,17 @@ class MemberPrivilegeCard extends StatelessWidget {
                                       size: 40,
                                     ),
                             ),
+                              const SizedBox(height: 10),
+                              Text(
+                                'Privilege Card',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: Colors.white.withValues(alpha: 0.92),
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  letterSpacing: 0.2,
+                                ),
+                              ),
 
                           ],
                         ),
@@ -403,26 +558,6 @@ class _CardAccentOrb extends StatelessWidget {
       decoration: BoxDecoration(
         color: color,
         shape: BoxShape.circle,
-      ),
-    );
-  }
-}
-
-class _CardAvatarFallback extends StatelessWidget {
-  final String label;
-
-  const _CardAvatarFallback({required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Text(
-        label.isEmpty ? 'M' : label[0].toUpperCase(),
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: 16,
-          fontWeight: FontWeight.w700,
-        ),
       ),
     );
   }

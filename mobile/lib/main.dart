@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'config/theme.dart';
 import 'config/routes.dart';
@@ -12,6 +13,7 @@ import 'providers/kaneev_provider.dart';
 import 'providers/finance_provider.dart';
 import 'providers/admin_provider.dart';
 import 'providers/privilege_offer_provider.dart';
+import 'providers/banner_provider.dart';
 import 'screens/auth/splash_screen.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/admin/admin_dashboard.dart';
@@ -24,6 +26,7 @@ import 'screens/admin/kuri/kuri_list_screen.dart';
 import 'screens/admin/kuri/create_kuri_screen.dart';
 import 'screens/admin/kuri/kuri_detail_screen.dart';
 import 'screens/admin/notifications/send_notification_screen.dart';
+import 'screens/admin/notifications/notification_list_screen.dart';
 import 'screens/admin/reports/reports_screen.dart';
 import 'screens/member/member_dashboard.dart';
 import 'screens/member/profile_screen.dart';
@@ -39,10 +42,17 @@ import 'screens/admin/finance/finance_screen.dart';
 import 'screens/admin/admin_management_screen.dart';
 import 'screens/admin/privilege_offers/privilege_offer_list_screen.dart';
 import 'screens/member/member_offers_screen.dart';
+import 'screens/admin/banners/banner_list_screen.dart';
+import 'screens/admin/infacc_sync_screen.dart';
 import 'screens/super_admin/super_admin_dashboard.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
+  SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+    systemNavigationBarColor: Colors.transparent,
+    systemNavigationBarDividerColor: Colors.transparent,
+  ));
   runApp(const AyalkoottamApp());
 }
 
@@ -63,6 +73,7 @@ class AyalkoottamApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => FinanceProvider()),
         ChangeNotifierProvider(create: (_) => AdminProvider()),
         ChangeNotifierProvider(create: (_) => PrivilegeOfferProvider()),
+        ChangeNotifierProvider(create: (_) => BannerProvider()),
       ],
       child: MaterialApp(
         title: 'Sangamam',
@@ -85,6 +96,7 @@ class AyalkoottamApp extends StatelessWidget {
           AppRoutes.createKuri: (_) => const CreateKuriScreen(),
           AppRoutes.kuriDetail: (_) => const KuriDetailScreen(),
           AppRoutes.sendNotification: (_) => const SendNotificationScreen(),
+          AppRoutes.notificationList: (_) => const NotificationListScreen(),
           AppRoutes.reports: (_) => const ReportsScreen(),
           AppRoutes.manageAyalkoottam: (_) => const AyalkoottamListScreen(),
           AppRoutes.addAyalkoottam: (_) => const AddAyalkoottamScreen(),
@@ -93,6 +105,8 @@ class AyalkoottamApp extends StatelessWidget {
           AppRoutes.finance: (_) => const FinanceScreen(),
           AppRoutes.manageAdmins: (_) => const AdminManagementScreen(),
           AppRoutes.managePrivilegeOffers: (_) => const PrivilegeOfferListScreen(),
+          AppRoutes.manageBanners: (_) => const BannerListScreen(),
+          AppRoutes.infaccSync: (_) => const InfaccSyncScreen(),
           // Member
           AppRoutes.memberDashboard: (_) => const MemberDashboard(),
           AppRoutes.profile: (_) => const ProfileScreen(),

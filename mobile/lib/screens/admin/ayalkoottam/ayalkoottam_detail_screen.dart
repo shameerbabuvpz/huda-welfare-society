@@ -23,9 +23,7 @@ class _AyalkoottamDetailScreenState extends State<AyalkoottamDetailScreen> {
     _ak = ModalRoute.of(context)!.settings.arguments as Ayalkoottam;
     if (!_membersLoaded) {
       _membersLoaded = true;
-      Future.microtask(() {
-        context.read<MemberProvider>().loadMembers(ayalkoottamId: _ak.id);
-      });
+      context.read<MemberProvider>().loadMembers(ayalkoottamId: _ak.id);
     }
   }
 
@@ -125,9 +123,20 @@ class _AyalkoottamDetailScreenState extends State<AyalkoottamDetailScreen> {
         child: Text('Deactivate "${_ak.name}"?'),
       ),
       actions: [
-        OutlinedButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
-        ElevatedButton(
-          style: ElevatedButton.styleFrom(backgroundColor: AppTheme.error),
+        OutlinedButton(
+          onPressed: () => Navigator.pop(context),
+          style: OutlinedButton.styleFrom(
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          ),
+          child: const Text('Cancel'),
+        ),
+        FilledButton(
+          style: FilledButton.styleFrom(
+            backgroundColor: AppTheme.error,
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          ),
           onPressed: () async {
             Navigator.pop(context);
             await context.read<AyalkoottamProvider>().deactivate(_ak.id);

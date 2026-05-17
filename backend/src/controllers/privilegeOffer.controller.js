@@ -1,5 +1,7 @@
+const path = require('path');
 const privilegeOfferService = require('../services/privilegeOffer.service');
 const { buildPublicUploadUrl } = require('../config/uploads');
+const { compressOfferImage } = require('../utils/imageCompression');
 
 const privilegeOfferController = {
   // ── Admin ──
@@ -7,10 +9,12 @@ const privilegeOfferController = {
     try {
       const data = { ...req.body };
       if (req.files?.logo?.[0]) {
-        data.logo_url = buildPublicUploadUrl(req, `uploads/privilege-offers/${req.files.logo[0].filename}`);
+        const compressed = await compressOfferImage(req.files.logo[0].path);
+        data.logo_url = buildPublicUploadUrl(req, `uploads/privilege-offers/${path.basename(compressed)}`);
       }
       if (req.files?.image?.[0]) {
-        data.image_url = buildPublicUploadUrl(req, `uploads/privilege-offers/${req.files.image[0].filename}`);
+        const compressed = await compressOfferImage(req.files.image[0].path);
+        data.image_url = buildPublicUploadUrl(req, `uploads/privilege-offers/${path.basename(compressed)}`);
       }
       const offer = await privilegeOfferService.create(req.organizationId, data, req.user.id);
       res.status(201).json(offer);
@@ -35,10 +39,12 @@ const privilegeOfferController = {
     try {
       const data = { ...req.body };
       if (req.files?.logo?.[0]) {
-        data.logo_url = buildPublicUploadUrl(req, `uploads/privilege-offers/${req.files.logo[0].filename}`);
+        const compressed = await compressOfferImage(req.files.logo[0].path);
+        data.logo_url = buildPublicUploadUrl(req, `uploads/privilege-offers/${path.basename(compressed)}`);
       }
       if (req.files?.image?.[0]) {
-        data.image_url = buildPublicUploadUrl(req, `uploads/privilege-offers/${req.files.image[0].filename}`);
+        const compressed = await compressOfferImage(req.files.image[0].path);
+        data.image_url = buildPublicUploadUrl(req, `uploads/privilege-offers/${path.basename(compressed)}`);
       }
       const offer = await privilegeOfferService.update(req.organizationId, parseInt(req.params.id, 10), data, req.user.id);
       res.json(offer);

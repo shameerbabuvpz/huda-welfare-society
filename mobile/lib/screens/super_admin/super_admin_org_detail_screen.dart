@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../config/theme.dart';
 import '../../models/organization.dart';
 import '../../services/organization_service.dart';
+import '../../widgets/app_bottom_sheet.dart';
 
 class SuperAdminOrgDetailScreen extends StatefulWidget {
   final int orgId;
@@ -70,9 +71,11 @@ class _SuperAdminOrgDetailScreenState extends State<SuperAdminOrgDetailScreen> {
   }
 
   Future<void> _editOrg() async {
-    final result = await showDialog<Map<String, String>>(
+    final result = await showModalBottomSheet<Map<String, String>>(
       context: context,
-      builder: (ctx) => _EditOrgDialog(org: _org!),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => _EditOrgSheet(org: _org!),
     );
     if (result == null) return;
 
@@ -89,9 +92,11 @@ class _SuperAdminOrgDetailScreenState extends State<SuperAdminOrgDetailScreen> {
   }
 
   Future<void> _addAdmin() async {
-    final result = await showDialog<Map<String, String>>(
+    final result = await showModalBottomSheet<Map<String, String>>(
       context: context,
-      builder: (ctx) => const _AddAdminDialog(),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => const _AddAdminSheet(),
     );
     if (result == null) return;
 
@@ -117,9 +122,11 @@ class _SuperAdminOrgDetailScreenState extends State<SuperAdminOrgDetailScreen> {
   }
 
   Future<void> _editAdmin(Map<String, dynamic> admin) async {
-    final result = await showDialog<Map<String, String>>(
+    final result = await showModalBottomSheet<Map<String, String>>(
       context: context,
-      builder: (ctx) => _EditAdminDialog(admin: admin),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => _EditAdminSheet(admin: admin),
     );
     if (result == null) return;
 
@@ -146,20 +153,13 @@ class _SuperAdminOrgDetailScreenState extends State<SuperAdminOrgDetailScreen> {
   }
 
   Future<void> _removeAdmin(Map<String, dynamic> admin) async {
-    final confirm = await showDialog<bool>(
+    final confirm = await showConfirmSheet(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Remove Admin'),
-        content: Text('Remove ${admin['name'] ?? 'this admin'}?'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            style: FilledButton.styleFrom(backgroundColor: AppTheme.error),
-            child: const Text('Remove'),
-          ),
-        ],
-      ),
+      title: 'Remove Admin',
+      message: 'Remove ${admin['name'] ?? 'this admin'}?',
+      confirmLabel: 'Remove',
+      isDestructive: true,
+      icon: Icons.person_remove_outlined,
     );
     if (confirm != true) return;
 
@@ -181,20 +181,13 @@ class _SuperAdminOrgDetailScreenState extends State<SuperAdminOrgDetailScreen> {
   }
 
   Future<void> _deleteOrg() async {
-    final confirm = await showDialog<bool>(
+    final confirm = await showConfirmSheet(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Delete Organization'),
-        content: Text('Delete "${_org?.name}"? This will deactivate the organization and all its users.'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            style: FilledButton.styleFrom(backgroundColor: AppTheme.error),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
+      title: 'Delete Organization',
+      message: 'Delete "${_org?.name}"? This will deactivate the organization and all its users.',
+      confirmLabel: 'Delete',
+      isDestructive: true,
+      icon: Icons.delete_forever_outlined,
     );
     if (confirm != true) return;
 
@@ -322,7 +315,7 @@ class _SuperAdminOrgDetailScreenState extends State<SuperAdminOrgDetailScreen> {
                               onPressed: () => _editAdmin(admin),
                             ),
                             IconButton(
-                              icon: Icon(Icons.delete_outline, size: 20, color: AppTheme.error),
+                              icon: const Icon(Icons.delete_outline, size: 20, color: AppTheme.error),
                               onPressed: () => _removeAdmin(admin),
                             ),
                           ],
@@ -336,15 +329,15 @@ class _SuperAdminOrgDetailScreenState extends State<SuperAdminOrgDetailScreen> {
   }
 }
 
-class _EditOrgDialog extends StatefulWidget {
+class _EditOrgSheet extends StatefulWidget {
   final Organization org;
-  const _EditOrgDialog({required this.org});
+  const _EditOrgSheet({required this.org});
 
   @override
-  State<_EditOrgDialog> createState() => _EditOrgDialogState();
+  State<_EditOrgSheet> createState() => _EditOrgSheetState();
 }
 
-class _EditOrgDialogState extends State<_EditOrgDialog> {
+class _EditOrgSheetState extends State<_EditOrgSheet> {
   late final TextEditingController _nameController;
   late final TextEditingController _placeController;
 
@@ -364,47 +357,56 @@ class _EditOrgDialogState extends State<_EditOrgDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('Edit Organization'),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          TextField(
-            controller: _nameController,
-            decoration: const InputDecoration(labelText: 'Name'),
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: _placeController,
-            decoration: const InputDecoration(labelText: 'Place'),
-          ),
-        ],
+    return Container(
+      decoration: const BoxDecoration(
+        color: AppTheme.surface,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
-      actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
-        FilledButton(
-          onPressed: () {
-            if (_nameController.text.trim().isEmpty) return;
-            Navigator.pop(context, {
-              'name': _nameController.text.trim(),
-              'place': _placeController.text.trim(),
-            });
-          },
-          child: const Text('Save'),
+      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+      child: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(width: 40, height: 4, decoration: BoxDecoration(color: AppTheme.outline, borderRadius: BorderRadius.circular(99))),
+              const SizedBox(height: 20),
+              Text('Edit Organization', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700)),
+              const SizedBox(height: 24),
+              TextField(controller: _nameController, decoration: const InputDecoration(labelText: 'Name')),
+              const SizedBox(height: 16),
+              TextField(controller: _placeController, decoration: const InputDecoration(labelText: 'Place')),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(child: OutlinedButton(onPressed: () => Navigator.pop(context), style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))), child: const Text('Cancel'))),
+                  const SizedBox(width: 12),
+                  Expanded(child: FilledButton(
+                    onPressed: () {
+                      if (_nameController.text.trim().isEmpty) return;
+                      Navigator.pop(context, {'name': _nameController.text.trim(), 'place': _placeController.text.trim()});
+                    },
+                    style: FilledButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))),
+                    child: const Text('Save'),
+                  )),
+                ],
+              ),
+            ],
+          ),
         ),
-      ],
+      ),
     );
   }
 }
 
-class _AddAdminDialog extends StatefulWidget {
-  const _AddAdminDialog();
+class _AddAdminSheet extends StatefulWidget {
+  const _AddAdminSheet();
 
   @override
-  State<_AddAdminDialog> createState() => _AddAdminDialogState();
+  State<_AddAdminSheet> createState() => _AddAdminSheetState();
 }
 
-class _AddAdminDialogState extends State<_AddAdminDialog> {
+class _AddAdminSheetState extends State<_AddAdminSheet> {
   final _phoneController = TextEditingController();
   final _nameController = TextEditingController();
 
@@ -417,51 +419,63 @@ class _AddAdminDialogState extends State<_AddAdminDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('Add Admin'),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          TextField(
-            controller: _phoneController,
-            decoration: const InputDecoration(labelText: 'Phone (10 digits) *', prefixText: '+91 '),
-            keyboardType: TextInputType.phone,
-            maxLength: 10,
-            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: _nameController,
-            decoration: const InputDecoration(labelText: 'Name'),
-          ),
-        ],
+    return Container(
+      decoration: const BoxDecoration(
+        color: AppTheme.surface,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
-      actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
-        FilledButton(
-          onPressed: () {
-            if (_phoneController.text.trim().length != 10) return;
-            Navigator.pop(context, {
-              'phone': _phoneController.text.trim(),
-              'name': _nameController.text.trim(),
-            });
-          },
-          child: const Text('Add'),
+      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+      child: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(width: 40, height: 4, decoration: BoxDecoration(color: AppTheme.outline, borderRadius: BorderRadius.circular(99))),
+              const SizedBox(height: 20),
+              Text('Add Admin', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700)),
+              const SizedBox(height: 24),
+              TextField(
+                controller: _phoneController,
+                decoration: const InputDecoration(labelText: 'Phone (10 digits) *', prefixText: '+91 '),
+                keyboardType: TextInputType.phone,
+                maxLength: 10,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              ),
+              const SizedBox(height: 16),
+              TextField(controller: _nameController, decoration: const InputDecoration(labelText: 'Name')),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(child: OutlinedButton(onPressed: () => Navigator.pop(context), style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))), child: const Text('Cancel'))),
+                  const SizedBox(width: 12),
+                  Expanded(child: FilledButton(
+                    onPressed: () {
+                      if (_phoneController.text.trim().length != 10) return;
+                      Navigator.pop(context, {'phone': _phoneController.text.trim(), 'name': _nameController.text.trim()});
+                    },
+                    style: FilledButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))),
+                    child: const Text('Add'),
+                  )),
+                ],
+              ),
+            ],
+          ),
         ),
-      ],
+      ),
     );
   }
 }
 
-class _EditAdminDialog extends StatefulWidget {
+class _EditAdminSheet extends StatefulWidget {
   final Map<String, dynamic> admin;
-  const _EditAdminDialog({required this.admin});
+  const _EditAdminSheet({required this.admin});
 
   @override
-  State<_EditAdminDialog> createState() => _EditAdminDialogState();
+  State<_EditAdminSheet> createState() => _EditAdminSheetState();
 }
 
-class _EditAdminDialogState extends State<_EditAdminDialog> {
+class _EditAdminSheetState extends State<_EditAdminSheet> {
   late final TextEditingController _phoneController;
   late final TextEditingController _nameController;
 
@@ -481,38 +495,50 @@ class _EditAdminDialogState extends State<_EditAdminDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('Edit Admin'),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          TextField(
-            controller: _phoneController,
-            decoration: const InputDecoration(labelText: 'Phone (10 digits) *', prefixText: '+91 '),
-            keyboardType: TextInputType.phone,
-            maxLength: 10,
-            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: _nameController,
-            decoration: const InputDecoration(labelText: 'Name'),
-          ),
-        ],
+    return Container(
+      decoration: const BoxDecoration(
+        color: AppTheme.surface,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
-      actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
-        FilledButton(
-          onPressed: () {
-            if (_phoneController.text.trim().length != 10) return;
-            Navigator.pop(context, {
-              'phone': _phoneController.text.trim(),
-              'name': _nameController.text.trim(),
-            });
-          },
-          child: const Text('Save'),
+      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+      child: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(width: 40, height: 4, decoration: BoxDecoration(color: AppTheme.outline, borderRadius: BorderRadius.circular(99))),
+              const SizedBox(height: 20),
+              Text('Edit Admin', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700)),
+              const SizedBox(height: 24),
+              TextField(
+                controller: _phoneController,
+                decoration: const InputDecoration(labelText: 'Phone (10 digits) *', prefixText: '+91 '),
+                keyboardType: TextInputType.phone,
+                maxLength: 10,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              ),
+              const SizedBox(height: 16),
+              TextField(controller: _nameController, decoration: const InputDecoration(labelText: 'Name')),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(child: OutlinedButton(onPressed: () => Navigator.pop(context), style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))), child: const Text('Cancel'))),
+                  const SizedBox(width: 12),
+                  Expanded(child: FilledButton(
+                    onPressed: () {
+                      if (_phoneController.text.trim().length != 10) return;
+                      Navigator.pop(context, {'phone': _phoneController.text.trim(), 'name': _nameController.text.trim()});
+                    },
+                    style: FilledButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))),
+                    child: const Text('Save'),
+                  )),
+                ],
+              ),
+            ],
+          ),
         ),
-      ],
+      ),
     );
   }
 }

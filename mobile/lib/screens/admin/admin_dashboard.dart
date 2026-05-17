@@ -65,12 +65,15 @@ class _DashboardHome extends StatelessWidget {
           children: [
             Text(
               'Welcome, ${user?.name ?? 'Admin'}',
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
             ),
             if (user?.lastLoginAt != null)
               Text(
                 'Last login: ${_formatDate(user!.lastLoginAt!)}',
-                style: TextStyle(fontSize: 11, color: Colors.grey.shade400),
+                style: TextStyle(
+                  fontSize: 11.5,
+                  color: Colors.white.withValues(alpha: 0.76),
+                ),
               ),
           ],
         ),
@@ -100,61 +103,73 @@ class _DashboardHome extends StatelessWidget {
         ],
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(18, 18, 18, 28),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             GridView.count(
               crossAxisCount: 3,
-              mainAxisSpacing: 12,
-              crossAxisSpacing: 12,
+              mainAxisSpacing: 14,
+              crossAxisSpacing: 14,
+              childAspectRatio: 0.9,
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               children: [
-            _DashboardCard(
-              icon: Icons.health_and_safety,
-              label: 'Health',
-              onTap: () => Navigator.pushNamed(context, AppRoutes.manageAssets),
-            ),
-            _DashboardCard(
-              icon: Icons.favorite,
-              label: 'Kaneev',
-              onTap: () => Navigator.pushNamed(context, AppRoutes.manageKaneev),
-            ),
-            _DashboardCard(
-              icon: Icons.account_balance,
-              label: 'Kuri Chitts',
-              onTap: () => Navigator.pushNamed(context, AppRoutes.manageKuri),
-            ),
-            _DashboardCard(
-              icon: Icons.account_balance_wallet,
-              label: 'Income & Expense',
-              onTap: () => Navigator.pushNamed(context, AppRoutes.finance),
-            ),
-            _DashboardCard(
-              icon: Icons.notifications,
-              label: 'Notifications',
-              onTap: () => Navigator.pushNamed(context, AppRoutes.sendNotification),
-            ),
-            _DashboardCard(
-              icon: Icons.groups_2,
-              label: 'Ayalkoottam',
-              onTap: () => Navigator.pushNamed(context, AppRoutes.manageAyalkoottam),
-            ),
-            _DashboardCard(
-              icon: Icons.people,
-              label: 'Members',
-              onTap: () => Navigator.pushNamed(context, AppRoutes.manageMembers),
-            ),
-            _DashboardCard(
-              icon: Icons.bar_chart,
-              label: 'Reports',
-              onTap: () => Navigator.pushNamed(context, AppRoutes.reports),
-            ),
-            _DashboardCard(
-              icon: Icons.card_giftcard,
-              label: 'Privilege Card',
-              onTap: () => Navigator.pushNamed(context, AppRoutes.managePrivilegeOffers),
-            ),
+                _DashboardCard(
+                  icon: Icons.health_and_safety,
+                  label: 'Health',
+                  onTap: () => Navigator.pushNamed(context, AppRoutes.manageAssets),
+                ),
+                _DashboardCard(
+                  icon: Icons.favorite,
+                  label: 'Kaneev',
+                  onTap: () => Navigator.pushNamed(context, AppRoutes.manageKaneev),
+                ),
+                _DashboardCard(
+                  icon: Icons.account_balance,
+                  label: 'Kuri Chitts',
+                  onTap: () => Navigator.pushNamed(context, AppRoutes.manageKuri),
+                ),
+                _DashboardCard(
+                  icon: Icons.account_balance_wallet,
+                  label: 'Income & Expense',
+                  onTap: () => Navigator.pushNamed(context, AppRoutes.finance),
+                ),
+                _DashboardCard(
+                  icon: Icons.notifications,
+                  label: 'Notifications',
+                  onTap: () => Navigator.pushNamed(context, AppRoutes.notificationList),
+                ),
+                _DashboardCard(
+                  icon: Icons.groups_2,
+                  label: 'Ayalkoottam',
+                  onTap: () => Navigator.pushNamed(context, AppRoutes.manageAyalkoottam),
+                ),
+                _DashboardCard(
+                  icon: Icons.people,
+                  label: 'Members',
+                  onTap: () => Navigator.pushNamed(context, AppRoutes.manageMembers),
+                ),
+                _DashboardCard(
+                  icon: Icons.bar_chart,
+                  label: 'Reports',
+                  onTap: () => Navigator.pushNamed(context, AppRoutes.reports),
+                ),
+                _DashboardCard(
+                  icon: Icons.card_giftcard,
+                  label: 'Privilege Card',
+                  onTap: () => Navigator.pushNamed(context, AppRoutes.managePrivilegeOffers),
+                ),
+                _DashboardCard(
+                  icon: Icons.photo_library,
+                  label: 'Ad Banners',
+                  onTap: () => Navigator.pushNamed(context, AppRoutes.manageBanners),
+                ),
+                _DashboardCard(
+                  icon: Icons.sync,
+                  label: 'INFACC Sync',
+                  onTap: () => Navigator.pushNamed(context, AppRoutes.infaccSync),
+                ),
               ],
             ),
             if (org != null)
@@ -164,9 +179,9 @@ class _DashboardHome extends StatelessWidget {
                   '${org.name}${org.place != null ? ' • ${org.place}' : ''}',
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    fontSize: 13,
+                    fontSize: 13.5,
                     fontWeight: FontWeight.w500,
-                    color: Colors.grey.shade600,
+                    color: AppTheme.ink.withValues(alpha: 0.72),
                   ),
                 ),
               ),
@@ -177,7 +192,7 @@ class _DashboardHome extends StatelessWidget {
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 11,
-                  color: Colors.grey.shade400,
+                  color: AppTheme.ink.withValues(alpha: 0.46),
                 ),
               ),
             ),
@@ -230,7 +245,7 @@ void _showProfileSheet(BuildContext context) {
               onTap: () {
                 // TODO: implement image picker
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Photo upload coming soon')),
+                  AppTheme.infoSnackBar('Photo upload coming soon'),
                 );
               },
               child: Stack(
@@ -285,6 +300,21 @@ void _showProfileSheet(BuildContext context) {
                 Expanded(
                   child: OutlinedButton.icon(
                     onPressed: () async {
+                      final confirmed = await showDialog<bool>(
+                        context: context,
+                        builder: (dlgCtx) => AlertDialog(
+                          title: const Text('Logout'),
+                          content: const Text('Do you want to logout?'),
+                          actions: [
+                            TextButton(onPressed: () => Navigator.pop(dlgCtx, false), child: const Text('Cancel')),
+                            TextButton(
+                              onPressed: () => Navigator.pop(dlgCtx, true),
+                              child: const Text('Logout', style: TextStyle(color: AppTheme.error)),
+                            ),
+                          ],
+                        ),
+                      );
+                      if (confirmed != true) return;
                       await auth.logout();
                       if (context.mounted) {
                         Navigator.of(ctx).pop();
@@ -330,29 +360,58 @@ class _DashboardCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Card(
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(4),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              CircleAvatar(
-                radius: 24,
-                backgroundColor: theme.colorScheme.primaryContainer,
-                child: Icon(icon, size: 26, color: theme.colorScheme.primary),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                label,
-                style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w700),
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: AppTheme.outline),
+        boxShadow: [
+          BoxShadow(
+            color: AppTheme.primaryDark.withValues(alpha: 0.06),
+            blurRadius: 18,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(24),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 14),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  width: 52,
+                  height: 52,
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primaryContainer,
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                  child: Icon(icon, size: 26, color: theme.colorScheme.primary),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  label,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: AppTheme.ink,
+                    height: 1.25,
+                  ),
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 8),
+                Icon(
+                  Icons.arrow_forward_rounded,
+                  size: 16,
+                  color: AppTheme.ink.withValues(alpha: 0.46),
+                ),
+              ],
+            ),
           ),
         ),
       ),

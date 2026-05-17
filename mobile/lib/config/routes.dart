@@ -15,6 +15,7 @@ class AppRoutes {
   static const String createKuri = '/admin/kuri/create';
   static const String kuriDetail = '/admin/kuri/detail';
   static const String sendNotification = '/admin/notifications/send';
+  static const String notificationList = '/admin/notifications';
   static const String reports = '/admin/reports';
   static const String manageAyalkoottam = '/admin/ayalkoottam';
   static const String addAyalkoottam = '/admin/ayalkoottam/add';
@@ -23,6 +24,8 @@ class AppRoutes {
   static const String finance = '/admin/finance';
   static const String manageAdmins = '/admin/admins';
   static const String managePrivilegeOffers = '/admin/privilege-offers';
+  static const String manageBanners = '/admin/banners';
+  static const String infaccSync = '/admin/infacc-sync';
 
   // Member
   static const String profile = '/member/profile';

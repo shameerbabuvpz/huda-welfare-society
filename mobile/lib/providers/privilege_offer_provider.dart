@@ -1,4 +1,3 @@
-import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import '../models/privilege_offer.dart';
 import '../services/privilege_offer_service.dart';

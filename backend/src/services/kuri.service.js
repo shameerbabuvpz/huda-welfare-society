@@ -50,7 +50,14 @@ const kuriService = {
     const members = await db('kuri_members')
       .where({ 'kuri_members.kuri_group_id': groupId, 'kuri_members.organization_id': orgId })
       .join('members', 'kuri_members.member_id', 'members.id')
-      .select('kuri_members.*', 'members.name as member_name', 'members.member_code');
+      .leftJoin('ayalkoottams', 'members.ayalkoottam_id', 'ayalkoottams.id')
+      .select(
+        'kuri_members.*',
+        'members.name as member_name',
+        'members.member_code',
+        'members.phone as member_phone',
+        'ayalkoottams.name as ayalkoottam_name',
+      );
 
     const winners = await db('kuri_winners')
       .where({ 'kuri_winners.kuri_group_id': groupId, 'kuri_winners.organization_id': orgId })

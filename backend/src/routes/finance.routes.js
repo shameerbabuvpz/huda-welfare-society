@@ -20,6 +20,7 @@ router.post(
 );
 
 router.get('/categories', authorize('admin', 'super_admin'), ctrl.listCategories);
+router.put('/categories/:id', authorize('admin', 'super_admin'), [body('name').notEmpty().trim()], validate, ctrl.updateCategory);
 router.delete('/categories/:id', authorize('admin', 'super_admin'), ctrl.deleteCategory);
 
 // ─── Transactions ─────────────────────────────────────────────
@@ -38,6 +39,7 @@ router.post(
 );
 
 router.get('/transactions', authorize('admin', 'super_admin'), ctrl.listTransactions);
+router.put('/transactions/:id', authorize('admin', 'super_admin'), ctrl.updateTransaction);
 router.delete('/transactions/:id', authorize('admin', 'super_admin'), ctrl.deleteTransaction);
 
 // ─── Summary ──────────────────────────────────────────────────

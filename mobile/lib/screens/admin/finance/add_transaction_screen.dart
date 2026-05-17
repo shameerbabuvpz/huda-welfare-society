@@ -116,7 +116,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
 
             // Category dropdown
             DropdownButtonFormField<int>(
-              value: _categoryId,
+              initialValue: _categoryId,
               decoration: const InputDecoration(
                 labelText: 'Category',
                 border: OutlineInputBorder(),

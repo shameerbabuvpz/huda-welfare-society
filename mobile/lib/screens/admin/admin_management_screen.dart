@@ -5,6 +5,7 @@ import '../../../config/theme.dart';
 import '../../../models/admin.dart';
 import '../../../providers/admin_provider.dart';
 import '../../../providers/auth_provider.dart';
+import '../../../widgets/app_bottom_sheet.dart';
 
 class AdminManagementScreen extends StatefulWidget {
   const AdminManagementScreen({super.key});
@@ -147,40 +148,33 @@ class _AdminManagementScreenState extends State<AdminManagementScreen> {
   }
 
   void _showAdminDialog(BuildContext context, {Admin? admin}) {
-    showDialog(
+    showModalBottomSheet(
       context: context,
-      builder: (_) => _AdminFormDialog(admin: admin),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _AdminFormSheet(admin: admin),
     );
   }
 
-  void _confirmDelete(BuildContext context, Admin admin) {
-    showDialog(
+  void _confirmDelete(BuildContext context, Admin admin) async {
+    final confirm = await showConfirmSheet(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Remove Admin'),
-        content: Text('Remove ${admin.name ?? admin.phone ?? 'this admin'}?\n\nThe account will be deactivated.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: AppTheme.error),
-            onPressed: () async {
-              Navigator.pop(ctx);
-              final success = await context.read<AdminProvider>().deleteAdmin(admin.id);
-              if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  success
-                      ? AppTheme.successSnackBar('Admin removed')
-                      : AppTheme.errorSnackBar('Failed'),
-                );
-              }
-            },
-            child: const Text('Remove'),
-          ),
-        ],
-      ),
+      title: 'Remove Admin',
+      message: 'Remove ${admin.name ?? admin.phone ?? 'this admin'}?\n\nThe account will be deactivated.',
+      confirmLabel: 'Remove',
+      isDestructive: true,
+      icon: Icons.person_remove_outlined,
+    );
+    if (confirm != true) return;
+    if (!context.mounted) return;
+    final adminProvider = context.read<AdminProvider>();
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+    final success = await adminProvider.deleteAdmin(admin.id);
+    if (!context.mounted) return;
+    scaffoldMessenger.showSnackBar(
+      success
+          ? AppTheme.successSnackBar('Admin removed')
+          : AppTheme.errorSnackBar('Failed'),
     );
   }
 }
@@ -341,16 +335,16 @@ class _AdminCard extends StatelessWidget {
   }
 }
 
-class _AdminFormDialog extends StatefulWidget {
+class _AdminFormSheet extends StatefulWidget {
   final Admin? admin;
 
-  const _AdminFormDialog({this.admin});
+  const _AdminFormSheet({this.admin});
 
   @override
-  State<_AdminFormDialog> createState() => _AdminFormDialogState();
+  State<_AdminFormSheet> createState() => _AdminFormSheetState();
 }
 
-class _AdminFormDialogState extends State<_AdminFormDialog> {
+class _AdminFormSheetState extends State<_AdminFormSheet> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _nameController;
   late final TextEditingController _phoneController;
@@ -410,73 +404,114 @@ class _AdminFormDialogState extends State<_AdminFormDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text(isEdit ? 'Edit Admin' : 'Add New Admin'),
-      content: SizedBox(
-        width: MediaQuery.of(context).size.width * 0.9,
-        child: Form(
-          key: _formKey,
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextFormField(
-                  controller: _nameController,
-                  decoration: const InputDecoration(
-                    labelText: 'Name *',
-                    prefixIcon: Icon(Icons.person),
-                  ),
-                  validator: (v) => (v == null || v.trim().isEmpty) ? 'Name is required' : null,
+    return Container(
+      decoration: const BoxDecoration(
+        color: AppTheme.surface,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
+      child: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppTheme.outline,
+                  borderRadius: BorderRadius.circular(99),
                 ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _phoneController,
-                  decoration: const InputDecoration(
-                    labelText: 'Phone Number *',
-                    prefixIcon: Icon(Icons.phone),
-                    prefixText: '+91 ',
-                  ),
-                  keyboardType: TextInputType.phone,
-                  maxLength: 10,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  validator: (v) {
-                    if (v == null || v.length != 10) return 'Enter 10-digit phone number';
-                    if (!RegExp(r'^\d{10}$').hasMatch(v)) return 'Digits only';
-                    return null;
-                  },
+              ),
+              const SizedBox(height: 20),
+              Text(
+                isEdit ? 'Edit Admin' : 'Add New Admin',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 24),
+              Form(
+                key: _formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextFormField(
+                      controller: _nameController,
+                      decoration: const InputDecoration(
+                        labelText: 'Name *',
+                        prefixIcon: Icon(Icons.person),
+                      ),
+                      validator: (v) => (v == null || v.trim().isEmpty) ? 'Name is required' : null,
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _phoneController,
+                      decoration: const InputDecoration(
+                        labelText: 'Phone Number *',
+                        prefixIcon: Icon(Icons.phone),
+                        prefixText: '+91 ',
+                      ),
+                      keyboardType: TextInputType.phone,
+                      maxLength: 10,
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                      validator: (v) {
+                        if (v == null || v.length != 10) return 'Enter 10-digit phone number';
+                        if (!RegExp(r'^\d{10}$').hasMatch(v)) return 'Digits only';
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _emailController,
+                      decoration: const InputDecoration(
+                        labelText: 'Email (optional)',
+                        prefixIcon: Icon(Icons.email),
+                      ),
+                      keyboardType: TextInputType.emailAddress,
+                      validator: (v) {
+                        if (v != null && v.isNotEmpty && !RegExp(r'^[^@]+@[^@]+\.[^@]+$').hasMatch(v)) {
+                          return 'Enter valid email';
+                        }
+                        return null;
+                      },
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _emailController,
-                  decoration: const InputDecoration(
-                    labelText: 'Email (optional)',
-                    prefixIcon: Icon(Icons.email),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: _saving ? null : () => Navigator.pop(context),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      ),
+                      child: const Text('Cancel'),
+                    ),
                   ),
-                  keyboardType: TextInputType.emailAddress,
-                  validator: (v) {
-                    if (v != null && v.isNotEmpty && !RegExp(r'^[^@]+@[^@]+\.[^@]+$').hasMatch(v)) {
-                      return 'Enter valid email';
-                    }
-                    return null;
-                  },
-                ),
-              ],
-            ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: FilledButton(
+                      onPressed: _saving ? null : _save,
+                      style: FilledButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      ),
+                      child: _saving
+                          ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                          : Text(isEdit ? 'Update' : 'Add'),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
       ),
-      actions: [
-        TextButton(
-          onPressed: _saving ? null : () => Navigator.pop(context),
-          child: const Text('Cancel'),
-        ),
-        FilledButton(
-          onPressed: _saving ? null : _save,
-          child: _saving
-              ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-              : Text(isEdit ? 'Update' : 'Add'),
-        ),
-      ],
     );
   }
 }

@@ -23,6 +23,10 @@ class KuriService {
     await ApiService.post('/kuri/$groupId/members', {'member_id': memberId});
   }
 
+  static Future<void> removeMember(int groupId, int memberId) async {
+    await ApiService.delete('/kuri/$groupId/members/$memberId');
+  }
+
   // Collections
   static Future<void> recordCollection(int groupId, {
     required int memberId,
@@ -67,6 +71,12 @@ class KuriService {
       'amount': amount,
       if (reference != null) 'reference': reference,
     });
+  }
+
+  // Update group
+  static Future<KuriGroup> updateGroup(int id, Map<String, dynamic> body) async {
+    final data = await ApiService.put('/kuri/$id', body);
+    return KuriGroup.fromJson(data);
   }
 
   // Member view

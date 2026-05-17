@@ -39,8 +39,7 @@ class _SendNotificationScreenState extends State<SendNotificationScreen> {
 
     if (success) {
       ScaffoldMessenger.of(context).showSnackBar(AppTheme.successSnackBar('Notification sent'));
-      _titleController.clear();
-      _bodyController.clear();
+      Navigator.pop(context, true);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         AppTheme.errorSnackBar(context.read<NotificationProvider>().error ?? 'Failed'),

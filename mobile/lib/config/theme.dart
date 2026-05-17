@@ -70,17 +70,36 @@ class AppTheme {
       scaffoldBackgroundColor: background,
       canvasColor: background,
       textTheme: textTheme.copyWith(
+        headlineSmall: textTheme.headlineSmall?.copyWith(
+          fontWeight: FontWeight.w700,
+          color: ink,
+          height: 1.1,
+        ),
         headlineMedium: textTheme.headlineMedium?.copyWith(
           fontWeight: FontWeight.w700,
           color: ink,
+          height: 1.08,
         ),
         titleLarge: textTheme.titleLarge?.copyWith(
           fontWeight: FontWeight.w700,
           color: ink,
+          height: 1.15,
         ),
         titleMedium: textTheme.titleMedium?.copyWith(
           fontWeight: FontWeight.w600,
           color: ink,
+        ),
+        bodyLarge: textTheme.bodyLarge?.copyWith(
+          color: ink,
+          height: 1.45,
+        ),
+        bodyMedium: textTheme.bodyMedium?.copyWith(
+          color: ink,
+          height: 1.45,
+        ),
+        labelLarge: textTheme.labelLarge?.copyWith(
+          fontWeight: FontWeight.w600,
+          letterSpacing: 0.2,
         ),
       ),
       appBarTheme: const AppBarTheme(
@@ -94,7 +113,9 @@ class AppTheme {
         elevation: 0,
         color: surface,
         surfaceTintColor: Colors.transparent,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shadowColor: primaryDark.withValues(alpha: 0.08),
+        margin: EdgeInsets.zero,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
@@ -102,7 +123,8 @@ class AppTheme {
         labelStyle: TextStyle(color: ink.withValues(alpha: 0.72)),
         floatingLabelStyle: const TextStyle(color: primaryDark),
         prefixIconColor: primary,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        hintStyle: TextStyle(color: ink.withValues(alpha: 0.48)),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
           borderSide: const BorderSide(color: outline),
@@ -129,8 +151,10 @@ class AppTheme {
           backgroundColor: primary,
           foregroundColor: Colors.white,
           elevation: 0,
+          minimumSize: const Size.fromHeight(52),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          textStyle: textTheme.labelLarge,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
         ),
       ),
       filledButtonTheme: FilledButtonThemeData(
@@ -138,21 +162,27 @@ class AppTheme {
           backgroundColor: primary,
           foregroundColor: Colors.white,
           elevation: 0,
+          minimumSize: const Size.fromHeight(52),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          textStyle: textTheme.labelLarge,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: primaryDark,
+          backgroundColor: surface,
           side: const BorderSide(color: outline),
+          minimumSize: const Size.fromHeight(52),
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          textStyle: textTheme.labelLarge,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
         ),
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
           foregroundColor: primaryDark,
+          textStyle: textTheme.labelLarge,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
         ),
       ),
@@ -174,6 +204,7 @@ class AppTheme {
         backgroundColor: surface,
         indicatorColor: colorScheme.primaryContainer,
         surfaceTintColor: Colors.transparent,
+        height: 72,
         labelTextStyle: WidgetStatePropertyAll(
           textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w600),
         ),
@@ -207,8 +238,22 @@ class AppTheme {
       listTileTheme: const ListTileThemeData(
         iconColor: primary,
         textColor: ink,
+        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       ),
       dividerColor: outline,
+      dividerTheme: const DividerThemeData(
+        color: outline,
+        thickness: 1,
+        space: 24,
+      ),
+      tabBarTheme: const TabBarThemeData(
+        labelColor: Colors.white,
+        unselectedLabelColor: Colors.white70,
+        indicatorColor: Colors.white,
+        indicatorSize: TabBarIndicatorSize.tab,
+        labelStyle: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+        unselectedLabelStyle: TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+      ),
       dialogTheme: DialogThemeData(
         backgroundColor: surface,
         surfaceTintColor: Colors.transparent,

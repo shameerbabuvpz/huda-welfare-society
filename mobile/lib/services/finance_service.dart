@@ -18,6 +18,10 @@ class FinanceService {
     await ApiService.delete('/finance/categories/$id');
   }
 
+  static Future<Map<String, dynamic>> updateCategory(int id, Map<String, dynamic> body) async {
+    return await ApiService.put('/finance/categories/$id', body);
+  }
+
   // ─── Transactions ─────────────────────────────────────────────
   static Future<Map<String, dynamic>> listTransactions({
     int page = 1,
@@ -40,6 +44,10 @@ class FinanceService {
 
   static Future<void> deleteTransaction(int id) async {
     await ApiService.delete('/finance/transactions/$id');
+  }
+
+  static Future<Map<String, dynamic>> updateTransaction(int id, Map<String, dynamic> body) async {
+    return await ApiService.put('/finance/transactions/$id', body);
   }
 
   // ─── Summary ──────────────────────────────────────────────────

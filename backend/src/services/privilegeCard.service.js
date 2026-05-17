@@ -8,13 +8,14 @@ const privilegeCardService = {
     const member = await db('members')
       .leftJoin('ayalkoottams', 'members.ayalkoottam_id', 'ayalkoottams.id')
       .where({ 'members.id': memberId })
-      .select('members.name', 'members.ayalkoottam_id', 'ayalkoottams.name as ayalkoottam_name')
+      .select('members.name', 'members.photo_url', 'members.ayalkoottam_id', 'ayalkoottams.name as ayalkoottam_name')
       .first();
     const org = await db('organizations').where({ id: orgId }).first();
 
     return {
       ...card,
       member_name: member?.name,
+      photo_url: member?.photo_url,
       organization_name: org?.name,
       ayalkoottam_name: member?.ayalkoottam_name,
       ayalkoottam_id: member?.ayalkoottam_id,

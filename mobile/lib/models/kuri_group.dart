@@ -53,6 +53,8 @@ class KuriMemberSlot {
   final String status;
   final String? memberName;
   final String? memberCode;
+  final String? memberPhone;
+  final String? ayalkoottamName;
 
   KuriMemberSlot({
     required this.id,
@@ -61,6 +63,8 @@ class KuriMemberSlot {
     required this.status,
     this.memberName,
     this.memberCode,
+    this.memberPhone,
+    this.ayalkoottamName,
   });
 
   factory KuriMemberSlot.fromJson(Map<String, dynamic> json) {
@@ -71,6 +75,8 @@ class KuriMemberSlot {
       status: json['status'],
       memberName: json['member_name'],
       memberCode: json['member_code'],
+      memberPhone: json['member_phone'],
+      ayalkoottamName: json['ayalkoottam_name'],
     );
   }
 }

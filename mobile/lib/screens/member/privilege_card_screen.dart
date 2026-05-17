@@ -1,5 +1,12 @@
+import 'dart:io';
+import 'dart:typed_data';
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../../config/theme.dart';
 import '../../models/privilege_card.dart';
@@ -18,6 +25,7 @@ class _PrivilegeCardScreenState extends State<PrivilegeCardScreen> {
   PrivilegeCard? _card;
   bool _loading = true;
   String? _error;
+  final GlobalKey _cardKey = GlobalKey();
 
   @override
   void initState() {
@@ -32,6 +40,46 @@ class _PrivilegeCardScreenState extends State<PrivilegeCardScreen> {
       _error = e.toString();
     }
     if (mounted) setState(() => _loading = false);
+  }
+
+  Future<Uint8List?> _captureCardImage() async {
+    try {
+      final boundary = _cardKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
+      if (boundary == null) return null;
+      final image = await boundary.toImage(pixelRatio: 3.0);
+      final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+      return byteData?.buffer.asUint8List();
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> _downloadCard() async {
+    final bytes = await _captureCardImage();
+    if (bytes == null || !mounted) return;
+
+    final dir = await getTemporaryDirectory();
+    final file = File('${dir.path}/privilege_card.png');
+    await file.writeAsBytes(bytes);
+
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      AppTheme.successSnackBar('Card saved! Use Share to send it.'),
+    );
+  }
+
+  Future<void> _shareCard() async {
+    final bytes = await _captureCardImage();
+    if (bytes == null || !mounted) return;
+
+    final dir = await getTemporaryDirectory();
+    final file = File('${dir.path}/privilege_card.png');
+    await file.writeAsBytes(bytes);
+
+    await Share.shareXFiles(
+      [XFile(file.path)],
+      text: 'My Privilege Card - ${_card?.organizationName ?? ""}',
+    );
   }
 
   @override
@@ -60,29 +108,44 @@ class _PrivilegeCardScreenState extends State<PrivilegeCardScreen> {
                     physics: const AlwaysScrollableScrollPhysics(),
                     padding: const EdgeInsets.all(20),
                     children: [
-                      MemberPrivilegeCard(
-                        card: _card!,
-                        memberName: _card!.memberName ?? user?.name ?? 'Member',
-                        organizationName: _card!.organizationName ?? 'Sangamam',
-                        ayalkoottamName: _card!.ayalkoottamName,
-                        photoUrl: user?.photoUrl,
-                      ),
-                      const SizedBox(height: 18),
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: AppTheme.surfaceWarm,
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: Theme.of(context).colorScheme.secondaryContainer),
-                        ),
-                        child: Text(
-                          'QR code is now included inside the privilege card itself so the full card is available in one compact view.',
-                          style: TextStyle(
-                            color: Colors.grey.shade800,
-                            fontSize: 13,
-                            height: 1.4,
+                      RepaintBoundary(
+                        key: _cardKey,
+                        child: Container(
+                          color: AppTheme.background,
+                          child: Column(
+                            children: [
+                              const SizedBox(height: 8),
+                              MemberPrivilegeCard(
+                                card: _card!,
+                                memberName: _card!.memberName ?? user?.name ?? 'Member',
+                                organizationName: _card!.organizationName,
+                                ayalkoottamName: _card!.ayalkoottamName,
+                                photoUrl: _card!.photoUrl ?? user?.photoUrl,
+                              ),
+                              const SizedBox(height: 8),
+                            ],
                           ),
                         ),
+                      ),
+                      const SizedBox(height: 20),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: _downloadCard,
+                              icon: const Icon(Icons.download),
+                              label: const Text('Save'),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              onPressed: _shareCard,
+                              icon: const Icon(Icons.share),
+                              label: const Text('Share'),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
