@@ -1,0 +1,18 @@
+node_modules/
+.env
+*.log
+dist/
+.DS_Store
+
+# Flutter
+mobile/.dart_tool/
+mobile/.packages
+mobile/build/
+mobile/.flutter-plugins
+mobile/.flutter-plugins-dependencies
+backend/uploads/
+
+# Firebase
+firebase-service-account.json
+google-services.json
+GoogleService-Info.plist

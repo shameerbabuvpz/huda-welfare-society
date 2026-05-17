@@ -1,0 +1,354 @@
+import 'dart:convert';
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../../models/privilege_offer.dart';
+import '../../../providers/privilege_offer_provider.dart';
+import '../../../services/api_service.dart';
+import 'privilege_offer_form_screen.dart';
+
+class PrivilegeOfferDetailScreen extends StatefulWidget {
+  final int offerId;
+  const PrivilegeOfferDetailScreen({super.key, required this.offerId});
+
+  @override
+  State<PrivilegeOfferDetailScreen> createState() => _PrivilegeOfferDetailScreenState();
+}
+
+class _PrivilegeOfferDetailScreenState extends State<PrivilegeOfferDetailScreen> {
+  PrivilegeOffer? _offer;
+  List<PrivilegeRedemption> _redemptions = [];
+  bool _loading = true;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    setState(() { _loading = true; _error = null; });
+    try {
+      final data = await ApiService.get('/privilege-offers/${widget.offerId}');
+      _offer = PrivilegeOffer.fromJson(data);
+      if (data['redemptions'] != null) {
+        _redemptions = (data['redemptions'] as List)
+            .map((e) => PrivilegeRedemption.fromJson(e))
+            .toList();
+      }
+    } catch (e) {
+      _error = e.toString();
+    }
+    if (mounted) setState(() => _loading = false);
+  }
+
+  Future<void> _toggleStatus() async {
+    if (_offer == null) return;
+    final newStatus = _offer!.status == 'active' ? 'inactive' : 'active';
+    try {
+      await context.read<PrivilegeOfferProvider>().updateOffer(widget.offerId, {'status': newStatus});
+      _load();
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+    }
+  }
+
+  Future<void> _deleteOffer() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete Offer?'),
+        content: const Text('This cannot be undone.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Delete')),
+        ],
+      ),
+    );
+    if (confirm != true) return;
+    try {
+      await context.read<PrivilegeOfferProvider>().deleteOffer(widget.offerId);
+      if (mounted) Navigator.pop(context, true);
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(_offer?.companyName ?? 'Offer Details'),
+        actions: [
+          if (_offer != null)
+            PopupMenuButton<String>(
+              onSelected: (v) {
+                if (v == 'edit') _edit();
+                if (v == 'toggle') _toggleStatus();
+                if (v == 'delete') _deleteOffer();
+              },
+              itemBuilder: (_) => [
+                const PopupMenuItem(value: 'edit', child: Text('Edit')),
+                PopupMenuItem(
+                  value: 'toggle',
+                  child: Text(_offer!.status == 'active' ? 'Deactivate' : 'Activate'),
+                ),
+                const PopupMenuItem(value: 'delete', child: Text('Delete', style: TextStyle(color: Colors.red))),
+              ],
+            ),
+        ],
+      ),
+      body: _loading
+          ? const Center(child: CircularProgressIndicator())
+          : _error != null
+              ? Center(child: Text(_error!))
+              : _offer == null
+                  ? const Center(child: Text('Not found'))
+                  : RefreshIndicator(
+                      onRefresh: _load,
+                      child: ListView(
+                        padding: const EdgeInsets.all(20),
+                        children: [
+                          _buildOfferCard(),
+                          const SizedBox(height: 20),
+                          _buildQrSection(),
+                          const SizedBox(height: 20),
+                          if (_offer!.termsAndConditions != null && _offer!.termsAndConditions!.isNotEmpty) ...[
+                            _buildTermsSection(),
+                            const SizedBox(height: 20),
+                          ],
+                          _buildRedemptionsSection(),
+                        ],
+                      ),
+                    ),
+    );
+  }
+
+  Widget _buildOfferCard() {
+    final offer = _offer!;
+    return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(offer.companyName, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: offer.status == 'active' ? Colors.green.shade50 : Colors.red.shade50,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    offer.status == 'active' ? 'Active' : 'Inactive',
+                    style: TextStyle(
+                      color: offer.status == 'active' ? Colors.green.shade700 : Colors.red.shade700,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            if (offer.description != null) ...[
+              const SizedBox(height: 8),
+              Text(offer.description!, style: TextStyle(color: Colors.grey.shade700)),
+            ],
+            const Divider(height: 24),
+            Row(
+              children: [
+                _InfoChip(icon: Icons.local_offer, label: _offerLabel(offer)),
+                const SizedBox(width: 12),
+                _InfoChip(icon: Icons.qr_code_scanner, label: '${offer.redemptionCount} used'),
+              ],
+            ),
+            if (offer.contactPhone != null || offer.contactEmail != null) ...[
+              const SizedBox(height: 12),
+              if (offer.contactPhone != null)
+                Row(children: [
+                  const Icon(Icons.phone, size: 16, color: Colors.grey),
+                  const SizedBox(width: 6),
+                  Text(offer.contactPhone!, style: const TextStyle(fontSize: 13)),
+                ]),
+              if (offer.contactEmail != null) ...[
+                const SizedBox(height: 4),
+                Row(children: [
+                  const Icon(Icons.email, size: 16, color: Colors.grey),
+                  const SizedBox(width: 6),
+                  Text(offer.contactEmail!, style: const TextStyle(fontSize: 13)),
+                ]),
+              ],
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildQrSection() {
+    final offer = _offer!;
+    return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          children: [
+            const Text('QR Code for Shop', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+            const SizedBox(height: 6),
+            Text(
+              'Print this and display at the partner shop',
+              style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+            ),
+            const SizedBox(height: 16),
+            if (offer.qrData != null)
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.grey.shade200),
+                ),
+                child: Image.memory(
+                  base64Decode(offer.qrData!.split(',').last),
+                  width: 200,
+                  height: 200,
+                ),
+              )
+            else
+              const Text('QR not available'),
+            const SizedBox(height: 12),
+            Text(
+              'Code: ${offer.qrCode}',
+              style: TextStyle(fontSize: 12, color: Colors.grey.shade500, fontFamily: 'monospace'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTermsSection() {
+    return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Row(
+              children: [
+                Icon(Icons.rule, size: 20),
+                SizedBox(width: 8),
+                Text('Terms & Conditions', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text(_offer!.termsAndConditions!, style: const TextStyle(height: 1.5)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRedemptionsSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Redemptions (${_redemptions.length})',
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+        ),
+        const SizedBox(height: 12),
+        if (_redemptions.isEmpty)
+          const Card(
+            child: Padding(
+              padding: EdgeInsets.all(20),
+              child: Center(child: Text('No redemptions yet', style: TextStyle(color: Colors.grey))),
+            ),
+          )
+        else
+          ...List.generate(_redemptions.length, (i) {
+            final r = _redemptions[i];
+            return Card(
+              margin: const EdgeInsets.only(bottom: 8),
+              child: ListTile(
+                leading: CircleAvatar(
+                  backgroundColor: Colors.blue.shade50,
+                  child: Text('${i + 1}', style: TextStyle(color: Colors.blue.shade700)),
+                ),
+                title: Text(r.memberName ?? 'Member'),
+                subtitle: Text(r.memberCode ?? ''),
+                trailing: Text(
+                  r.redeemedAt != null
+                      ? '${r.redeemedAt!.day}/${r.redeemedAt!.month}/${r.redeemedAt!.year}'
+                      : '',
+                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                ),
+              ),
+            );
+          }),
+      ],
+    );
+  }
+
+  void _edit() async {
+    if (_offer == null) return;
+    final result = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => PrivilegeOfferFormScreen(
+          offerId: widget.offerId,
+          initialData: {
+            'company_name': _offer!.companyName,
+            'description': _offer!.description,
+            'offer_type': _offer!.offerType,
+            'offer_value': _offer!.offerValue,
+            'terms_and_conditions': _offer!.termsAndConditions,
+            'contact_phone': _offer!.contactPhone,
+            'contact_email': _offer!.contactEmail,
+            'status': _offer!.status,
+          },
+        ),
+      ),
+    );
+    if (result == true && mounted) _load();
+  }
+
+  String _offerLabel(PrivilegeOffer offer) {
+    if (offer.offerType == 'percentage' && offer.offerValue != null) {
+      return '${offer.offerValue!.toInt()}% Off';
+    } else if (offer.offerType == 'flat' && offer.offerValue != null) {
+      return '₹${offer.offerValue!.toInt()} Off';
+    }
+    return 'Free Gift';
+  }
+}
+
+class _InfoChip extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  const _InfoChip({required this.icon, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 16, color: Colors.grey.shade700),
+          const SizedBox(width: 4),
+          Text(label, style: TextStyle(fontSize: 13, color: Colors.grey.shade700)),
+        ],
+      ),
+    );
+  }
+}
