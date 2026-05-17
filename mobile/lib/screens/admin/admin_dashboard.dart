@@ -221,7 +221,6 @@ String _formatDate(String dateStr) {
 void _showProfileSheet(BuildContext context) {
   final auth = context.read<AuthProvider>();
   final user = auth.user;
-  final nameController = TextEditingController(text: user?.name ?? '');
 
   showModalBottomSheet(
     context: context,
@@ -286,61 +285,37 @@ void _showProfileSheet(BuildContext context) {
             const SizedBox(height: 16),
             Text(user?.phone ?? '',
                 style: TextStyle(color: Colors.grey.shade600)),
-            const SizedBox(height: 16),
-            TextField(
-              controller: nameController,
-              decoration: const InputDecoration(
-                labelText: 'Name',
-                prefixIcon: Icon(Icons.person),
-              ),
-            ),
             const SizedBox(height: 20),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () async {
-                      final confirmed = await showDialog<bool>(
-                        context: context,
-                        builder: (dlgCtx) => AlertDialog(
-                          title: const Text('Logout'),
-                          content: const Text('Do you want to logout?'),
-                          actions: [
-                            TextButton(onPressed: () => Navigator.pop(dlgCtx, false), child: const Text('Cancel')),
-                            TextButton(
-                              onPressed: () => Navigator.pop(dlgCtx, true),
-                              child: const Text('Logout', style: TextStyle(color: AppTheme.error)),
-                            ),
-                          ],
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: () async {
+                  final confirmed = await showDialog<bool>(
+                    context: context,
+                    builder: (dlgCtx) => AlertDialog(
+                      title: const Text('Logout'),
+                      content: const Text('Do you want to logout?'),
+                      actions: [
+                        TextButton(onPressed: () => Navigator.pop(dlgCtx, false), child: const Text('Cancel')),
+                        TextButton(
+                          onPressed: () => Navigator.pop(dlgCtx, true),
+                          child: const Text('Logout', style: TextStyle(color: AppTheme.error)),
                         ),
-                      );
-                      if (confirmed != true) return;
-                      await auth.logout();
-                      if (context.mounted) {
-                        Navigator.of(ctx).pop();
-                        Navigator.pushReplacementNamed(
-                            context, AppRoutes.login);
-                      }
-                    },
-                    icon: const Icon(Icons.logout, color: AppTheme.error),
-                    label: const Text('Logout',
-                        style: TextStyle(color: AppTheme.error)),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () async {
-                      final newName = nameController.text.trim();
-                      if (newName.isNotEmpty && newName != user?.name) {
-                        await auth.updateProfile(name: newName);
-                      }
-                      if (ctx.mounted) Navigator.of(ctx).pop();
-                    },
-                    child: const Text('Save'),
-                  ),
-                ),
-              ],
+                      ],
+                    ),
+                  );
+                  if (confirmed != true) return;
+                  await auth.logout();
+                  if (context.mounted) {
+                    Navigator.of(ctx).pop();
+                    Navigator.pushReplacementNamed(
+                        context, AppRoutes.login);
+                  }
+                },
+                icon: const Icon(Icons.logout, color: AppTheme.error),
+                label: const Text('Logout',
+                    style: TextStyle(color: AppTheme.error)),
+              ),
             ),
           ],
         ),
