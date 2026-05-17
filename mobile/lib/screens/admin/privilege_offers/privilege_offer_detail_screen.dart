@@ -45,8 +45,10 @@ class _PrivilegeOfferDetailScreenState extends State<PrivilegeOfferDetailScreen>
   Future<void> _toggleStatus() async {
     if (_offer == null) return;
     final newStatus = _offer!.status == 'active' ? 'inactive' : 'active';
+    final provider = context.read<PrivilegeOfferProvider>();
     try {
-      await context.read<PrivilegeOfferProvider>().updateOffer(widget.offerId, {'status': newStatus});
+      await provider.updateOffer(widget.offerId, {'status': newStatus});
+      if (!mounted) return;
       _load();
     } catch (e) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
@@ -66,9 +68,11 @@ class _PrivilegeOfferDetailScreenState extends State<PrivilegeOfferDetailScreen>
       ),
     );
     if (confirm != true) return;
+    final provider = context.read<PrivilegeOfferProvider>();
     try {
-      await context.read<PrivilegeOfferProvider>().deleteOffer(widget.offerId);
-      if (mounted) Navigator.pop(context, true);
+      await provider.deleteOffer(widget.offerId);
+      if (!mounted) return;
+      Navigator.pop(context, true);
     } catch (e) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
     }
@@ -128,63 +132,86 @@ class _PrivilegeOfferDetailScreenState extends State<PrivilegeOfferDetailScreen>
     final offer = _offer!;
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Banner image
+          if (offer.imageUrl != null && offer.imageUrl!.isNotEmpty)
+            Image.network(
+              offer.imageUrl!,
+              width: double.infinity,
+              height: 160,
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+            ),
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  child: Text(offer.companyName, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: offer.status == 'active' ? Colors.green.shade50 : Colors.red.shade50,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    offer.status == 'active' ? 'Active' : 'Inactive',
-                    style: TextStyle(
-                      color: offer.status == 'active' ? Colors.green.shade700 : Colors.red.shade700,
-                      fontWeight: FontWeight.w600,
+                Row(
+                  children: [
+                    if (offer.logoUrl != null && offer.logoUrl!.isNotEmpty) ...[
+                      CircleAvatar(
+                        radius: 24,
+                        backgroundImage: NetworkImage(offer.logoUrl!),
+                        backgroundColor: Colors.grey.shade100,
+                      ),
+                      const SizedBox(width: 12),
+                    ],
+                    Expanded(
+                      child: Text(offer.companyName, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
                     ),
-                  ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: offer.status == 'active' ? Colors.green.shade50 : Colors.red.shade50,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        offer.status == 'active' ? 'Active' : 'Inactive',
+                        style: TextStyle(
+                          color: offer.status == 'active' ? Colors.green.shade700 : Colors.red.shade700,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
+                if (offer.description != null) ...[
+                  const SizedBox(height: 8),
+                  Text(offer.description!, style: TextStyle(color: Colors.grey.shade700)),
+                ],
+                const Divider(height: 24),
+                Row(
+                  children: [
+                    _InfoChip(icon: Icons.local_offer, label: _offerLabel(offer)),
+                    const SizedBox(width: 12),
+                    _InfoChip(icon: Icons.qr_code_scanner, label: '${offer.redemptionCount} used'),
+                  ],
+                ),
+                if (offer.contactPhone != null || offer.contactEmail != null) ...[
+                  const SizedBox(height: 12),
+                  if (offer.contactPhone != null)
+                    Row(children: [
+                      const Icon(Icons.phone, size: 16, color: Colors.grey),
+                      const SizedBox(width: 6),
+                      Text(offer.contactPhone!, style: const TextStyle(fontSize: 13)),
+                    ]),
+                  if (offer.contactEmail != null) ...[
+                    const SizedBox(height: 4),
+                    Row(children: [
+                      const Icon(Icons.email, size: 16, color: Colors.grey),
+                      const SizedBox(width: 6),
+                      Text(offer.contactEmail!, style: const TextStyle(fontSize: 13)),
+                    ]),
+                  ],
+                ],
               ],
             ),
-            if (offer.description != null) ...[
-              const SizedBox(height: 8),
-              Text(offer.description!, style: TextStyle(color: Colors.grey.shade700)),
-            ],
-            const Divider(height: 24),
-            Row(
-              children: [
-                _InfoChip(icon: Icons.local_offer, label: _offerLabel(offer)),
-                const SizedBox(width: 12),
-                _InfoChip(icon: Icons.qr_code_scanner, label: '${offer.redemptionCount} used'),
-              ],
-            ),
-            if (offer.contactPhone != null || offer.contactEmail != null) ...[
-              const SizedBox(height: 12),
-              if (offer.contactPhone != null)
-                Row(children: [
-                  const Icon(Icons.phone, size: 16, color: Colors.grey),
-                  const SizedBox(width: 6),
-                  Text(offer.contactPhone!, style: const TextStyle(fontSize: 13)),
-                ]),
-              if (offer.contactEmail != null) ...[
-                const SizedBox(height: 4),
-                Row(children: [
-                  const Icon(Icons.email, size: 16, color: Colors.grey),
-                  const SizedBox(width: 6),
-                  Text(offer.contactEmail!, style: const TextStyle(fontSize: 13)),
-                ]),
-              ],
-            ],
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -310,6 +337,8 @@ class _PrivilegeOfferDetailScreenState extends State<PrivilegeOfferDetailScreen>
             'terms_and_conditions': _offer!.termsAndConditions,
             'contact_phone': _offer!.contactPhone,
             'contact_email': _offer!.contactEmail,
+            'logo_url': _offer!.logoUrl,
+            'image_url': _offer!.imageUrl,
             'status': _offer!.status,
           },
         ),

@@ -66,6 +66,28 @@ class _PrivilegeOfferFormScreenState extends State<PrivilegeOfferFormScreen> {
     super.dispose();
   }
 
+  Future<void> _pickLogo() async {
+    final picker = ImagePicker();
+    final picked = await picker.pickImage(source: ImageSource.gallery, maxWidth: 512);
+    if (picked == null) return;
+    final bytes = await picked.readAsBytes();
+    setState(() {
+      _logoBytes = bytes;
+      _logoFilename = picked.name;
+    });
+  }
+
+  Future<void> _pickImage() async {
+    final picker = ImagePicker();
+    final picked = await picker.pickImage(source: ImageSource.gallery, maxWidth: 1200);
+    if (picked == null) return;
+    final bytes = await picked.readAsBytes();
+    setState(() {
+      _imageBytes = bytes;
+      _imageFilename = picked.name;
+    });
+  }
+
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _saving = true);
@@ -84,9 +106,22 @@ class _PrivilegeOfferFormScreenState extends State<PrivilegeOfferFormScreen> {
     try {
       final provider = context.read<PrivilegeOfferProvider>();
       if (_isEdit) {
-        await provider.updateOffer(widget.offerId!, data);
+        await provider.updateOffer(
+          widget.offerId!,
+          data,
+          logoBytes: _logoBytes,
+          logoFilename: _logoFilename,
+          imageBytes: _imageBytes,
+          imageFilename: _imageFilename,
+        );
       } else {
-        await provider.createOffer(data);
+        await provider.createOffer(
+          data,
+          logoBytes: _logoBytes,
+          logoFilename: _logoFilename,
+          imageBytes: _imageBytes,
+          imageFilename: _imageFilename,
+        );
       }
       if (mounted) Navigator.pop(context, true);
     } catch (e) {
@@ -108,6 +143,28 @@ class _PrivilegeOfferFormScreenState extends State<PrivilegeOfferFormScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              // Logo picker
+              _buildImagePicker(
+                label: 'Company Logo',
+                icon: Icons.business,
+                bytes: _logoBytes,
+                existingUrl: _existingLogoUrl,
+                onPick: _pickLogo,
+                onClear: () => setState(() { _logoBytes = null; _logoFilename = null; }),
+                isCircle: true,
+              ),
+              const SizedBox(height: 16),
+              // Promo image picker
+              _buildImagePicker(
+                label: 'Promotional Image',
+                icon: Icons.image,
+                bytes: _imageBytes,
+                existingUrl: _existingImageUrl,
+                onPick: _pickImage,
+                onClear: () => setState(() { _imageBytes = null; _imageFilename = null; }),
+                isCircle: false,
+              ),
+              const SizedBox(height: 20),
               TextFormField(
                 controller: _companyNameCtrl,
                 decoration: const InputDecoration(
@@ -207,6 +264,82 @@ class _PrivilegeOfferFormScreenState extends State<PrivilegeOfferFormScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildImagePicker({
+    required String label,
+    required IconData icon,
+    required Uint8List? bytes,
+    required String? existingUrl,
+    required VoidCallback onPick,
+    required VoidCallback onClear,
+    required bool isCircle,
+  }) {
+    final hasImage = bytes != null || (existingUrl != null && existingUrl!.isNotEmpty);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            GestureDetector(
+              onTap: onPick,
+              child: Container(
+                width: isCircle ? 80 : 120,
+                height: 80,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade100,
+                  borderRadius: isCircle ? null : BorderRadius.circular(12),
+                  shape: isCircle ? BoxShape.circle : BoxShape.rectangle,
+                  border: Border.all(color: Colors.grey.shade300),
+                  image: bytes != null
+                      ? DecorationImage(image: MemoryImage(bytes), fit: BoxFit.cover)
+                      : existingUrl != null && existingUrl!.isNotEmpty
+                          ? DecorationImage(image: NetworkImage(existingUrl!), fit: BoxFit.cover)
+                          : null,
+                ),
+                child: !hasImage
+                    ? Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(icon, color: Colors.grey.shade400, size: 28),
+                          const SizedBox(height: 4),
+                          Text('Upload', style: TextStyle(fontSize: 11, color: Colors.grey.shade500)),
+                        ],
+                      )
+                    : null,
+              ),
+            ),
+            if (hasImage) ...[
+              const SizedBox(width: 12),
+              Column(
+                children: [
+                  TextButton.icon(
+                    onPressed: onPick,
+                    icon: const Icon(Icons.edit, size: 16),
+                    label: const Text('Change'),
+                  ),
+                  TextButton.icon(
+                    onPressed: onClear,
+                    icon: const Icon(Icons.close, size: 16, color: Colors.red),
+                    label: const Text('Remove', style: TextStyle(color: Colors.red)),
+                  ),
+                ],
+              ),
+            ] else ...[
+              const SizedBox(width: 12),
+              TextButton.icon(
+                onPressed: onPick,
+                icon: const Icon(Icons.upload, size: 16),
+                label: const Text('Choose File'),
+              ),
+            ],
+          ],
+        ),
+      ],
     );
   }
 }
