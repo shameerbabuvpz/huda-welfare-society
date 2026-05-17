@@ -22,13 +22,13 @@ class Organization {
   factory Organization.fromJson(Map<String, dynamic> json) {
     return Organization(
       id: json['id'],
-      name: json['name'],
+      name: json['name'] ?? '',
       contactEmail: json['contact_email'],
       contactPhone: json['contact_phone'],
       address: json['address'],
       place: json['place'],
       logoUrl: json['logo_url'] ?? json['logoUrl'],
-      status: json['status'],
+      status: json['status'] ?? 'active',
     );
   }
 }

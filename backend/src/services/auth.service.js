@@ -94,7 +94,7 @@ const authService = {
     if (user.organization_id) {
       const org = await db('organizations').where({ id: user.organization_id }).first();
       if (org) {
-        orgInfo = { id: org.id, name: org.name, place: org.place, logoUrl: org.logo_url };
+        orgInfo = { id: org.id, name: org.name, place: org.place, logoUrl: org.logo_url, status: org.status };
       }
     }
 
