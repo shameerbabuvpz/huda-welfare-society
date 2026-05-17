@@ -1,6 +1,10 @@
 import 'dart:convert';
+import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:share_plus/share_plus.dart';
 import '../../../config/theme.dart';
 import '../../../models/privilege_offer.dart';
 import '../../../providers/privilege_offer_provider.dart';
@@ -255,6 +259,25 @@ class _PrivilegeOfferDetailScreenState extends State<PrivilegeOfferDetailScreen>
               'Code: ${offer.qrCode}',
               style: TextStyle(fontSize: 12, color: Colors.grey.shade500, fontFamily: 'monospace'),
             ),
+            if (offer.qrData != null) ...[
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  OutlinedButton.icon(
+                    onPressed: () => _downloadQr(offer),
+                    icon: const Icon(Icons.download, size: 18),
+                    label: const Text('Save'),
+                  ),
+                  const SizedBox(width: 12),
+                  FilledButton.icon(
+                    onPressed: () => _shareQr(offer),
+                    icon: const Icon(Icons.share, size: 18),
+                    label: const Text('Share'),
+                  ),
+                ],
+              ),
+            ],
           ],
         ),
       ),
@@ -348,6 +371,46 @@ class _PrivilegeOfferDetailScreenState extends State<PrivilegeOfferDetailScreen>
       ),
     );
     if (result == true && mounted) _load();
+  }
+
+  Uint8List _qrBytes(PrivilegeOffer offer) {
+    return base64Decode(offer.qrData!.split(',').last);
+  }
+
+  Future<void> _downloadQr(PrivilegeOffer offer) async {
+    try {
+      final bytes = _qrBytes(offer);
+      final dir = await getApplicationDocumentsDirectory();
+      final file = File('${dir.path}/qr_${offer.companyName.replaceAll(' ', '_')}.png');
+      await file.writeAsBytes(bytes);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        AppTheme.successSnackBar('QR saved to ${file.path}'),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        AppTheme.errorSnackBar('Failed to save QR: $e'),
+      );
+    }
+  }
+
+  Future<void> _shareQr(PrivilegeOffer offer) async {
+    try {
+      final bytes = _qrBytes(offer);
+      final dir = await getTemporaryDirectory();
+      final file = File('${dir.path}/qr_${offer.companyName.replaceAll(' ', '_')}.png');
+      await file.writeAsBytes(bytes);
+      await Share.shareXFiles(
+        [XFile(file.path)],
+        text: '${offer.companyName} - Privilege Offer QR Code',
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        AppTheme.errorSnackBar('Failed to share QR: $e'),
+      );
+    }
   }
 
   String _offerLabel(PrivilegeOffer offer) {
