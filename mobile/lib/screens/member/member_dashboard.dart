@@ -231,7 +231,7 @@ class _MemberDashboardState extends State<MemberDashboard> {
                             children: [
                               _ServiceRow(
                                 icon: Icons.card_giftcard,
-                                color: Colors.amber.shade700,
+                                color: AppTheme.accent,
                                 title: 'Privilege Offers',
                                 subtitle: 'View & redeem partner offers',
                                 onTap: () => Navigator.pushNamed(context, AppRoutes.memberOffers),
@@ -416,9 +416,9 @@ class _NotificationStrip extends StatelessWidget {
         child: Ink(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: const Color(0xFFFFF7EA),
+            color: AppTheme.surfaceWarm,
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: const Color(0xFFEFD6A5)),
+            border: Border.all(color: Theme.of(context).colorScheme.secondaryContainer),
           ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -427,10 +427,10 @@ class _NotificationStrip extends StatelessWidget {
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFFE6A7),
+                  color: Theme.of(context).colorScheme.secondaryContainer,
                   borderRadius: BorderRadius.circular(14),
                 ),
-                child: const Icon(Icons.notifications_active_outlined, color: Color(0xFF8A6214)),
+                child: const Icon(Icons.notifications_active_outlined, color: AppTheme.accent),
               ),
               const SizedBox(width: 14),
               Expanded(
@@ -447,7 +447,7 @@ class _NotificationStrip extends StatelessWidget {
                             style: const TextStyle(
                               fontSize: 14.5,
                               fontWeight: FontWeight.w700,
-                              color: Color(0xFF433014),
+                              color: AppTheme.primaryDark,
                             ),
                           ),
                         ),

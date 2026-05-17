@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../../config/theme.dart';
 import '../../../providers/finance_provider.dart';
 import '../../../models/finance.dart';
 import 'add_transaction_screen.dart';
@@ -131,7 +132,7 @@ class _FinanceScreenState extends State<FinanceScreen> with SingleTickerProvider
                   child: _SummaryItem(
                     label: 'Income',
                     amount: income,
-                    color: Colors.green,
+                    color: AppTheme.primary,
                     icon: Icons.arrow_downward,
                   ),
                 ),
@@ -139,7 +140,7 @@ class _FinanceScreenState extends State<FinanceScreen> with SingleTickerProvider
                   child: _SummaryItem(
                     label: 'Expense',
                     amount: expense,
-                    color: Colors.red,
+                    color: AppTheme.error,
                     icon: Icons.arrow_upward,
                   ),
                 ),
@@ -147,7 +148,7 @@ class _FinanceScreenState extends State<FinanceScreen> with SingleTickerProvider
                   child: _SummaryItem(
                     label: 'Balance',
                     amount: balance,
-                    color: balance >= 0 ? Colors.blue : Colors.red,
+                    color: balance >= 0 ? AppTheme.accent : AppTheme.error,
                     icon: Icons.account_balance_wallet,
                   ),
                 ),
@@ -202,7 +203,7 @@ class _TransactionList extends StatelessWidget {
           return const Center(child: CircularProgressIndicator());
         }
         if (provider.error != null) {
-          return Center(child: Text(provider.error!, style: const TextStyle(color: Colors.red)));
+          return Center(child: Text(provider.error!, style: const TextStyle(color: AppTheme.error)));
         }
         if (provider.transactions.isEmpty) {
           return const Center(child: Text('No transactions yet'));
@@ -247,7 +248,7 @@ class _TransactionTile extends StatelessWidget {
       key: Key('txn_${txn.id}'),
       direction: DismissDirection.endToStart,
       background: Container(
-        color: Colors.red,
+        color: AppTheme.error,
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 16),
         child: const Icon(Icons.delete, color: Colors.white),
@@ -264,7 +265,7 @@ class _TransactionTile extends StatelessWidget {
           actions: [
             OutlinedButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
             ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+              style: ElevatedButton.styleFrom(backgroundColor: AppTheme.error),
               onPressed: () => Navigator.pop(context, true),
               child: const Text('Delete'),
             ),
@@ -277,10 +278,12 @@ class _TransactionTile extends StatelessWidget {
       child: Card(
         child: ListTile(
           leading: CircleAvatar(
-            backgroundColor: isIncome ? Colors.green[50] : Colors.red[50],
+            backgroundColor: isIncome
+                ? Theme.of(context).colorScheme.primaryContainer
+                : Theme.of(context).colorScheme.errorContainer,
             child: Icon(
               isIncome ? Icons.arrow_downward : Icons.arrow_upward,
-              color: isIncome ? Colors.green : Colors.red,
+              color: isIncome ? AppTheme.primary : AppTheme.error,
             ),
           ),
           title: Text(txn.categoryName ?? 'Unknown'),
@@ -295,7 +298,7 @@ class _TransactionTile extends StatelessWidget {
           trailing: Text(
             '${isIncome ? '+' : '-'}₹${txn.amount.toStringAsFixed(2)}',
             style: TextStyle(
-              color: isIncome ? Colors.green : Colors.red,
+              color: isIncome ? AppTheme.primary : AppTheme.error,
               fontWeight: FontWeight.bold,
               fontSize: 15,
             ),

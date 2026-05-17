@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../../config/theme.dart';
 import '../../../providers/finance_provider.dart';
 import '../../../widgets/app_bottom_sheet.dart';
 
@@ -60,7 +61,7 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
                     final success = await context.read<FinanceProvider>().createCategory(name.trim(), type);
                     if (!success && mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(context.read<FinanceProvider>().error ?? 'Failed')),
+                        AppTheme.errorSnackBar(context.read<FinanceProvider>().error ?? 'Failed'),
                       );
                     }
                   },
@@ -96,7 +97,7 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 8),
                   child: Text('Income Categories',
-                      style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green[700], fontSize: 16)),
+                      style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.primary, fontSize: 16)),
                 ),
                 ...incomeCategories.map((c) => _CategoryTile(category: c)),
               ],
@@ -104,7 +105,7 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 8),
                   child: Text('Expense Categories',
-                      style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red[700], fontSize: 16)),
+                      style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.error, fontSize: 16)),
                 ),
                 ...expenseCategories.map((c) => _CategoryTile(category: c)),
               ],
@@ -137,16 +138,18 @@ class _CategoryTile extends StatelessWidget {
     return Card(
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: isIncome ? Colors.green[50] : Colors.red[50],
+          backgroundColor: isIncome
+              ? Theme.of(context).colorScheme.primaryContainer
+              : Theme.of(context).colorScheme.errorContainer,
           child: Icon(
             isIncome ? Icons.arrow_downward : Icons.arrow_upward,
-            color: isIncome ? Colors.green : Colors.red,
+            color: isIncome ? AppTheme.primary : AppTheme.error,
             size: 20,
           ),
         ),
         title: Text(category.name),
         trailing: IconButton(
-          icon: const Icon(Icons.delete_outline, color: Colors.red),
+          icon: const Icon(Icons.delete_outline, color: AppTheme.error),
           onPressed: () async {
             final confirm = await showAppSheet<bool>(
               context: context,
@@ -159,7 +162,7 @@ class _CategoryTile extends StatelessWidget {
               actions: [
                 OutlinedButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
                 ElevatedButton(
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                  style: ElevatedButton.styleFrom(backgroundColor: AppTheme.error),
                   onPressed: () => Navigator.pop(context, true),
                   child: const Text('Delete'),
                 ),
@@ -169,7 +172,7 @@ class _CategoryTile extends StatelessWidget {
               final success = await context.read<FinanceProvider>().deleteCategory(category.id);
               if (!success && context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(context.read<FinanceProvider>().error ?? 'Cannot delete')),
+                  AppTheme.errorSnackBar(context.read<FinanceProvider>().error ?? 'Cannot delete'),
                 );
               }
             }

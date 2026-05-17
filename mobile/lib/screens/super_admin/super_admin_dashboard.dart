@@ -36,7 +36,7 @@ class _SuperAdminDashboardState extends State<SuperAdminDashboard> {
       setState(() => _loading = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+          AppTheme.errorSnackBar('Error: $e'),
         );
       }
     }
@@ -58,7 +58,7 @@ class _SuperAdminDashboardState extends State<SuperAdminDashboard> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+          AppTheme.errorSnackBar('Error: $e'),
         );
       }
     }

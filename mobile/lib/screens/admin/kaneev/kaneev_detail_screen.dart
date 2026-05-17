@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../../config/theme.dart';
 import '../../../providers/kaneev_provider.dart';
 import '../../../providers/ayalkoottam_provider.dart';
 import '../../../providers/member_provider.dart';
@@ -91,7 +92,7 @@ class _KaneevDetailScreenState extends State<KaneevDetailScreen> with SingleTick
                 onPressed: () => _showRecordDonationDialog(group),
                 icon: const Icon(Icons.payments),
                 label: const Text('Record Donation'),
-                backgroundColor: Colors.deepPurple,
+                backgroundColor: AppTheme.primary,
               ),
               const SizedBox(height: 12),
               FloatingActionButton.extended(
@@ -107,7 +108,7 @@ class _KaneevDetailScreenState extends State<KaneevDetailScreen> with SingleTick
             onPressed: () => _showSelectRecipientDialog(group),
             icon: const Icon(Icons.card_giftcard),
             label: const Text('Select Recipient'),
-            backgroundColor: Colors.deepPurple,
+            backgroundColor: AppTheme.primary,
           );
         }
         return const SizedBox.shrink();
@@ -128,7 +129,7 @@ class _KaneevDetailScreenState extends State<KaneevDetailScreen> with SingleTick
   void _showRecordDonationDialog(KaneevGroup group) {
     final enrolledMembers = group.members ?? [];
     if (enrolledMembers.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No members enrolled')));
+      ScaffoldMessenger.of(context).showSnackBar(AppTheme.infoSnackBar('No members enrolled'));
       return;
     }
 
@@ -143,7 +144,7 @@ class _KaneevDetailScreenState extends State<KaneevDetailScreen> with SingleTick
   void _showSelectRecipientDialog(KaneevGroup group) {
     final enrolledMembers = group.members ?? [];
     if (enrolledMembers.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No members enrolled')));
+      ScaffoldMessenger.of(context).showSnackBar(AppTheme.infoSnackBar('No members enrolled'));
       return;
     }
 
@@ -151,7 +152,7 @@ class _KaneevDetailScreenState extends State<KaneevDetailScreen> with SingleTick
     final eligibleMembers = enrolledMembers.where((m) => !recipientMemberIds.contains(m.memberId)).toList();
 
     if (eligibleMembers.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('All members have already received')));
+      ScaffoldMessenger.of(context).showSnackBar(AppTheme.infoSnackBar('All members have already received'));
       return;
     }
 
@@ -259,7 +260,7 @@ class _SelectRecipientSheetState extends State<_SelectRecipientSheet> {
       expand: false,
       builder: (ctx, scrollController) => Container(
         decoration: const BoxDecoration(
-          color: Colors.white,
+          color: AppTheme.surface,
           borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
         ),
         child: Padding(
@@ -336,7 +337,7 @@ class _SelectRecipientSheetState extends State<_SelectRecipientSheet> {
                     Text('${filtered.length} eligible', style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
                     const Spacer(),
                     if (widget.recipientCount > 0)
-                      Text('${widget.recipientCount} already received', style: TextStyle(fontSize: 12, color: Colors.orange.shade700)),
+                      Text('${widget.recipientCount} already received', style: const TextStyle(fontSize: 12, color: AppTheme.accent)),
                   ],
                 ),
               ),
@@ -354,9 +355,9 @@ class _SelectRecipientSheetState extends State<_SelectRecipientSheet> {
                           final isSelected = _selectedMemberId == m.memberId;
                           return ListTile(
                             selected: isSelected,
-                            selectedTileColor: Colors.deepPurple.shade50,
+                            selectedTileColor: Theme.of(context).colorScheme.primaryContainer,
                             leading: CircleAvatar(
-                              backgroundColor: isSelected ? Colors.deepPurple : Colors.grey.shade200,
+                              backgroundColor: isSelected ? AppTheme.primary : Theme.of(context).colorScheme.surfaceContainerHighest,
                               child: isSelected
                                   ? const Icon(Icons.check, color: Colors.white, size: 18)
                                   : Text(m.memberName?[0].toUpperCase() ?? '?', style: const TextStyle(fontSize: 14)),
@@ -366,7 +367,7 @@ class _SelectRecipientSheetState extends State<_SelectRecipientSheet> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 if (m.ayalkoottamName != null)
-                                  Text(m.ayalkoottamName!, style: TextStyle(fontSize: 12, color: Colors.deepPurple.shade400)),
+                                  Text(m.ayalkoottamName!, style: const TextStyle(fontSize: 12, color: AppTheme.primary)),
                                 if (m.memberCode != null)
                                   Text(m.memberCode!, style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
                               ],
@@ -386,7 +387,7 @@ class _SelectRecipientSheetState extends State<_SelectRecipientSheet> {
                   onPressed: _selectedMemberId != null ? _confirmRecipient : null,
                   icon: const Icon(Icons.card_giftcard),
                   label: const Text('Confirm Recipient'),
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.deepPurple),
+                  style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primary),
                 ),
               ),
             ],
@@ -453,12 +454,12 @@ class _DonationSheetState extends State<_DonationSheet> {
         _paidDates[memberId] = DateTime.now().toIso8601String();
       });
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Donation recorded ✓')));
+        ScaffoldMessenger.of(context).showSnackBar(AppTheme.successSnackBar('Donation recorded'));
       }
     } else {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.read<KaneevProvider>().error ?? 'Error'), backgroundColor: Colors.red),
+          AppTheme.errorSnackBar(context.read<KaneevProvider>().error ?? 'Error'),
         );
       }
     }
@@ -475,7 +476,7 @@ class _DonationSheetState extends State<_DonationSheet> {
       expand: false,
       builder: (ctx, scrollController) => Container(
         decoration: const BoxDecoration(
-          color: Colors.white,
+          color: AppTheme.surface,
           borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
         ),
         child: Padding(
@@ -528,7 +529,7 @@ class _DonationSheetState extends State<_DonationSheet> {
                   ),
                   const SizedBox(width: 12),
                   Text('${_paidMemberIds.length}/${members.length} paid',
-                      style: TextStyle(color: Colors.green.shade700, fontWeight: FontWeight.w600)),
+                      style: const TextStyle(color: AppTheme.primary, fontWeight: FontWeight.w600)),
                 ],
               ),
               const Divider(),
@@ -546,9 +547,11 @@ class _DonationSheetState extends State<_DonationSheet> {
                       final paidDateStr = paidDate != null ? paidDate.split('T')[0] : null;
                       return ListTile(
                         leading: CircleAvatar(
-                          backgroundColor: isPaid ? Colors.green.shade50 : Colors.grey.shade100,
+                          backgroundColor: isPaid
+                              ? Theme.of(context).colorScheme.primaryContainer
+                              : Theme.of(context).colorScheme.surfaceContainerHighest,
                           child: isPaid
-                              ? const Icon(Icons.check_circle, color: Colors.green)
+                              ? const Icon(Icons.check_circle, color: AppTheme.primary)
                               : Text(m.memberName?[0].toUpperCase() ?? '?'),
                         ),
                         title: Text(m.memberName ?? 'Member #${m.memberId}'),
@@ -556,16 +559,16 @@ class _DonationSheetState extends State<_DonationSheet> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             if (m.ayalkoottamName != null)
-                              Text(m.ayalkoottamName!, style: TextStyle(fontSize: 12, color: Colors.deepPurple.shade400)),
+                              Text(m.ayalkoottamName!, style: const TextStyle(fontSize: 12, color: AppTheme.primary)),
                             Text(isPaid
                                 ? 'Paid ₹${widget.group.donationAmount.toStringAsFixed(0)} ✓${paidDateStr != null ? ' • $paidDateStr' : ''}'
                                 : 'Pending'),
                           ],
                         ),
                         trailing: isPaid
-                            ? const Icon(Icons.check, color: Colors.green)
+                            ? const Icon(Icons.check, color: AppTheme.primary)
                             : ElevatedButton(
-                                style: ElevatedButton.styleFrom(backgroundColor: Colors.deepPurple),
+                                style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primary),
                                 onPressed: () => _recordDonation(m.memberId),
                                 child: const Text('₹ Pay', style: TextStyle(color: Colors.white)),
                               ),
@@ -606,7 +609,7 @@ class _AddMemberSheetState extends State<_AddMemberSheet> {
       expand: false,
       builder: (ctx, scrollController) => Container(
         decoration: const BoxDecoration(
-          color: Colors.white,
+          color: AppTheme.surface,
           borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
         ),
         child: Padding(
@@ -690,10 +693,10 @@ class _AddMemberSheetState extends State<_AddMemberSheet> {
     final success = await context.read<KaneevProvider>().addMember(memberId);
     if (mounted) {
       if (success) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Member added successfully')));
+        ScaffoldMessenger.of(context).showSnackBar(AppTheme.successSnackBar('Member added successfully'));
         Navigator.pop(context);
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.read<KaneevProvider>().error ?? 'Error')));
+        ScaffoldMessenger.of(context).showSnackBar(AppTheme.errorSnackBar(context.read<KaneevProvider>().error ?? 'Error'));
       }
     }
   }
@@ -737,7 +740,7 @@ class _InfoTab extends StatelessWidget {
                 borderRadius: BorderRadius.circular(16),
                 child: Padding(
                   padding: const EdgeInsets.all(4),
-                  child: Icon(Icons.edit, size: 18, color: Colors.deepPurple.shade400),
+                  child: const Icon(Icons.edit, size: 18, color: AppTheme.primary),
                 ),
               ),
             ],
@@ -773,7 +776,7 @@ class _InfoTab extends StatelessWidget {
               final success = await context.read<KaneevProvider>().updateDonationAmount(amount);
               if (!success && context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(context.read<KaneevProvider>().error ?? 'Error'), backgroundColor: Colors.red),
+                  AppTheme.errorSnackBar(context.read<KaneevProvider>().error ?? 'Error'),
                 );
               }
             },
@@ -819,7 +822,9 @@ class _MembersTab extends StatelessWidget {
         final hasReceived = recipientMemberIds.contains(m.memberId);
         return ListTile(
           leading: CircleAvatar(
-            backgroundColor: hasReceived ? Colors.green.shade50 : Colors.deepPurple.shade50,
+            backgroundColor: hasReceived
+                ? Theme.of(context).colorScheme.primaryContainer
+                : Theme.of(context).colorScheme.secondaryContainer,
             child: Text('${m.slotNumber ?? (i + 1)}'),
           ),
           title: Text(m.memberName ?? 'Member #${m.memberId}'),
@@ -827,18 +832,18 @@ class _MembersTab extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               if (m.ayalkoottamName != null)
-                Text(m.ayalkoottamName!, style: TextStyle(fontSize: 12, color: Colors.deepPurple.shade400)),
+                Text(m.ayalkoottamName!, style: const TextStyle(fontSize: 12, color: AppTheme.primary)),
               Text(m.memberCode ?? '', style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
             ],
           ),
           trailing: hasReceived
               ? Chip(
                   label: const Text('Received', style: TextStyle(fontSize: 11, color: Colors.white)),
-                  backgroundColor: Colors.green,
+                  backgroundColor: AppTheme.primary,
                 )
               : Chip(
                   label: const Text('Pending', style: TextStyle(fontSize: 11)),
-                  backgroundColor: Colors.orange.shade100,
+                  backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
                 ),
         );
       },
@@ -867,7 +872,7 @@ class _RecipientsTab extends StatelessWidget {
           margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
           child: ListTile(
             leading: CircleAvatar(
-              backgroundColor: Colors.deepPurple.shade50,
+              backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
               child: Text('${r.monthNumber}'),
             ),
             title: Text(r.memberName ?? 'Member #${r.memberId}'),
@@ -899,9 +904,7 @@ class _BalanceTab extends StatelessWidget {
           margin: const EdgeInsets.all(16),
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Colors.deepPurple.shade700, Colors.deepPurple.shade400],
-            ),
+            gradient: AppTheme.heroGradient,
             borderRadius: BorderRadius.circular(16),
           ),
           child: Column(
@@ -916,7 +919,7 @@ class _BalanceTab extends StatelessWidget {
               Text(
                 group.currentBalance > 0 ? 'Surplus' : group.currentBalance < 0 ? 'Deficit' : 'Balanced',
                 style: TextStyle(
-                  color: group.currentBalance >= 0 ? Colors.greenAccent : Colors.redAccent,
+                  color: group.currentBalance >= 0 ? AppTheme.accentSoft : Theme.of(context).colorScheme.errorContainer,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -953,8 +956,8 @@ class _BalanceTab extends StatelessWidget {
                           children: [
                             CircleAvatar(
                               radius: 16,
-                              backgroundColor: Colors.deepPurple.shade50,
-                              child: Text('${log.monthNumber}', style: TextStyle(fontSize: 12, color: Colors.deepPurple.shade700)),
+                              backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
+                              child: Text('${log.monthNumber}', style: const TextStyle(fontSize: 12, color: AppTheme.primaryDark)),
                             ),
                             const SizedBox(width: 12),
                             Text('Month ${log.monthNumber}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
@@ -962,14 +965,16 @@ class _BalanceTab extends StatelessWidget {
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                               decoration: BoxDecoration(
-                                color: log.cumulativeBalance >= 0 ? Colors.green.shade50 : Colors.red.shade50,
+                                color: log.cumulativeBalance >= 0
+                                    ? Theme.of(context).colorScheme.primaryContainer
+                                    : Theme.of(context).colorScheme.errorContainer,
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Text(
                                 '₹${log.cumulativeBalance.toStringAsFixed(0)}',
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
-                                  color: log.cumulativeBalance >= 0 ? Colors.green.shade700 : Colors.red.shade700,
+                                  color: log.cumulativeBalance >= 0 ? AppTheme.primary : AppTheme.error,
                                 ),
                               ),
                             ),
@@ -979,16 +984,16 @@ class _BalanceTab extends StatelessWidget {
                         Row(
                           children: [
                             Expanded(
-                              child: _balanceItem('Collected', '₹${log.totalCollected.toStringAsFixed(0)}', Colors.blue),
+                              child: _balanceItem('Collected', '₹${log.totalCollected.toStringAsFixed(0)}', AppTheme.primary),
                             ),
                             Expanded(
-                              child: _balanceItem('Distributed', '₹${log.totalDistributed.toStringAsFixed(0)}', Colors.orange),
+                              child: _balanceItem('Distributed', '₹${log.totalDistributed.toStringAsFixed(0)}', AppTheme.accent),
                             ),
                             Expanded(
                               child: _balanceItem(
                                 'Month Bal.',
                                 '${log.monthBalance >= 0 ? '+' : ''}₹${log.monthBalance.toStringAsFixed(0)}',
-                                log.monthBalance >= 0 ? Colors.green : Colors.red,
+                                log.monthBalance >= 0 ? AppTheme.primary : AppTheme.error,
                               ),
                             ),
                           ],

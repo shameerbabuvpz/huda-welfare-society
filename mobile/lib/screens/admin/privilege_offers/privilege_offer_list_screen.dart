@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../../config/theme.dart';
 import '../../../models/privilege_offer.dart';
 import '../../../providers/privilege_offer_provider.dart';
 import 'privilege_offer_form_screen.dart';
@@ -97,14 +98,16 @@ class _OfferCard extends StatelessWidget {
                 CircleAvatar(
                   radius: 25,
                   backgroundImage: NetworkImage(offer.logoUrl!),
-                  backgroundColor: Colors.grey.shade100,
+                  backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
                 )
               else
                 Container(
                   width: 50,
                   height: 50,
                   decoration: BoxDecoration(
-                    color: isActive ? Colors.green.withOpacity(0.1) : Colors.grey.withOpacity(0.1),
+                    color: isActive
+                        ? Theme.of(context).colorScheme.primaryContainer
+                        : Theme.of(context).colorScheme.surfaceContainerHighest,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Center(
@@ -113,7 +116,7 @@ class _OfferCard extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
-                        color: isActive ? Colors.green : Colors.grey,
+                        color: isActive ? AppTheme.primary : Colors.grey,
                       ),
                     ),
                   ),
@@ -148,14 +151,16 @@ class _OfferCard extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                           decoration: BoxDecoration(
-                            color: isActive ? Colors.green.shade50 : Colors.red.shade50,
+                            color: isActive
+                                ? Theme.of(context).colorScheme.primaryContainer
+                                : Theme.of(context).colorScheme.errorContainer,
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
                             isActive ? 'Active' : 'Inactive',
                             style: TextStyle(
                               fontSize: 11,
-                              color: isActive ? Colors.green.shade700 : Colors.red.shade700,
+                              color: isActive ? AppTheme.primary : AppTheme.error,
                             ),
                           ),
                         ),

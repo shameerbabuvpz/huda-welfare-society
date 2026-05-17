@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../../config/theme.dart';
 import '../../../providers/kuri_provider.dart';
 import '../../../providers/ayalkoottam_provider.dart';
 import '../../../providers/member_provider.dart';
@@ -114,7 +115,7 @@ class _KuriDetailScreenState extends State<KuriDetailScreen> with SingleTickerPr
   void _showSelectWinnerDialog(KuriGroup group) {
     final enrolledMembers = group.members ?? [];
     if (enrolledMembers.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No members enrolled')));
+      ScaffoldMessenger.of(context).showSnackBar(AppTheme.infoSnackBar('No members enrolled'));
       return;
     }
 
@@ -231,7 +232,7 @@ class _AddMemberSheetState extends State<_AddMemberSheet> {
       expand: false,
       builder: (ctx, scrollController) => Container(
         decoration: const BoxDecoration(
-          color: Colors.white,
+          color: AppTheme.surface,
           borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
         ),
         child: Padding(
@@ -252,8 +253,11 @@ class _AddMemberSheetState extends State<_AddMemberSheet> {
                 if (_addedCount > 0)
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(color: Colors.green.shade50, borderRadius: BorderRadius.circular(16)),
-                    child: Text('$_addedCount added', style: TextStyle(fontSize: 13, color: Colors.green.shade700, fontWeight: FontWeight.w600)),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.primaryContainer,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Text('$_addedCount added', style: const TextStyle(fontSize: 13, color: AppTheme.primary, fontWeight: FontWeight.w600)),
                   ),
                 IconButton(
                   icon: const Icon(Icons.close, size: 22),
@@ -298,7 +302,7 @@ class _AddMemberSheetState extends State<_AddMemberSheet> {
                     if (_selectedMemberIds.isNotEmpty)
                       Text(
                         '${_selectedMemberIds.length} selected',
-                        style: TextStyle(fontSize: 13, color: Theme.of(context).primaryColor, fontWeight: FontWeight.w600),
+                        style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.w600),
                       ),
                     const SizedBox(width: 8),
                     InkWell(
@@ -319,7 +323,7 @@ class _AddMemberSheetState extends State<_AddMemberSheet> {
                         _selectedMemberIds.length == _filteredMembers.where((m) => !_addedMemberIds.contains(m.id)).length && _selectedMemberIds.isNotEmpty
                             ? 'Deselect All'
                             : 'Select All',
-                        style: TextStyle(fontSize: 13, color: Theme.of(context).primaryColor, fontWeight: FontWeight.w500),
+                        style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.w500),
                       ),
                     ),
                   ],
@@ -335,9 +339,9 @@ class _AddMemberSheetState extends State<_AddMemberSheet> {
                     final isSelected = _selectedMemberIds.contains(m.id);
                     return ListTile(
                       leading: isAdded
-                          ? CircleAvatar(backgroundColor: Colors.green.shade50, child: const Icon(Icons.check, color: Colors.green))
+                        ? CircleAvatar(backgroundColor: Theme.of(context).colorScheme.primaryContainer, child: const Icon(Icons.check, color: AppTheme.primary))
                           : CircleAvatar(
-                              backgroundColor: isSelected ? Theme.of(context).primaryColor : null,
+                          backgroundColor: isSelected ? Theme.of(context).colorScheme.primary : null,
                               child: isSelected
                                   ? const Icon(Icons.check, color: Colors.white, size: 20)
                                   : Text(m.name[0].toUpperCase()),
@@ -345,7 +349,7 @@ class _AddMemberSheetState extends State<_AddMemberSheet> {
                       title: Text(m.name, style: TextStyle(color: isAdded ? Colors.grey : null)),
                       subtitle: Text(m.phone ?? '', style: TextStyle(color: isAdded ? Colors.grey.shade400 : null)),
                       trailing: isAdded
-                          ? Text('Added', style: TextStyle(color: Colors.green.shade600, fontSize: 12, fontWeight: FontWeight.w600))
+                          ? const Text('Added', style: TextStyle(color: AppTheme.primary, fontSize: 12, fontWeight: FontWeight.w600))
                           : null,
                       onTap: isAdded ? null : () {
                         setState(() {
@@ -438,12 +442,12 @@ class _AddMemberSheetState extends State<_AddMemberSheet> {
       setState(() => _adding = false);
       if (successCount > 0) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('$successCount member${successCount > 1 ? 's' : ''} added successfully')),
+          AppTheme.successSnackBar('$successCount member${successCount > 1 ? 's' : ''} added successfully'),
         );
       }
       if (successCount < ids.length) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${ids.length - successCount} member${ids.length - successCount > 1 ? 's' : ''} failed'), backgroundColor: Colors.red),
+          AppTheme.errorSnackBar('${ids.length - successCount} member${ids.length - successCount > 1 ? 's' : ''} failed'),
         );
       }
     }
@@ -504,10 +508,12 @@ class _MembersTab extends StatelessWidget {
           trailing: Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
             decoration: BoxDecoration(
-              color: m.status == 'active' ? Colors.green.shade50 : Colors.red.shade50,
+              color: m.status == 'active'
+                  ? Theme.of(context).colorScheme.primaryContainer
+                  : Theme.of(context).colorScheme.errorContainer,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Text(m.status, style: TextStyle(fontSize: 12, color: m.status == 'active' ? Colors.green : Colors.red)),
+            child: Text(m.status, style: TextStyle(fontSize: 12, color: m.status == 'active' ? AppTheme.primary : AppTheme.error)),
           ),
         );
       },
@@ -530,14 +536,14 @@ class _WinnersTab extends StatelessWidget {
         final w = winners[i];
         return ListTile(
           leading: CircleAvatar(
-            backgroundColor: Colors.amber.shade50,
-            child: const Icon(Icons.emoji_events, color: Colors.amber),
+            backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
+            child: const Icon(Icons.emoji_events, color: AppTheme.accent),
           ),
           title: Text(w.memberName ?? 'Member'),
           subtitle: Text('Month ${w.monthNumber} • ${w.wonDate}'),
           trailing: w.payoutAmount != null
-              ? Text('₹${w.payoutAmount!.toStringAsFixed(0)}', style: const TextStyle(fontWeight: FontWeight.w600, color: Colors.green))
-              : const Text('Pending', style: TextStyle(color: Colors.orange)),
+              ? Text('₹${w.payoutAmount!.toStringAsFixed(0)}', style: const TextStyle(fontWeight: FontWeight.w600, color: AppTheme.primary))
+              : const Text('Pending', style: TextStyle(color: AppTheme.accent)),
         );
       },
     );

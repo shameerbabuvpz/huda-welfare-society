@@ -2,6 +2,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
+import '../../../config/theme.dart';
 import '../../../providers/privilege_offer_provider.dart';
 
 class PrivilegeOfferFormScreen extends StatefulWidget {
@@ -276,7 +277,7 @@ class _PrivilegeOfferFormScreenState extends State<PrivilegeOfferFormScreen> {
     required VoidCallback onClear,
     required bool isCircle,
   }) {
-    final hasImage = bytes != null || (existingUrl != null && existingUrl!.isNotEmpty);
+    final hasImage = bytes != null || (existingUrl != null && existingUrl.isNotEmpty);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -297,8 +298,8 @@ class _PrivilegeOfferFormScreenState extends State<PrivilegeOfferFormScreen> {
                   border: Border.all(color: Colors.grey.shade300),
                   image: bytes != null
                       ? DecorationImage(image: MemoryImage(bytes), fit: BoxFit.cover)
-                      : existingUrl != null && existingUrl!.isNotEmpty
-                          ? DecorationImage(image: NetworkImage(existingUrl!), fit: BoxFit.cover)
+                      : existingUrl != null && existingUrl.isNotEmpty
+                        ? DecorationImage(image: NetworkImage(existingUrl), fit: BoxFit.cover)
                           : null,
                 ),
                 child: !hasImage
@@ -324,8 +325,8 @@ class _PrivilegeOfferFormScreenState extends State<PrivilegeOfferFormScreen> {
                   ),
                   TextButton.icon(
                     onPressed: onClear,
-                    icon: const Icon(Icons.close, size: 16, color: Colors.red),
-                    label: const Text('Remove', style: TextStyle(color: Colors.red)),
+                    icon: const Icon(Icons.close, size: 16, color: AppTheme.error),
+                    label: const Text('Remove', style: TextStyle(color: AppTheme.error)),
                   ),
                 ],
               ),

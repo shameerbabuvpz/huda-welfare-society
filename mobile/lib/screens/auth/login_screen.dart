@@ -45,9 +45,7 @@ class _LoginScreenState extends State<LoginScreen> {
       _otpFocusNodes[0].requestFocus();
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content: Text(auth.error ?? 'Failed to send OTP'),
-            backgroundColor: Colors.red),
+        AppTheme.errorSnackBar(auth.error ?? 'Failed to send OTP'),
       );
     }
   }
@@ -116,9 +114,7 @@ class _LoginScreenState extends State<LoginScreen> {
       _clearOtp();
       _otpFocusNodes[0].requestFocus();
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content: Text(auth.error ?? 'Invalid OTP'),
-            backgroundColor: Colors.red),
+        AppTheme.errorSnackBar(auth.error ?? 'Invalid OTP'),
       );
     }
   }

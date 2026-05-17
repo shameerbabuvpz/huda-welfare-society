@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../config/theme.dart';
 import '../../providers/notification_provider.dart';
 
 class MyNotificationsScreen extends StatefulWidget {
@@ -43,8 +44,8 @@ class _MyNotificationsScreenState extends State<MyNotificationsScreen> {
                       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                       child: ListTile(
                         leading: CircleAvatar(
-                          backgroundColor: Colors.blue.shade50,
-                          child: const Icon(Icons.notifications, color: Colors.blue),
+                          backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                          child: const Icon(Icons.notifications, color: AppTheme.primary),
                         ),
                         title: Text(n.title),
                         subtitle: Column(

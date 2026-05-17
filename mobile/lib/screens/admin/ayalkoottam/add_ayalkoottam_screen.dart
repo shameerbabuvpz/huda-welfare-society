@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../../config/theme.dart';
 import '../../../providers/ayalkoottam_provider.dart';
 
 class AddAyalkoottamScreen extends StatefulWidget {
@@ -36,11 +37,11 @@ class _AddAyalkoottamScreenState extends State<AddAyalkoottamScreen> {
 
     if (!mounted) return;
     if (success) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Ayalkoottam added')));
+      ScaffoldMessenger.of(context).showSnackBar(AppTheme.successSnackBar('Ayalkoottam added'));
       Navigator.pop(context);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.read<AyalkoottamProvider>().error ?? 'Failed'), backgroundColor: Colors.red),
+        AppTheme.errorSnackBar(context.read<AyalkoottamProvider>().error ?? 'Failed'),
       );
     }
   }

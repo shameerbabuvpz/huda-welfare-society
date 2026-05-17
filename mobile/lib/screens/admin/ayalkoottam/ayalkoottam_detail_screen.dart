@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../../config/theme.dart';
 import '../../../models/ayalkoottam.dart';
 import '../../../providers/ayalkoottam_provider.dart';
 import '../../../providers/member_provider.dart';
@@ -84,10 +85,15 @@ class _AyalkoottamDetailScreenState extends State<AyalkoottamDetailScreen> {
                 trailing: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                   decoration: BoxDecoration(
-                    color: m.status == 'active' ? Colors.green.shade50 : Colors.red.shade50,
+                    color: m.status == 'active'
+                        ? Theme.of(context).colorScheme.primaryContainer
+                        : Theme.of(context).colorScheme.errorContainer,
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Text(m.status, style: TextStyle(fontSize: 12, color: m.status == 'active' ? Colors.green : Colors.red)),
+                  child: Text(
+                    m.status,
+                    style: TextStyle(fontSize: 12, color: m.status == 'active' ? AppTheme.primary : AppTheme.error),
+                  ),
                 ),
               ),
             )),
@@ -121,7 +127,7 @@ class _AyalkoottamDetailScreenState extends State<AyalkoottamDetailScreen> {
       actions: [
         OutlinedButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
         ElevatedButton(
-          style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+          style: ElevatedButton.styleFrom(backgroundColor: AppTheme.error),
           onPressed: () async {
             Navigator.pop(context);
             await context.read<AyalkoottamProvider>().deactivate(_ak.id);

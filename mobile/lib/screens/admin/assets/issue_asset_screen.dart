@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../../config/theme.dart';
 import '../../../providers/asset_provider.dart';
 import '../../../models/asset.dart';
 import '../../../models/member.dart';
@@ -89,18 +90,12 @@ class _IssueAssetScreenState extends State<IssueAssetScreen> {
     if (!mounted) return;
     if (success) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('${_selectedAsset!.name} issued to ${_selectedMember!.name}'),
-          backgroundColor: Colors.green,
-        ),
+        AppTheme.successSnackBar('${_selectedAsset!.name} issued to ${_selectedMember!.name}'),
       );
       Navigator.pop(context);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(context.read<AssetProvider>().error ?? 'Failed to issue'),
-          backgroundColor: Colors.red,
-        ),
+        AppTheme.errorSnackBar(context.read<AssetProvider>().error ?? 'Failed to issue'),
       );
     }
   }
@@ -124,7 +119,7 @@ class _IssueAssetScreenState extends State<IssueAssetScreen> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.grey.shade100,
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Center(child: Text('No items available for issue')),
@@ -146,17 +141,20 @@ class _IssueAssetScreenState extends State<IssueAssetScreen> {
                           width: 140,
                           padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
-                            color: selected ? Colors.blue.shade50 : Colors.white,
-                            border: Border.all(color: selected ? Colors.blue : Colors.grey.shade300, width: selected ? 2 : 1),
+                            color: selected ? Theme.of(context).colorScheme.primaryContainer : Colors.white,
+                            border: Border.all(
+                              color: selected ? AppTheme.primary : Theme.of(context).colorScheme.outline,
+                              width: selected ? 2 : 1,
+                            ),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.inventory_2, size: 20, color: selected ? Colors.blue : Colors.grey),
+                              Icon(Icons.inventory_2, size: 20, color: selected ? AppTheme.primary : Colors.grey),
                               const SizedBox(height: 4),
-                              Text(asset.name, style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: selected ? Colors.blue : Colors.black), maxLines: 1, overflow: TextOverflow.ellipsis),
+                              Text(asset.name, style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: selected ? AppTheme.primary : Colors.black), maxLines: 1, overflow: TextOverflow.ellipsis),
                               Text(asset.category ?? 'General', style: TextStyle(fontSize: 11, color: Colors.grey.shade600), maxLines: 1),
                             ],
                           ),
@@ -197,15 +195,15 @@ class _IssueAssetScreenState extends State<IssueAssetScreen> {
                             return ListTile(
                               dense: true,
                               selected: selected,
-                              selectedTileColor: Colors.blue.shade50,
+                              selectedTileColor: Theme.of(context).colorScheme.primaryContainer,
                               leading: CircleAvatar(
                                 radius: 16,
-                                backgroundColor: selected ? Colors.blue : Colors.grey.shade200,
+                                backgroundColor: selected ? AppTheme.primary : Colors.grey.shade200,
                                 child: Text(m.name[0].toUpperCase(), style: TextStyle(color: selected ? Colors.white : Colors.black, fontSize: 12)),
                               ),
                               title: Text(m.name, style: const TextStyle(fontSize: 14)),
                               subtitle: Text(m.phone ?? '', style: const TextStyle(fontSize: 12)),
-                              trailing: selected ? const Icon(Icons.check_circle, color: Colors.blue) : null,
+                              trailing: selected ? const Icon(Icons.check_circle, color: AppTheme.primary) : null,
                               onTap: () => setState(() => _selectedMember = m),
                             );
                           },
@@ -241,9 +239,9 @@ class _IssueAssetScreenState extends State<IssueAssetScreen> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.blue.shade50,
+                  color: Theme.of(context).colorScheme.primaryContainer,
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.blue.shade200),
+                  border: Border.all(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.22)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,

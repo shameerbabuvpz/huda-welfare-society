@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../config/theme.dart';
 import '../../../services/api_service.dart';
 
 class ReportsScreen extends StatefulWidget {
@@ -50,7 +51,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                 _ReportCard(
                   title: 'Members',
                   icon: Icons.people,
-                  color: Colors.blue,
+                  color: AppTheme.primary,
                   items: _memberReport != null
                       ? {'Active': '${_memberReport!['active']}', 'Inactive': '${_memberReport!['inactive']}'}
                       : {},
@@ -59,7 +60,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                 _ReportCard(
                   title: 'Assets',
                   icon: Icons.inventory,
-                  color: Colors.orange,
+                  color: AppTheme.accent,
                   items: _assetReport != null
                       ? {
                           'Available': '${_assetReport!['available']}',
@@ -72,7 +73,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                 _ReportCard(
                   title: 'Notifications',
                   icon: Icons.notifications,
-                  color: Colors.purple,
+                  color: AppTheme.primaryDark,
                   items: _notifReport != null
                       ? {
                           'Total': '${_notifReport!['total_notifications']}',

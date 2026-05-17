@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../config/theme.dart';
 import '../../models/asset.dart';
 import '../../services/asset_service.dart';
 
@@ -52,8 +53,10 @@ class _MyAssetsScreenState extends State<MyAssetsScreen> {
                       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                       child: ListTile(
                         leading: CircleAvatar(
-                          backgroundColor: isOverdue ? Colors.red.shade50 : Colors.blue.shade50,
-                          child: Icon(Icons.inventory, color: isOverdue ? Colors.red : Colors.blue),
+                          backgroundColor: isOverdue
+                              ? Theme.of(context).colorScheme.errorContainer
+                              : Theme.of(context).colorScheme.primaryContainer,
+                          child: Icon(Icons.inventory, color: isOverdue ? AppTheme.error : AppTheme.primary),
                         ),
                         title: Text(a.assetName ?? 'Asset'),
                         subtitle: Column(
@@ -61,12 +64,15 @@ class _MyAssetsScreenState extends State<MyAssetsScreen> {
                           children: [
                             Text('Code: ${a.assetCode ?? ''}'),
                             Text('Issued: ${a.issueDate}'),
-                            if (a.dueDate != null) Text('Due: ${a.dueDate}', style: TextStyle(color: isOverdue ? Colors.red : null)),
+                            if (a.dueDate != null) Text('Due: ${a.dueDate}', style: TextStyle(color: isOverdue ? AppTheme.error : null)),
                           ],
                         ),
                         trailing: isOverdue
-                            ? const Chip(label: Text('OVERDUE', style: TextStyle(fontSize: 10, color: Colors.white)), backgroundColor: Colors.red)
-                            : const Chip(label: Text('ISSUED', style: TextStyle(fontSize: 10)), backgroundColor: Color(0xFFE3F2FD)),
+                            ? const Chip(label: Text('OVERDUE', style: TextStyle(fontSize: 10, color: Colors.white)), backgroundColor: AppTheme.error)
+                            : Chip(
+                                label: const Text('ISSUED', style: TextStyle(fontSize: 10)),
+                                backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                              ),
                         isThreeLine: true,
                       ),
                     );

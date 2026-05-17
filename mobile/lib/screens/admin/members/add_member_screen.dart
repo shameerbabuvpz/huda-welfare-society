@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import '../../../config/theme.dart';
 import '../../../providers/member_provider.dart';
 import '../../../providers/ayalkoottam_provider.dart';
 import '../../../services/member_service.dart';
@@ -40,7 +41,7 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
     if (!_formKey.currentState!.validate()) return;
     if (_selectedAyalkoottamId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Select an Ayalkoottam'), backgroundColor: Colors.red),
+        AppTheme.errorSnackBar('Select an Ayalkoottam'),
       );
       return;
     }
@@ -60,7 +61,7 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
           actions: [
             OutlinedButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
             ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+              style: ElevatedButton.styleFrom(backgroundColor: AppTheme.error),
               onPressed: () => Navigator.pop(context, true),
               child: const Text('Replace'),
             ),
@@ -85,11 +86,11 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
 
     if (!mounted) return;
     if (success) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Member added')));
+      ScaffoldMessenger.of(context).showSnackBar(AppTheme.successSnackBar('Member added'));
       Navigator.pop(context);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.read<MemberProvider>().error ?? 'Failed'), backgroundColor: Colors.red),
+        AppTheme.errorSnackBar(context.read<MemberProvider>().error ?? 'Failed'),
       );
     }
   }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../config/theme.dart';
 import '../../models/kuri_group.dart';
 import '../../services/kuri_service.dart';
 
@@ -72,13 +73,16 @@ class _KuriCard extends StatelessWidget {
                 if (status.hasWon)
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(color: Colors.amber.shade50, borderRadius: BorderRadius.circular(12)),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.secondaryContainer,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.emoji_events, size: 14, color: Colors.amber),
+                        const Icon(Icons.emoji_events, size: 14, color: AppTheme.accent),
                         const SizedBox(width: 4),
-                        Text('Won Month ${status.winMonth}', style: const TextStyle(fontSize: 12, color: Colors.amber)),
+                        Text('Won Month ${status.winMonth}', style: const TextStyle(fontSize: 12, color: AppTheme.accent)),
                       ],
                     ),
                   ),
@@ -93,7 +97,7 @@ class _KuriCard extends StatelessWidget {
                 Expanded(
                   child: Column(
                     children: [
-                      Text('${status.paidMonths.length}', style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.green)),
+                      Text('${status.paidMonths.length}', style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppTheme.primary)),
                       const Text('Paid', style: TextStyle(fontSize: 12)),
                     ],
                   ),
@@ -101,7 +105,7 @@ class _KuriCard extends StatelessWidget {
                 Expanded(
                   child: Column(
                     children: [
-                      Text('${status.pendingMonths.length}', style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.orange)),
+                      Text('${status.pendingMonths.length}', style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppTheme.accent)),
                       const Text('Pending', style: TextStyle(fontSize: 12)),
                     ],
                   ),
@@ -110,7 +114,7 @@ class _KuriCard extends StatelessWidget {
             ),
             if (status.pendingMonths.isNotEmpty) ...[
               const SizedBox(height: 12),
-              Text('Pending months: ${status.pendingMonths.join(', ')}', style: TextStyle(fontSize: 12, color: Colors.red.shade300)),
+              Text('Pending months: ${status.pendingMonths.join(', ')}', style: TextStyle(fontSize: 12, color: AppTheme.error.withValues(alpha: 0.8))),
             ],
           ],
         ),

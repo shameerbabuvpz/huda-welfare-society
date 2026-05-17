@@ -286,9 +286,9 @@ void _showProfileSheet(BuildContext context) {
                             context, AppRoutes.login);
                       }
                     },
-                    icon: const Icon(Icons.logout, color: Colors.red),
+                    icon: const Icon(Icons.logout, color: AppTheme.error),
                     label: const Text('Logout',
-                        style: TextStyle(color: Colors.red)),
+                        style: TextStyle(color: AppTheme.error)),
                   ),
                 ),
                 const SizedBox(width: 12),

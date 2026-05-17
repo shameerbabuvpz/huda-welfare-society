@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../../config/theme.dart';
 import '../../../models/privilege_offer.dart';
 import '../../../providers/privilege_offer_provider.dart';
 import '../../../services/api_service.dart';
@@ -51,7 +52,7 @@ class _PrivilegeOfferDetailScreenState extends State<PrivilegeOfferDetailScreen>
       if (!mounted) return;
       _load();
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(AppTheme.errorSnackBar(e.toString()));
     }
   }
 
@@ -63,7 +64,11 @@ class _PrivilegeOfferDetailScreenState extends State<PrivilegeOfferDetailScreen>
         content: const Text('This cannot be undone.'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
-          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Delete')),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: AppTheme.error),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Delete'),
+          ),
         ],
       ),
     );
@@ -74,7 +79,7 @@ class _PrivilegeOfferDetailScreenState extends State<PrivilegeOfferDetailScreen>
       if (!mounted) return;
       Navigator.pop(context, true);
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(AppTheme.errorSnackBar(e.toString()));
     }
   }
 
@@ -97,7 +102,7 @@ class _PrivilegeOfferDetailScreenState extends State<PrivilegeOfferDetailScreen>
                   value: 'toggle',
                   child: Text(_offer!.status == 'active' ? 'Deactivate' : 'Activate'),
                 ),
-                const PopupMenuItem(value: 'delete', child: Text('Delete', style: TextStyle(color: Colors.red))),
+                const PopupMenuItem(value: 'delete', child: Text('Delete', style: TextStyle(color: AppTheme.error))),
               ],
             ),
         ],
@@ -156,7 +161,7 @@ class _PrivilegeOfferDetailScreenState extends State<PrivilegeOfferDetailScreen>
                       CircleAvatar(
                         radius: 24,
                         backgroundImage: NetworkImage(offer.logoUrl!),
-                        backgroundColor: Colors.grey.shade100,
+                        backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
                       ),
                       const SizedBox(width: 12),
                     ],
@@ -166,13 +171,15 @@ class _PrivilegeOfferDetailScreenState extends State<PrivilegeOfferDetailScreen>
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
-                        color: offer.status == 'active' ? Colors.green.shade50 : Colors.red.shade50,
+                        color: offer.status == 'active'
+                            ? Theme.of(context).colorScheme.primaryContainer
+                            : Theme.of(context).colorScheme.errorContainer,
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
                         offer.status == 'active' ? 'Active' : 'Inactive',
                         style: TextStyle(
-                          color: offer.status == 'active' ? Colors.green.shade700 : Colors.red.shade700,
+                          color: offer.status == 'active' ? AppTheme.primary : AppTheme.error,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -237,7 +244,7 @@ class _PrivilegeOfferDetailScreenState extends State<PrivilegeOfferDetailScreen>
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.grey.shade200),
+                  border: Border.all(color: Theme.of(context).colorScheme.outline),
                 ),
                 child: Image.memory(
                   base64Decode(offer.qrData!.split(',').last),
@@ -304,8 +311,8 @@ class _PrivilegeOfferDetailScreenState extends State<PrivilegeOfferDetailScreen>
               margin: const EdgeInsets.only(bottom: 8),
               child: ListTile(
                 leading: CircleAvatar(
-                  backgroundColor: Colors.blue.shade50,
-                  child: Text('${i + 1}', style: TextStyle(color: Colors.blue.shade700)),
+                  backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                  child: Text('${i + 1}', style: const TextStyle(color: AppTheme.primary)),
                 ),
                 title: Text(r.memberName ?? 'Member'),
                 subtitle: Text(r.memberCode ?? ''),
@@ -367,15 +374,15 @@ class _InfoChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: Colors.grey.shade100,
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 16, color: Colors.grey.shade700),
+          Icon(icon, size: 16, color: AppTheme.ink.withValues(alpha: 0.7)),
           const SizedBox(width: 4),
-          Text(label, style: TextStyle(fontSize: 13, color: Colors.grey.shade700)),
+          Text(label, style: TextStyle(fontSize: 13, color: AppTheme.ink.withValues(alpha: 0.78))),
         ],
       ),
     );

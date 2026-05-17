@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import '../../config/theme.dart';
 import '../../models/privilege_offer.dart';
 import '../../services/privilege_offer_service.dart';
 
@@ -94,17 +95,14 @@ class _MemberOffersScreenState extends State<MemberOffersScreen> with SingleTick
       final redemption = await PrivilegeOfferService.redeem(qrCode);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('✓ Redeemed at ${redemption.companyName}!'),
-            backgroundColor: Colors.green,
-          ),
+          AppTheme.successSnackBar('Redeemed at ${redemption.companyName}!'),
         );
         _load();
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
+          AppTheme.errorSnackBar(e.toString()),
         );
       }
     }
@@ -196,8 +194,8 @@ class _MemberOffersScreenState extends State<MemberOffersScreen> with SingleTick
             margin: const EdgeInsets.only(bottom: 10),
             child: ListTile(
               leading: CircleAvatar(
-                backgroundColor: Colors.green.shade50,
-                child: Icon(Icons.check_circle, color: Colors.green.shade700),
+                backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                child: const Icon(Icons.check_circle, color: AppTheme.primary),
               ),
               title: Text(r.companyName ?? 'Partner'),
               subtitle: Text(
@@ -207,7 +205,7 @@ class _MemberOffersScreenState extends State<MemberOffersScreen> with SingleTick
               ),
               trailing: Text(
                 _redemptionLabel(r),
-                style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green.shade700),
+                style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.primary),
               ),
             ),
           );
@@ -244,7 +242,7 @@ class _MemberOfferCard extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
             gradient: LinearGradient(
-              colors: [Colors.deepPurple.shade50, Colors.white],
+              colors: [Theme.of(context).colorScheme.secondaryContainer, Colors.white],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -255,23 +253,23 @@ class _MemberOfferCard extends StatelessWidget {
                 CircleAvatar(
                   radius: 30,
                   backgroundImage: NetworkImage(offer.logoUrl!),
-                  backgroundColor: Colors.grey.shade100,
+                  backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
                 )
               else
                 Container(
                   width: 60,
                   height: 60,
                   decoration: BoxDecoration(
-                    color: Colors.deepPurple.withOpacity(0.1),
+                    color: Theme.of(context).colorScheme.primaryContainer,
                     borderRadius: BorderRadius.circular(14),
                   ),
                   child: Center(
                     child: Text(
                       _offerBadge(),
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: Colors.deepPurple.shade700,
+                        color: AppTheme.primary,
                       ),
                       textAlign: TextAlign.center,
                     ),
@@ -348,15 +346,15 @@ class _MemberOfferCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: Colors.deepPurple.shade50,
+                color: Theme.of(context).colorScheme.primaryContainer,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
                 _offerBadge().replaceAll('\n', ' '),
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: Colors.deepPurple.shade700,
+                  color: AppTheme.primary,
                 ),
               ),
             ),
@@ -371,9 +369,9 @@ class _MemberOfferCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.grey.shade50,
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: Colors.grey.shade200),
+                  border: Border.all(color: Theme.of(context).colorScheme.outline),
                 ),
                 child: Text(offer.termsAndConditions!, style: const TextStyle(height: 1.5)),
               ),

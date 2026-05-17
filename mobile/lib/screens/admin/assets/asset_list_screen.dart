@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../../config/theme.dart';
 import '../../../providers/asset_provider.dart';
 import '../../../models/asset.dart';
 import '../../../models/member.dart';
@@ -107,10 +108,10 @@ class _ItemsTab extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _StatChip(label: 'Total', value: '${stats.total}', color: Colors.blue),
-                _StatChip(label: 'Available', value: '${stats.available}', color: Colors.green),
-                _StatChip(label: 'Issued', value: '${stats.issued}', color: Colors.orange),
-                _StatChip(label: 'Damaged', value: '${stats.damaged}', color: Colors.red),
+                _StatChip(label: 'Total', value: '${stats.total}', color: AppTheme.primaryDark),
+                _StatChip(label: 'Available', value: '${stats.available}', color: AppTheme.primary),
+                _StatChip(label: 'Issued', value: '${stats.issued}', color: AppTheme.accent),
+                _StatChip(label: 'Damaged', value: '${stats.damaged}', color: AppTheme.error),
               ],
             ),
           ),
@@ -160,10 +161,10 @@ class _AssetTile extends StatelessWidget {
 
   Color _statusColor() {
     switch (asset.status) {
-      case 'available': return Colors.green;
-      case 'issued': return Colors.orange;
-      case 'damaged': return Colors.red;
-      case 'missing': return Colors.purple;
+      case 'available': return AppTheme.primary;
+      case 'issued': return AppTheme.accent;
+      case 'damaged': return AppTheme.error;
+      case 'missing': return AppTheme.primaryDark;
       default: return Colors.grey;
     }
   }
@@ -467,10 +468,10 @@ class _IssueRegisterTile extends StatelessWidget {
   const _IssueRegisterTile({required this.txn});
 
   Color _statusColor() {
-    if (txn.status == 'issued') return Colors.orange;
-    if (txn.status == 'returned') return Colors.green;
-    if (txn.status == 'returned_damaged') return Colors.red;
-    if (txn.status == 'returned_missing') return Colors.purple;
+    if (txn.status == 'issued') return AppTheme.accent;
+    if (txn.status == 'returned') return AppTheme.primary;
+    if (txn.status == 'returned_damaged') return AppTheme.error;
+    if (txn.status == 'returned_missing') return AppTheme.primaryDark;
     return Colors.grey;
   }
 
@@ -519,13 +520,13 @@ class _IssueRegisterTile extends StatelessWidget {
               const SizedBox(height: 4),
               Row(
                 children: [
-                  Icon(Icons.assignment_return, size: 14, color: Colors.green.shade600),
+                  const Icon(Icons.assignment_return, size: 14, color: AppTheme.primary),
                   const SizedBox(width: 4),
-                  Text('Returned: ${txn.returnDate}', style: TextStyle(fontSize: 12, color: Colors.green.shade700)),
+                  Text('Returned: ${txn.returnDate}', style: const TextStyle(fontSize: 12, color: AppTheme.primary)),
                   if (txn.conditionOnReturn != null && txn.conditionOnReturn != 'working') ...[
                     const SizedBox(width: 8),
-                    Icon(Icons.warning_amber, size: 14, color: Colors.red.shade600),
-                    Text(' ${txn.conditionOnReturn}', style: TextStyle(fontSize: 12, color: Colors.red.shade700)),
+                    const Icon(Icons.warning_amber, size: 14, color: AppTheme.error),
+                    Text(' ${txn.conditionOnReturn}', style: const TextStyle(fontSize: 12, color: AppTheme.error)),
                   ],
                 ],
               ),
@@ -534,9 +535,9 @@ class _IssueRegisterTile extends StatelessWidget {
               const SizedBox(height: 4),
               Row(
                 children: [
-                  const Icon(Icons.timer_off, size: 14, color: Colors.red),
+                  const Icon(Icons.timer_off, size: 14, color: AppTheme.error),
                   const SizedBox(width: 4),
-                  Text('OVERDUE - Due: ${txn.dueDate}', style: const TextStyle(fontSize: 12, color: Colors.red, fontWeight: FontWeight.w500)),
+                  Text('OVERDUE - Due: ${txn.dueDate}', style: const TextStyle(fontSize: 12, color: AppTheme.error, fontWeight: FontWeight.w500)),
                 ],
               ),
             ],
@@ -581,7 +582,7 @@ class _DamageReportTabState extends State<_DamageReportTab> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.check_circle_outline, size: 64, color: Colors.green.shade200),
+            Icon(Icons.check_circle_outline, size: 64, color: Theme.of(context).colorScheme.primaryContainer),
             const SizedBox(height: 12),
             Text('No damaged or missing items', style: TextStyle(color: Colors.grey.shade600)),
           ],
@@ -601,8 +602,10 @@ class _DamageReportTabState extends State<_DamageReportTab> {
             margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
             child: ListTile(
               leading: CircleAvatar(
-                backgroundColor: isDamaged ? Colors.orange.shade50 : Colors.red.shade50,
-                child: Icon(isDamaged ? Icons.warning_amber : Icons.help_outline, color: isDamaged ? Colors.orange : Colors.red),
+                backgroundColor: isDamaged
+                    ? Theme.of(context).colorScheme.secondaryContainer
+                    : Theme.of(context).colorScheme.errorContainer,
+                child: Icon(isDamaged ? Icons.warning_amber : Icons.help_outline, color: isDamaged ? AppTheme.accent : AppTheme.error),
               ),
               title: Text(item['name'] ?? '', style: const TextStyle(fontWeight: FontWeight.w500)),
               subtitle: Column(
@@ -615,8 +618,13 @@ class _DamageReportTabState extends State<_DamageReportTab> {
               ),
               trailing: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(color: isDamaged ? Colors.orange.shade50 : Colors.red.shade50, borderRadius: BorderRadius.circular(12)),
-                child: Text(condition.toUpperCase(), style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: isDamaged ? Colors.orange : Colors.red)),
+                decoration: BoxDecoration(
+                  color: isDamaged
+                      ? Theme.of(context).colorScheme.secondaryContainer
+                      : Theme.of(context).colorScheme.errorContainer,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(condition.toUpperCase(), style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: isDamaged ? AppTheme.accent : AppTheme.error)),
               ),
               isThreeLine: true,
             ),

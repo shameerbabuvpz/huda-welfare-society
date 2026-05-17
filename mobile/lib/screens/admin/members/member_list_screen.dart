@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../../config/theme.dart';
 import '../../../providers/member_provider.dart';
 import '../../../models/member.dart';
 import '../../../config/routes.dart';
@@ -61,7 +62,7 @@ class _MemberListScreenState extends State<MemberListScreen> {
                   onPressed: () { _searchController.clear(); _search(''); },
                 ),
                 filled: true,
-                fillColor: Colors.white,
+                fillColor: Theme.of(context).colorScheme.surface,
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
                 contentPadding: const EdgeInsets.symmetric(vertical: 0),
               ),
@@ -121,12 +122,14 @@ class _MemberTile extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
                 decoration: BoxDecoration(
-                  color: member.designation == 'president' ? Colors.amber.shade50 : Colors.purple.shade50,
+                  color: member.designation == 'president'
+                      ? Theme.of(context).colorScheme.secondaryContainer
+                      : Theme.of(context).colorScheme.primaryContainer,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
                   member.designation == 'president' ? 'P' : 'S',
-                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: member.designation == 'president' ? Colors.amber.shade800 : Colors.purple.shade800),
+                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: member.designation == 'president' ? AppTheme.accent : AppTheme.primary),
                 ),
               ),
             ],
@@ -134,8 +137,8 @@ class _MemberTile extends StatelessWidget {
               const SizedBox(width: 6),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-                decoration: BoxDecoration(color: Colors.red.shade50, borderRadius: BorderRadius.circular(6)),
-                child: Text('Inactive', style: TextStyle(fontSize: 10, color: Colors.red.shade700)),
+                decoration: BoxDecoration(color: Theme.of(context).colorScheme.errorContainer, borderRadius: BorderRadius.circular(6)),
+                child: const Text('Inactive', style: TextStyle(fontSize: 10, color: AppTheme.error)),
               ),
             ],
           ],
@@ -148,7 +151,7 @@ class _MemberTile extends StatelessWidget {
               value: 'toggle_status',
               child: Text(isActive ? 'Deactivate' : 'Activate'),
             ),
-            const PopupMenuItem(value: 'delete', child: Text('Remove', style: TextStyle(color: Colors.red))),
+            const PopupMenuItem(value: 'delete', child: Text('Remove', style: TextStyle(color: AppTheme.error))),
           ],
           onSelected: (v) {
             if (v == 'edit') _showEditDialog(context);
@@ -173,7 +176,7 @@ class _MemberTile extends StatelessWidget {
       actions: [
         OutlinedButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
         ElevatedButton(
-          style: ElevatedButton.styleFrom(backgroundColor: isActive ? Colors.red : Colors.green),
+          style: ElevatedButton.styleFrom(backgroundColor: isActive ? AppTheme.error : AppTheme.primary),
           onPressed: () {
             Navigator.pop(context);
             context.read<MemberProvider>().updateMember(member.id, {'status': isActive ? 'inactive' : 'active'});
@@ -196,7 +199,7 @@ class _MemberTile extends StatelessWidget {
       actions: [
         OutlinedButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
         ElevatedButton(
-          style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+          style: ElevatedButton.styleFrom(backgroundColor: AppTheme.error),
           onPressed: () {
             Navigator.pop(context);
             context.read<MemberProvider>().deleteMember(member.id);

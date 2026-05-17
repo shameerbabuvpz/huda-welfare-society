@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../../config/theme.dart';
 import '../../../providers/kuri_provider.dart';
 import '../../../config/routes.dart';
 
@@ -59,7 +60,7 @@ class _KuriListScreenState extends State<KuriListScreen> {
                   onPressed: () { _searchController.clear(); _search(''); },
                 ),
                 filled: true,
-                fillColor: Colors.white,
+                fillColor: Theme.of(context).colorScheme.surface,
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
                 contentPadding: const EdgeInsets.symmetric(vertical: 0),
               ),
@@ -94,18 +95,23 @@ class _KuriListScreenState extends State<KuriListScreen> {
                       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                       child: ListTile(
                         leading: CircleAvatar(
-                          backgroundColor: Colors.green.shade50,
-                          child: const Icon(Icons.account_balance, color: Colors.green),
+                          backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                          child: const Icon(Icons.account_balance, color: AppTheme.primary),
                         ),
                         title: Text(g.name),
                         subtitle: Text('${g.code} • ₹${g.monthlyAmount.toStringAsFixed(0)}/mo • ${g.durationMonths} months'),
                         trailing: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                           decoration: BoxDecoration(
-                            color: g.status == 'active' ? Colors.green.shade50 : Colors.grey.shade200,
+                            color: g.status == 'active'
+                                ? Theme.of(context).colorScheme.primaryContainer
+                                : Theme.of(context).colorScheme.surfaceContainerHighest,
                             borderRadius: BorderRadius.circular(12),
                           ),
-                          child: Text(g.status, style: TextStyle(fontSize: 12, color: g.status == 'active' ? Colors.green : Colors.grey)),
+                          child: Text(
+                            g.status,
+                            style: TextStyle(fontSize: 12, color: g.status == 'active' ? AppTheme.primary : Colors.grey),
+                          ),
                         ),
                         onTap: () {
                           Navigator.pushNamed(context, AppRoutes.kuriDetail, arguments: g.id);

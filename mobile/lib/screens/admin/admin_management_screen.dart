@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import '../../../config/theme.dart';
 import '../../../models/admin.dart';
 import '../../../providers/admin_provider.dart';
 import '../../../providers/auth_provider.dart';
@@ -66,9 +67,6 @@ class _AdminManagementScreenState extends State<AdminManagementScreen> {
                         },
                       )
                     : null,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                filled: true,
-                fillColor: Colors.grey.shade50,
               ),
               onChanged: _onSearch,
             ),
@@ -83,9 +81,9 @@ class _AdminManagementScreenState extends State<AdminManagementScreen> {
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.error_outline, size: 48, color: Colors.red.shade300),
+                            Icon(Icons.error_outline, size: 48, color: Theme.of(context).colorScheme.error),
                             const SizedBox(height: 8),
-                            Text(provider.error!, style: TextStyle(color: Colors.red.shade700)),
+                            Text(provider.error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
                             const SizedBox(height: 16),
                             ElevatedButton(
                               onPressed: () => provider.loadAdmins(),
@@ -167,16 +165,15 @@ class _AdminManagementScreenState extends State<AdminManagementScreen> {
             child: const Text('Cancel'),
           ),
           FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            style: FilledButton.styleFrom(backgroundColor: AppTheme.error),
             onPressed: () async {
               Navigator.pop(ctx);
               final success = await context.read<AdminProvider>().deleteAdmin(admin.id);
               if (mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(success ? 'Admin removed' : 'Failed'),
-                    backgroundColor: success ? Colors.green : Colors.red,
-                  ),
+                  success
+                      ? AppTheme.successSnackBar('Admin removed')
+                      : AppTheme.errorSnackBar('Failed'),
                 );
               }
             },
@@ -217,13 +214,15 @@ class _AdminCard extends StatelessWidget {
               CircleAvatar(
                 radius: 28,
                 backgroundColor: admin.isActive
-                    ? (admin.isSuperAdmin ? Colors.amber.shade100 : Colors.blue.shade100)
-                    : Colors.grey.shade200,
+                    ? (admin.isSuperAdmin
+                        ? Theme.of(context).colorScheme.secondaryContainer
+                        : Theme.of(context).colorScheme.primaryContainer)
+                    : Theme.of(context).colorScheme.surfaceContainerHighest,
                 child: Icon(
                   admin.isSuperAdmin ? Icons.shield : Icons.admin_panel_settings,
                   size: 28,
                   color: admin.isActive
-                      ? (admin.isSuperAdmin ? Colors.amber.shade800 : Colors.blue.shade800)
+                      ? (admin.isSuperAdmin ? AppTheme.accent : AppTheme.primary)
                       : Colors.grey,
                 ),
               ),
@@ -246,10 +245,10 @@ class _AdminCard extends StatelessWidget {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                             decoration: BoxDecoration(
-                              color: Colors.green.shade100,
+                              color: Theme.of(context).colorScheme.primaryContainer,
                               borderRadius: BorderRadius.circular(8),
                             ),
-                            child: Text('You', style: TextStyle(fontSize: 11, color: Colors.green.shade800, fontWeight: FontWeight.w600)),
+                            child: const Text('You', style: TextStyle(fontSize: 11, color: AppTheme.primaryDark, fontWeight: FontWeight.w600)),
                           ),
                       ],
                     ),
@@ -280,14 +279,16 @@ class _AdminCard extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                           decoration: BoxDecoration(
-                            color: admin.isSuperAdmin ? Colors.amber.shade50 : Colors.blue.shade50,
+                            color: admin.isSuperAdmin
+                                ? Theme.of(context).colorScheme.secondaryContainer
+                                : Theme.of(context).colorScheme.primaryContainer,
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
                             admin.isSuperAdmin ? 'Super Admin' : 'Admin',
                             style: TextStyle(
                               fontSize: 11,
-                              color: admin.isSuperAdmin ? Colors.amber.shade800 : Colors.blue.shade800,
+                              color: admin.isSuperAdmin ? AppTheme.accent : AppTheme.primary,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -296,14 +297,16 @@ class _AdminCard extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                           decoration: BoxDecoration(
-                            color: admin.isActive ? Colors.green.shade50 : Colors.red.shade50,
+                            color: admin.isActive
+                                ? Theme.of(context).colorScheme.primaryContainer
+                                : Theme.of(context).colorScheme.errorContainer,
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
                             admin.isActive ? 'Active' : 'Inactive',
                             style: TextStyle(
                               fontSize: 11,
-                              color: admin.isActive ? Colors.green.shade800 : Colors.red.shade800,
+                              color: admin.isActive ? AppTheme.primary : AppTheme.error,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -323,9 +326,9 @@ class _AdminCard extends StatelessWidget {
                   itemBuilder: (_) => [
                     const PopupMenuItem(value: 'delete', child: Row(
                       children: [
-                        Icon(Icons.delete, color: Colors.red, size: 20),
+                        Icon(Icons.delete, color: AppTheme.error, size: 20),
                         SizedBox(width: 8),
-                        Text('Remove', style: TextStyle(color: Colors.red)),
+                        Text('Remove', style: TextStyle(color: AppTheme.error)),
                       ],
                     )),
                   ],
@@ -396,17 +399,11 @@ class _AdminFormDialogState extends State<_AdminFormDialog> {
     if (success) {
       Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(isEdit ? 'Admin updated' : 'New admin added'),
-          backgroundColor: Colors.green,
-        ),
+        AppTheme.successSnackBar(isEdit ? 'Admin updated' : 'New admin added'),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(provider.error ?? 'Failed'),
-          backgroundColor: Colors.red,
-        ),
+        AppTheme.errorSnackBar(provider.error ?? 'Failed'),
       );
     }
   }

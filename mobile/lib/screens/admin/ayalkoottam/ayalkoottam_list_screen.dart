@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../../config/theme.dart';
 import '../../../providers/ayalkoottam_provider.dart';
 import '../../../models/ayalkoottam.dart';
 import '../../../widgets/app_bottom_sheet.dart';
@@ -60,7 +61,7 @@ class _AyalkoottamListScreenState extends State<AyalkoottamListScreen> {
                   onPressed: () { _searchController.clear(); _search(''); },
                 ),
                 filled: true,
-                fillColor: Colors.white,
+                fillColor: Theme.of(context).colorScheme.surface,
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
                 contentPadding: const EdgeInsets.symmetric(vertical: 0),
               ),
@@ -109,8 +110,10 @@ class _AyalkoottamTile extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: isActive ? Colors.teal.shade50 : Colors.grey.shade200,
-          child: Icon(Icons.groups_2, color: isActive ? Colors.teal : Colors.grey),
+          backgroundColor: isActive
+              ? Theme.of(context).colorScheme.primaryContainer
+              : Theme.of(context).colorScheme.surfaceContainerHighest,
+          child: Icon(Icons.groups_2, color: isActive ? AppTheme.primary : Colors.grey),
         ),
         title: Row(
           children: [
@@ -119,8 +122,11 @@ class _AyalkoottamTile extends StatelessWidget {
               const SizedBox(width: 6),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-                decoration: BoxDecoration(color: Colors.red.shade50, borderRadius: BorderRadius.circular(6)),
-                child: Text('Inactive', style: TextStyle(fontSize: 10, color: Colors.red.shade700)),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.errorContainer,
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: const Text('Inactive', style: TextStyle(fontSize: 10, color: AppTheme.error)),
               ),
             ],
           ],
@@ -134,8 +140,14 @@ class _AyalkoottamTile extends StatelessWidget {
               children: [
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                  decoration: BoxDecoration(color: Colors.blue.shade50, borderRadius: BorderRadius.circular(12)),
-                  child: Text('${ak.memberCount ?? 0}', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.blue.shade700)),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.secondaryContainer,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    '${ak.memberCount ?? 0}',
+                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.primaryDark),
+                  ),
                 ),
                 const Text('Members', style: TextStyle(fontSize: 10)),
               ],
@@ -170,7 +182,7 @@ class _AyalkoottamTile extends StatelessWidget {
       actions: [
         OutlinedButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
         ElevatedButton(
-          style: ElevatedButton.styleFrom(backgroundColor: isActive ? Colors.red : Colors.green),
+          style: ElevatedButton.styleFrom(backgroundColor: isActive ? AppTheme.error : AppTheme.primary),
           onPressed: () {
             Navigator.pop(context);
             if (isActive) {

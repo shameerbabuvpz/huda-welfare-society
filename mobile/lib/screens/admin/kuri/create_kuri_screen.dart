@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../../config/theme.dart';
 import '../../../providers/kuri_provider.dart';
 
 class CreateKuriScreen extends StatefulWidget {
@@ -40,7 +41,7 @@ class _CreateKuriScreenState extends State<CreateKuriScreen> {
   Future<void> _save() async {
     if (!_formKey.currentState!.validate() || _startDate == null) {
       if (_startDate == null) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Select a start date')));
+        ScaffoldMessenger.of(context).showSnackBar(AppTheme.errorSnackBar('Select a start date'));
       }
       return;
     }
@@ -59,11 +60,11 @@ class _CreateKuriScreenState extends State<CreateKuriScreen> {
 
     if (!mounted) return;
     if (success) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Kuri group created')));
+      ScaffoldMessenger.of(context).showSnackBar(AppTheme.successSnackBar('Kuri group created'));
       Navigator.pop(context);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.read<KuriProvider>().error ?? 'Failed'), backgroundColor: Colors.red),
+        AppTheme.errorSnackBar(context.read<KuriProvider>().error ?? 'Failed'),
       );
     }
   }
@@ -119,7 +120,7 @@ class _CreateKuriScreenState extends State<CreateKuriScreen> {
                 title: Text(_startDate == null ? 'Select Start Date *' : 'Start: ${_startDate!.toIso8601String().split('T')[0]}'),
                 trailing: const Icon(Icons.calendar_today),
                 onTap: _pickDate,
-                tileColor: Colors.grey.shade50,
+                tileColor: Theme.of(context).colorScheme.surfaceContainerHighest,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
               ),
               const SizedBox(height: 24),

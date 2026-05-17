@@ -20,6 +20,24 @@ class AppTheme {
     end: Alignment.bottomRight,
   );
 
+  static SnackBar infoSnackBar(String message) {
+    return SnackBar(content: Text(message));
+  }
+
+  static SnackBar successSnackBar(String message) {
+    return SnackBar(
+      content: Text(message),
+      backgroundColor: success,
+    );
+  }
+
+  static SnackBar errorSnackBar(String message) {
+    return SnackBar(
+      content: Text(message),
+      backgroundColor: error,
+    );
+  }
+
   static ThemeData get lightTheme {
     final colorScheme = ColorScheme.fromSeed(
       seedColor: primary,

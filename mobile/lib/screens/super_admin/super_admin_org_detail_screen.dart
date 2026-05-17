@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../../config/theme.dart';
 import '../../models/organization.dart';
 import '../../services/organization_service.dart';
 
@@ -38,7 +39,7 @@ class _SuperAdminOrgDetailScreenState extends State<SuperAdminOrgDetailScreen> {
       setState(() => _loading = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+          AppTheme.errorSnackBar('Error: $e'),
         );
       }
     }
@@ -56,13 +57,13 @@ class _SuperAdminOrgDetailScreenState extends State<SuperAdminOrgDetailScreen> {
       _load();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Logo updated'), backgroundColor: Colors.green),
+          AppTheme.successSnackBar('Logo updated'),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+          AppTheme.errorSnackBar('Error: $e'),
         );
       }
     }
@@ -81,7 +82,7 @@ class _SuperAdminOrgDetailScreenState extends State<SuperAdminOrgDetailScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+          AppTheme.errorSnackBar('Error: $e'),
         );
       }
     }
@@ -103,13 +104,13 @@ class _SuperAdminOrgDetailScreenState extends State<SuperAdminOrgDetailScreen> {
       _load();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Admin added'), backgroundColor: Colors.green),
+          AppTheme.successSnackBar('Admin added'),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+          AppTheme.errorSnackBar('Error: $e'),
         );
       }
     }
@@ -176,7 +177,9 @@ class _SuperAdminOrgDetailScreenState extends State<SuperAdminOrgDetailScreen> {
                           const SizedBox(height: 8),
                           Chip(
                             label: Text(_org!.status),
-                            backgroundColor: _org!.status == 'active' ? Colors.green.shade50 : Colors.red.shade50,
+                            backgroundColor: _org!.status == 'active'
+                                ? Theme.of(context).colorScheme.primaryContainer
+                                : Theme.of(context).colorScheme.errorContainer,
                           ),
                         ],
                       ),

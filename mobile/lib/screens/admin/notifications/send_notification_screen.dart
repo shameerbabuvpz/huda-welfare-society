@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../../config/theme.dart';
 import '../../../providers/notification_provider.dart';
 
 class SendNotificationScreen extends StatefulWidget {
@@ -37,12 +38,12 @@ class _SendNotificationScreenState extends State<SendNotificationScreen> {
     if (!mounted) return;
 
     if (success) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Notification sent')));
+      ScaffoldMessenger.of(context).showSnackBar(AppTheme.successSnackBar('Notification sent'));
       _titleController.clear();
       _bodyController.clear();
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.read<NotificationProvider>().error ?? 'Failed'), backgroundColor: Colors.red),
+        AppTheme.errorSnackBar(context.read<NotificationProvider>().error ?? 'Failed'),
       );
     }
   }
