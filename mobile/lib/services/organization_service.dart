@@ -45,4 +45,19 @@ class OrganizationService {
     if (name != null && name.isNotEmpty) body['name'] = name;
     return await ApiService.post('/organizations/$orgId/admins', body);
   }
+
+  static Future<Map<String, dynamic>> updateAdmin(int orgId, int adminId, {String? phone, String? name}) async {
+    final body = <String, dynamic>{};
+    if (phone != null && phone.isNotEmpty) body['phone'] = phone;
+    if (name != null && name.isNotEmpty) body['name'] = name;
+    return await ApiService.put('/organizations/$orgId/admins/$adminId', body);
+  }
+
+  static Future<void> removeAdmin(int orgId, int adminId) async {
+    await ApiService.delete('/organizations/$orgId/admins/$adminId');
+  }
+
+  static Future<void> deleteOrg(int orgId) async {
+    await ApiService.delete('/organizations/$orgId');
+  }
 }

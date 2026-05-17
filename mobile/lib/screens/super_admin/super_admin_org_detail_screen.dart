@@ -116,6 +116,105 @@ class _SuperAdminOrgDetailScreenState extends State<SuperAdminOrgDetailScreen> {
     }
   }
 
+  Future<void> _editAdmin(Map<String, dynamic> admin) async {
+    final result = await showDialog<Map<String, String>>(
+      context: context,
+      builder: (ctx) => _EditAdminDialog(admin: admin),
+    );
+    if (result == null) return;
+
+    try {
+      await OrganizationService.updateAdmin(
+        widget.orgId,
+        admin['id'],
+        phone: result['phone'],
+        name: result['name'],
+      );
+      _load();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          AppTheme.successSnackBar('Admin updated'),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          AppTheme.errorSnackBar('Error: $e'),
+        );
+      }
+    }
+  }
+
+  Future<void> _removeAdmin(Map<String, dynamic> admin) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Remove Admin'),
+        content: Text('Remove ${admin['name'] ?? 'this admin'}?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: FilledButton.styleFrom(backgroundColor: AppTheme.error),
+            child: const Text('Remove'),
+          ),
+        ],
+      ),
+    );
+    if (confirm != true) return;
+
+    try {
+      await OrganizationService.removeAdmin(widget.orgId, admin['id']);
+      _load();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          AppTheme.successSnackBar('Admin removed'),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          AppTheme.errorSnackBar('Error: $e'),
+        );
+      }
+    }
+  }
+
+  Future<void> _deleteOrg() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete Organization'),
+        content: Text('Delete "${_org?.name}"? This will deactivate the organization and all its users.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: FilledButton.styleFrom(backgroundColor: AppTheme.error),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+    if (confirm != true) return;
+
+    try {
+      await OrganizationService.deleteOrg(widget.orgId);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          AppTheme.successSnackBar('Organization deleted'),
+        );
+        Navigator.pop(context, true);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          AppTheme.errorSnackBar('Error: $e'),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -123,6 +222,7 @@ class _SuperAdminOrgDetailScreenState extends State<SuperAdminOrgDetailScreen> {
         title: Text(_org?.name ?? 'Organization'),
         actions: [
           if (_org != null) IconButton(icon: const Icon(Icons.edit), onPressed: _editOrg),
+          if (_org != null) IconButton(icon: const Icon(Icons.delete_outline), onPressed: _deleteOrg),
         ],
       ),
       body: _loading
@@ -214,6 +314,19 @@ class _SuperAdminOrgDetailScreenState extends State<SuperAdminOrgDetailScreen> {
                         leading: const CircleAvatar(child: Icon(Icons.person)),
                         title: Text(admin['name'] ?? 'Admin'),
                         subtitle: Text(admin['phone'] ?? ''),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.edit, size: 20),
+                              onPressed: () => _editAdmin(admin),
+                            ),
+                            IconButton(
+                              icon: Icon(Icons.delete_outline, size: 20, color: AppTheme.error),
+                              onPressed: () => _removeAdmin(admin),
+                            ),
+                          ],
+                        ),
                       ),
                     )),
                 ],
@@ -334,6 +447,70 @@ class _AddAdminDialogState extends State<_AddAdminDialog> {
             });
           },
           child: const Text('Add'),
+        ),
+      ],
+    );
+  }
+}
+
+class _EditAdminDialog extends StatefulWidget {
+  final Map<String, dynamic> admin;
+  const _EditAdminDialog({required this.admin});
+
+  @override
+  State<_EditAdminDialog> createState() => _EditAdminDialogState();
+}
+
+class _EditAdminDialogState extends State<_EditAdminDialog> {
+  late final TextEditingController _phoneController;
+  late final TextEditingController _nameController;
+
+  @override
+  void initState() {
+    super.initState();
+    _phoneController = TextEditingController(text: widget.admin['phone'] ?? '');
+    _nameController = TextEditingController(text: widget.admin['name'] ?? '');
+  }
+
+  @override
+  void dispose() {
+    _phoneController.dispose();
+    _nameController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Edit Admin'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextField(
+            controller: _phoneController,
+            decoration: const InputDecoration(labelText: 'Phone (10 digits) *', prefixText: '+91 '),
+            keyboardType: TextInputType.phone,
+            maxLength: 10,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _nameController,
+            decoration: const InputDecoration(labelText: 'Name'),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+        FilledButton(
+          onPressed: () {
+            if (_phoneController.text.trim().length != 10) return;
+            Navigator.pop(context, {
+              'phone': _phoneController.text.trim(),
+              'name': _nameController.text.trim(),
+            });
+          },
+          child: const Text('Save'),
         ),
       ],
     );

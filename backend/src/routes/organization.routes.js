@@ -67,4 +67,18 @@ router.post(
 
 router.get('/:id/admins', ctrl.listAdmins);
 
+router.put(
+  '/:id/admins/:adminId',
+  [
+    body('phone').optional().matches(/^\d{10}$/).withMessage('Phone must be 10 digits'),
+    body('name').optional().trim(),
+  ],
+  validate,
+  ctrl.updateAdmin
+);
+
+router.delete('/:id/admins/:adminId', ctrl.removeAdmin);
+
+router.delete('/:id', ctrl.deleteOrg);
+
 module.exports = router;

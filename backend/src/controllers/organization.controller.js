@@ -100,6 +100,54 @@ const organizationController = {
       res.json(admins);
     } catch (err) { next(err); }
   },
+
+  // ── Update admin ──
+  async updateAdmin(req, res, next) {
+    try {
+      const orgId = parseInt(req.params.id, 10);
+      const adminId = parseInt(req.params.adminId, 10);
+      const { name, phone } = req.body;
+
+      const admin = await db('users').where({ id: adminId, organization_id: orgId, role: 'admin' }).first();
+      if (!admin) throw ApiError.notFound('Admin not found');
+
+      const updates = {};
+      if (name !== undefined) updates.name = name;
+      if (phone !== undefined) updates.phone = phone;
+      updates.updated_at = db.fn.now();
+
+      const [updated] = await db('users').where({ id: adminId }).update(updates).returning('*');
+      res.json({ id: updated.id, name: updated.name, phone: updated.phone, role: updated.role, organizationId: updated.organization_id });
+    } catch (err) { next(err); }
+  },
+
+  // ── Remove admin ──
+  async removeAdmin(req, res, next) {
+    try {
+      const orgId = parseInt(req.params.id, 10);
+      const adminId = parseInt(req.params.adminId, 10);
+
+      const admin = await db('users').where({ id: adminId, organization_id: orgId, role: 'admin' }).first();
+      if (!admin) throw ApiError.notFound('Admin not found');
+
+      await db('users').where({ id: adminId }).update({ status: 'inactive', updated_at: db.fn.now() });
+      res.json({ message: 'Admin removed' });
+    } catch (err) { next(err); }
+  },
+
+  // ── Delete organization ──
+  async deleteOrg(req, res, next) {
+    try {
+      const orgId = parseInt(req.params.id, 10);
+      const org = await db('organizations').where({ id: orgId }).first();
+      if (!org) throw ApiError.notFound('Organization not found');
+
+      // Soft-delete: deactivate org and all its users
+      await db('organizations').where({ id: orgId }).update({ status: 'inactive', updated_at: db.fn.now() });
+      await db('users').where({ organization_id: orgId }).update({ status: 'inactive', updated_at: db.fn.now() });
+      res.json({ message: 'Organization deleted' });
+    } catch (err) { next(err); }
+  },
 };
 
 module.exports = organizationController;
