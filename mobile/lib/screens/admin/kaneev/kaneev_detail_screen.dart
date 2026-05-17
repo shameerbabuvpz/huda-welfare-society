@@ -48,14 +48,14 @@ class _KaneevDetailScreenState extends State<KaneevDetailScreen> with SingleTick
 
     if (provider.loading || group == null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Kaneev')),
+        appBar: AppBar(title: const Text('Kaniv')),
         body: const Center(child: CircularProgressIndicator()),
       );
     }
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(group.name),
+        title: const Text('Kaniv'),
         bottom: TabBar(
           controller: _tabController,
           indicatorColor: Colors.white,

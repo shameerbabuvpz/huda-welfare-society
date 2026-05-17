@@ -257,8 +257,8 @@ class _MemberDashboardState extends State<MemberDashboard> {
                         if (data != null && data.kaneev != null) ...[
                           const SizedBox(height: 22),
                           const _SectionTitle(
-                            title: 'Kaneev',
-                            subtitle: 'Your member details appear here only when you are part of Kaneev.',
+                            title: 'Kaniv',
+                            subtitle: 'Your member details appear here only when you are part of Kaniv.',
                           ),
                           const SizedBox(height: 12),
                           _KaneevPanel(summary: data.kaneev!),
@@ -286,7 +286,7 @@ class _MemberDashboardState extends State<MemberDashboard> {
                                 const SizedBox(width: 14),
                                 Expanded(
                                   child: Text(
-                                    'More member services will appear here automatically when this member joins Kuri or Kaneev.',
+                                    'More member services will appear here automatically when this member joins Kuri or Kaniv.',
                                     style: TextStyle(
                                       color: Colors.grey.shade800,
                                       fontSize: 13.5,

@@ -122,7 +122,7 @@ class _DashboardHome extends StatelessWidget {
                 ),
                 _DashboardCard(
                   icon: Icons.favorite,
-                  label: 'Kaneev',
+                  label: 'Kaniv',
                   onTap: () => Navigator.pushNamed(context, AppRoutes.manageKaneev),
                 ),
                 _DashboardCard(
