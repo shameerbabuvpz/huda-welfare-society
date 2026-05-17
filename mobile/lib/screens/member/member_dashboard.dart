@@ -177,7 +177,7 @@ class _MemberDashboardState extends State<MemberDashboard> {
                                   ),
                                   const SizedBox(height: 6),
                                   Text(
-                                    data?.profile.ayalkoottamName ?? data?.card.organizationName ?? 'Privilege access ready',
+                                    data?.profile.ayalkoottamName ?? data?.card.organizationName ?? '',
                                     style: TextStyle(
                                       color: Colors.grey.shade700,
                                       fontSize: 14,

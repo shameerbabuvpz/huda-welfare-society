@@ -368,15 +368,7 @@ class MemberPrivilegeCard extends StatelessWidget {
                                       size: 40,
                                     ),
                             ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'QR Ready',
-                              style: TextStyle(
-                                color: Colors.white.withValues(alpha: 0.88),
-                                fontSize: 10.5,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
+
                           ],
                         ),
                       ),

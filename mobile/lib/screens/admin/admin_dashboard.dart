@@ -57,16 +57,9 @@ class _DashboardHome extends StatelessWidget {
       appBar: AppBar(
         leading: Padding(
           padding: const EdgeInsets.all(8),
-          child: org?.logoUrl != null
-              ? CircleAvatar(
-                  backgroundImage: NetworkImage(org!.logoUrl!),
-                  backgroundColor: Colors.white,
-                )
-              : const CircleAvatar(
-                  backgroundColor: Colors.white,
-                  child: Icon(Icons.business, color: AppTheme.primary),
-                ),
+          child: Image.asset('assets/images/ayalkoottam.png'),
         ),
+        centerTitle: false,
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -110,18 +103,6 @@ class _DashboardHome extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            if (org != null)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: Text(
-                  '${org.name}${org.place != null ? ' • ${org.place}' : ''}',
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                    color: AppTheme.primaryDark,
-                  ),
-                ),
-              ),
             GridView.count(
               crossAxisCount: 3,
               mainAxisSpacing: 12,
@@ -175,6 +156,30 @@ class _DashboardHome extends StatelessWidget {
               onTap: () => Navigator.pushNamed(context, AppRoutes.managePrivilegeOffers),
             ),
               ],
+            ),
+            if (org != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 20),
+                child: Text(
+                  '${org.name}${org.place != null ? ' • ${org.place}' : ''}',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.grey.shade600,
+                  ),
+                ),
+              ),
+            Padding(
+              padding: const EdgeInsets.only(top: 6),
+              child: Text(
+                'Version 1.0',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 11,
+                  color: Colors.grey.shade400,
+                ),
+              ),
             ),
           ],
         ),
