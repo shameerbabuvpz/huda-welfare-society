@@ -56,6 +56,7 @@ const kuriService = {
         'members.name as member_name',
         'members.member_code',
         'members.phone as member_phone',
+        'members.is_guest',
         'ayalkoottams.name as ayalkoottam_name',
       );
 
@@ -122,6 +123,7 @@ const kuriService = {
       name,
       phone: phone || null,
       status: 'active',
+      is_guest: true,
       created_by: actorId,
       updated_by: actorId,
     }).returning('*');
