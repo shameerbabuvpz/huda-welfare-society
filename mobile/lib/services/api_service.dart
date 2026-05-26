@@ -65,7 +65,8 @@ class ApiService {
     if (response.statusCode >= 200 && response.statusCode < 300) {
       return body;
     }
-    final message = body['error']?['message'] ?? 'Something went wrong';
+    final error = body['error'];
+    final message = (error is Map ? error['message'] : null) ?? body['message'] ?? 'Something went wrong';
     throw ApiException(response.statusCode, message);
   }
 }

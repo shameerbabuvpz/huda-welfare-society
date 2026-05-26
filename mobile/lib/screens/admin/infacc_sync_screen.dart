@@ -40,8 +40,13 @@ class _InfaccSyncScreenState extends State<InfaccSyncScreen> {
       final status = await InfaccSyncService.getStatus();
       setState(() {
         _hasCredentials = status['hasCredentials'] == true;
-        _infaccPhone = status['infaccPhone'];
-        _lastSync = status['lastSync'];
+        _infaccPhone = status['infaccPhone']?.toString();
+        final ls = status['lastSync'];
+        if (ls is Map) {
+          _lastSync = ls['syncedAt']?.toString();
+        } else if (ls is String) {
+          _lastSync = ls;
+        }
         if (_infaccPhone != null) _phoneController.text = _infaccPhone!;
         _loading = false;
       });
