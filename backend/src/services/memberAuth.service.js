@@ -1,6 +1,6 @@
 const jwt = require('jsonwebtoken');
 const knex = require('../config/database');
-const AppError = require('../utils/AppError');
+const ApiError = require('../utils/ApiError');
 
 const memberAuthService = {
   /**
