@@ -77,7 +77,7 @@ class _AyalkoottamDetailScreenState extends State<AyalkoottamDetailScreen> {
           else
             ...memberProvider.members.map((m) => Card(
               child: ListTile(
-                leading: CircleAvatar(child: Text(m.name[0].toUpperCase())),
+                leading: CircleAvatar(child: Text(m.name.isNotEmpty ? m.name[0].toUpperCase() : '?')),
                 title: Text(m.name),
                 subtitle: Text('${m.memberCode} • ${m.phone ?? ''}'),
                 trailing: Container(

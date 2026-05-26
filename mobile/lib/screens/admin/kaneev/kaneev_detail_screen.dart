@@ -24,7 +24,7 @@ class _KaneevDetailScreenState extends State<KaneevDetailScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
   }
 
   @override
@@ -59,6 +59,13 @@ class _KaneevDetailScreenState extends State<KaneevDetailScreen>
     return Scaffold(
       appBar: AppBar(
         title: const Text('Kaniv'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.info_outline),
+            tooltip: 'Group Info',
+            onPressed: () => _showInfoSheet(group),
+          ),
+        ],
         bottom: TabBar(
           controller: _tabController,
           indicatorColor: Colors.white,
@@ -72,7 +79,6 @@ class _KaneevDetailScreenState extends State<KaneevDetailScreen>
             Tab(
                 child:
                     Text('Balance', maxLines: 2, textAlign: TextAlign.center)),
-            Tab(child: Text('Info', maxLines: 2, textAlign: TextAlign.center)),
           ],
         ),
       ),
@@ -83,7 +89,6 @@ class _KaneevDetailScreenState extends State<KaneevDetailScreen>
           _MembersTab(group: group),
           _RecipientsTab(group: group),
           _BalanceTab(group: group),
-          _InfoTab(group: group),
         ],
       ),
     );
@@ -133,6 +138,196 @@ class _KaneevDetailScreenState extends State<KaneevDetailScreen>
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) => const _AddMemberSheet(),
+    );
+  }
+
+  void _showInfoSheet(KaneevGroup group) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => DraggableScrollableSheet(
+        initialChildSize: 0.5,
+        maxChildSize: 0.7,
+        minChildSize: 0.3,
+        expand: false,
+        builder: (ctx, scrollController) => Container(
+          decoration: const BoxDecoration(
+            color: AppTheme.surface,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: ListView(
+            controller: scrollController,
+            padding: const EdgeInsets.all(20),
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text('Kaniv Info',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              const Divider(height: 24),
+              _infoRow('Code', group.code),
+              _editableAmountRow(group),
+              _infoRow('Status', group.status.toUpperCase()),
+              _infoRow('Enrolled Members', '${group.members?.length ?? 0}'),
+              _infoRow('Recipients so far', '${group.recipients?.length ?? 0}'),
+              _infoRow('Current Balance',
+                  '₹${group.currentBalance.toStringAsFixed(2)}'),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _infoRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: TextStyle(color: Colors.grey.shade600)),
+          Text(value, style: const TextStyle(fontWeight: FontWeight.w600)),
+        ],
+      ),
+    );
+  }
+
+  Widget _editableAmountRow(KaneevGroup group) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text('Donation Amount',
+              style: TextStyle(color: Colors.grey.shade600)),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('₹${group.donationAmount.toStringAsFixed(2)}',
+                  style: const TextStyle(fontWeight: FontWeight.w600)),
+              const SizedBox(width: 4),
+              InkWell(
+                onTap: () {
+                  Navigator.pop(context);
+                  _showEditAmountDialog(group);
+                },
+                borderRadius: BorderRadius.circular(16),
+                child: const Padding(
+                  padding: EdgeInsets.all(4),
+                  child: Icon(Icons.edit, size: 18, color: AppTheme.primary),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showEditAmountDialog(KaneevGroup group) {
+    final controller =
+        TextEditingController(text: group.donationAmount.toStringAsFixed(0));
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => SafeArea(
+        child: Container(
+          margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+          decoration: BoxDecoration(
+            color: AppTheme.surface,
+            borderRadius: BorderRadius.circular(24),
+          ),
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(ctx).viewInsets.bottom,
+          ),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(24, 20, 24, 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: AppTheme.outline,
+                    borderRadius: BorderRadius.circular(99),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Text('Edit Donation Amount',
+                    style: Theme.of(ctx)
+                        .textTheme
+                        .titleMedium
+                        ?.copyWith(fontWeight: FontWeight.w700)),
+                const SizedBox(height: 20),
+                TextField(
+                  controller: controller,
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
+                  decoration: const InputDecoration(
+                    labelText: 'Amount (₹)',
+                    border: OutlineInputBorder(),
+                    prefixText: '₹ ',
+                  ),
+                  autofocus: true,
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.pop(ctx),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14)),
+                        ),
+                        child: const Text('Cancel'),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: FilledButton(
+                        onPressed: () async {
+                          final amount = double.tryParse(controller.text);
+                          if (amount == null || amount <= 0) return;
+                          Navigator.pop(ctx);
+                          final success = await context
+                              .read<KaneevProvider>()
+                              .updateDonationAmount(amount);
+                          if (!success && context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              AppTheme.errorSnackBar(
+                                  context.read<KaneevProvider>().error ??
+                                      'Error'),
+                            );
+                          }
+                        },
+                        style: FilledButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14)),
+                        ),
+                        child: const Text('Save'),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 
@@ -1003,6 +1198,15 @@ class _AddMemberSheetState extends State<_AddMemberSheet> {
   bool _loadingMembers = false;
 
   @override
+  void initState() {
+    super.initState();
+    // Auto-load all members when sheet opens
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadMembers(null);
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final akProvider = context.watch<AyalkoottamProvider>();
     final dropdownList = akProvider.dropdownList;
@@ -1071,51 +1275,41 @@ class _AddMemberSheetState extends State<_AddMemberSheet> {
                 Expanded(
                   child: _filteredMembers.isEmpty
                       ? const Center(
-                          child: Text('Select an ayalkoottam to see members'))
+                          child: Text('No members found'))
                       : ListView.builder(
                           controller: scrollController,
                           itemCount: _filteredMembers.length,
                           itemBuilder: (ctx, i) {
                             final m = _filteredMembers[i];
-                            return Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  CircleAvatar(
-                                    child: Text(m.name[0].toUpperCase()),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Text(
-                                          m.name,
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: const TextStyle(fontWeight: FontWeight.w500),
-                                        ),
-                                        if (m.phone != null)
-                                          Text(
-                                            m.phone!,
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                            style: TextStyle(
-                                              fontSize: 12,
-                                              color: Colors.grey.shade600,
-                                            ),
-                                          ),
-                                      ],
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  ElevatedButton(
-                                    onPressed: () => _addMember(m.id),
-                                    child: const Text('Add'),
-                                  ),
-                                ],
+                            return ListTile(
+                              dense: true,
+                              leading: CircleAvatar(
+                                radius: 18,
+                                child: Text(
+                                  m.name.isNotEmpty ? m.name[0].toUpperCase() : '?',
+                                  style: const TextStyle(fontSize: 14),
+                                ),
+                              ),
+                              title: Text(
+                                m.name,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14),
+                              ),
+                              subtitle: Text(
+                                '${m.memberCode}${m.phone != null ? ' • ${m.phone}' : ''}',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+                              ),
+                              trailing: SizedBox(
+                                width: 56,
+                                height: 32,
+                                child: ElevatedButton(
+                                  onPressed: () => _addMember(m.id),
+                                  style: ElevatedButton.styleFrom(padding: EdgeInsets.zero, textStyle: const TextStyle(fontSize: 12)),
+                                  child: const Text('Add'),
+                                ),
                               ),
                             );
                           },
@@ -1129,15 +1323,18 @@ class _AddMemberSheetState extends State<_AddMemberSheet> {
   }
 
   Future<void> _loadMembers(int? ayalkoottamId) async {
+    if (!mounted) return;
     setState(() => _loadingMembers = true);
     try {
       final provider = context.read<MemberProvider>();
       await provider.loadMembers(ayalkoottamId: ayalkoottamId);
+      if (!mounted) return;
       setState(() {
-        _filteredMembers = provider.members;
+        _filteredMembers = List<Member>.from(provider.members);
         _loadingMembers = false;
       });
-    } catch (_) {
+    } catch (e) {
+      if (!mounted) return;
       setState(() => _loadingMembers = false);
     }
   }
@@ -1154,168 +1351,6 @@ class _AddMemberSheetState extends State<_AddMemberSheet> {
             context.read<KaneevProvider>().error ?? 'Error'));
       }
     }
-  }
-}
-
-// ── Info Tab ──
-class _InfoTab extends StatelessWidget {
-  final KaneevGroup group;
-  const _InfoTab({required this.group});
-
-  @override
-  Widget build(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        _infoRow('Code', group.code),
-        _editableAmountRow(context),
-        _infoRow('Status', group.status.toUpperCase()),
-        _infoRow('Enrolled Members', '${group.members?.length ?? 0}'),
-        _infoRow('Recipients so far', '${group.recipients?.length ?? 0}'),
-        _infoRow(
-            'Current Balance', '₹${group.currentBalance.toStringAsFixed(2)}'),
-      ],
-    );
-  }
-
-  Widget _editableAmountRow(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text('Donation Amount',
-              style: TextStyle(color: Colors.grey.shade600)),
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text('₹${group.donationAmount.toStringAsFixed(2)}',
-                  style: const TextStyle(fontWeight: FontWeight.w600)),
-              const SizedBox(width: 4),
-              InkWell(
-                onTap: () => _showEditAmountDialog(context),
-                borderRadius: BorderRadius.circular(16),
-                child: const Padding(
-                  padding: EdgeInsets.all(4),
-                  child: Icon(Icons.edit, size: 18, color: AppTheme.primary),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showEditAmountDialog(BuildContext context) {
-    final controller =
-        TextEditingController(text: group.donationAmount.toStringAsFixed(0));
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => SafeArea(
-        child: Container(
-          margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-          decoration: BoxDecoration(
-            color: AppTheme.surface,
-            borderRadius: BorderRadius.circular(24),
-          ),
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(ctx).viewInsets.bottom,
-          ),
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(24, 20, 24, 20),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: AppTheme.outline,
-                    borderRadius: BorderRadius.circular(99),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                Text('Edit Donation Amount',
-                    style: Theme.of(ctx)
-                        .textTheme
-                        .titleMedium
-                        ?.copyWith(fontWeight: FontWeight.w700)),
-                const SizedBox(height: 20),
-                TextField(
-                  controller: controller,
-                  keyboardType:
-                      const TextInputType.numberWithOptions(decimal: true),
-                  decoration: const InputDecoration(
-                    labelText: 'Amount (₹)',
-                    border: OutlineInputBorder(),
-                    prefixText: '₹ ',
-                  ),
-                  autofocus: true,
-                ),
-                const SizedBox(height: 24),
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: () => Navigator.pop(ctx),
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14)),
-                        ),
-                        child: const Text('Cancel'),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: FilledButton(
-                        onPressed: () async {
-                          final amount = double.tryParse(controller.text);
-                          if (amount == null || amount <= 0) return;
-                          Navigator.pop(ctx);
-                          final success = await context
-                              .read<KaneevProvider>()
-                              .updateDonationAmount(amount);
-                          if (!success && context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              AppTheme.errorSnackBar(
-                                  context.read<KaneevProvider>().error ??
-                                      'Error'),
-                            );
-                          }
-                        },
-                        style: FilledButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14)),
-                        ),
-                        child: const Text('Save'),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _infoRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(label, style: TextStyle(color: Colors.grey.shade600)),
-          Text(value, style: const TextStyle(fontWeight: FontWeight.w600)),
-        ],
-      ),
-    );
   }
 }
 

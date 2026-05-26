@@ -47,18 +47,34 @@ const kuriService = {
     const group = await db('kuri_groups').where({ id: groupId, organization_id: orgId }).first();
     if (!group) throw ApiError.notFound('Kuri group not found');
 
-    const members = await db('kuri_members')
-      .where({ 'kuri_members.kuri_group_id': groupId, 'kuri_members.organization_id': orgId })
-      .join('members', 'kuri_members.member_id', 'members.id')
-      .leftJoin('ayalkoottams', 'members.ayalkoottam_id', 'ayalkoottams.id')
-      .select(
-        'kuri_members.*',
-        'members.name as member_name',
-        'members.member_code',
-        'members.phone as member_phone',
-        'members.is_guest',
-        'ayalkoottams.name as ayalkoottam_name',
-      );
+    let members;
+    try {
+      members = await db('kuri_members')
+        .where({ 'kuri_members.kuri_group_id': groupId, 'kuri_members.organization_id': orgId })
+        .join('members', 'kuri_members.member_id', 'members.id')
+        .leftJoin('ayalkoottams', 'members.ayalkoottam_id', 'ayalkoottams.id')
+        .select(
+          'kuri_members.*',
+          'members.name as member_name',
+          'members.member_code',
+          'members.phone as member_phone',
+          'members.is_guest',
+          'ayalkoottams.name as ayalkoottam_name',
+        );
+    } catch (e) {
+      // Fallback if is_guest column doesn't exist yet
+      members = await db('kuri_members')
+        .where({ 'kuri_members.kuri_group_id': groupId, 'kuri_members.organization_id': orgId })
+        .join('members', 'kuri_members.member_id', 'members.id')
+        .leftJoin('ayalkoottams', 'members.ayalkoottam_id', 'ayalkoottams.id')
+        .select(
+          'kuri_members.*',
+          'members.name as member_name',
+          'members.member_code',
+          'members.phone as member_phone',
+          'ayalkoottams.name as ayalkoottam_name',
+        );
+    }
 
     const winners = await db('kuri_winners')
       .where({ 'kuri_winners.kuri_group_id': groupId, 'kuri_winners.organization_id': orgId })
@@ -117,16 +133,30 @@ const kuriService = {
 
     // Create a guest member record
     const guestCode = `GUEST-${Date.now().toString(36).toUpperCase()}`;
-    const [member] = await db('members').insert({
-      organization_id: orgId,
-      member_code: guestCode,
-      name,
-      phone: phone || null,
-      status: 'active',
-      is_guest: true,
-      created_by: actorId,
-      updated_by: actorId,
-    }).returning('*');
+    let member;
+    try {
+      [member] = await db('members').insert({
+        organization_id: orgId,
+        member_code: guestCode,
+        name,
+        phone: phone || null,
+        status: 'active',
+        is_guest: true,
+        created_by: actorId,
+        updated_by: actorId,
+      }).returning('*');
+    } catch (e) {
+      // Fallback if is_guest column doesn't exist yet
+      [member] = await db('members').insert({
+        organization_id: orgId,
+        member_code: guestCode,
+        name,
+        phone: phone || null,
+        status: 'active',
+        created_by: actorId,
+        updated_by: actorId,
+      }).returning('*');
+    }
 
     const slotNumber = parseInt(currentCount.count, 10) + 1;
     const [km] = await db('kuri_members').insert({

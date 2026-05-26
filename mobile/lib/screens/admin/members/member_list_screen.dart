@@ -208,7 +208,7 @@ class _MemberTile extends StatelessWidget {
               ? NetworkImage(member.photoUrl!)
               : null,
           child: member.photoUrl == null || member.photoUrl!.isEmpty
-              ? Text(member.name[0].toUpperCase(), style: TextStyle(color: isActive ? null : Colors.grey))
+              ? Text(member.name.isNotEmpty ? member.name[0].toUpperCase() : '?', style: TextStyle(color: isActive ? null : Colors.grey))
               : null,
         ),
         title: Row(

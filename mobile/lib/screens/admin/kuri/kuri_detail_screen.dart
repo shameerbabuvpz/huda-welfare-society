@@ -327,6 +327,14 @@ class _AddMemberSheetState extends State<_AddMemberSheet> {
   bool _addingGuest = false;
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadMembers(null);
+    });
+  }
+
+  @override
   void dispose() {
     _guestNameController.dispose();
     _guestPhoneController.dispose();
@@ -458,7 +466,7 @@ class _AddMemberSheetState extends State<_AddMemberSheet> {
             if (_loadingMembers)
               const Expanded(child: Center(child: CircularProgressIndicator()))
             else if (_filteredMembers.isEmpty)
-              const Expanded(child: Center(child: Text('Select an ayalkoottam to see members')))
+              const Expanded(child: Center(child: Text('No members found')))
             else ...[
               // Select all / count row
               Padding(
@@ -515,10 +523,10 @@ class _AddMemberSheetState extends State<_AddMemberSheet> {
                           backgroundColor: isSelected ? Theme.of(context).colorScheme.primary : null,
                               child: isSelected
                                   ? const Icon(Icons.check, color: Colors.white, size: 20)
-                                  : Text(m.name[0].toUpperCase()),
+                                  : Text(m.name.isNotEmpty ? m.name[0].toUpperCase() : '?'),
                             ),
                       title: Text(m.name, style: TextStyle(color: isAdded ? Colors.grey : null)),
-                      subtitle: Text(m.phone ?? '', style: TextStyle(color: isAdded ? Colors.grey.shade400 : null)),
+                      subtitle: Text('${m.memberCode}${m.phone != null ? ' • ${m.phone}' : ''}', style: TextStyle(fontSize: 12, color: isAdded ? Colors.grey.shade400 : Colors.grey.shade600)),
                       trailing: isAdded
                           ? const Text('Added', style: TextStyle(color: AppTheme.primary, fontSize: 12, fontWeight: FontWeight.w600))
                           : null,
@@ -577,15 +585,18 @@ class _AddMemberSheetState extends State<_AddMemberSheet> {
   }
 
   Future<void> _loadMembers(int? ayalkoottamId) async {
+    if (!mounted) return;
     setState(() => _loadingMembers = true);
     try {
       final provider = context.read<MemberProvider>();
       await provider.loadMembers(ayalkoottamId: ayalkoottamId);
+      if (!mounted) return;
       setState(() {
-        _filteredMembers = provider.members;
+        _filteredMembers = List<Member>.from(provider.members);
         _loadingMembers = false;
       });
     } catch (_) {
+      if (!mounted) return;
       setState(() => _loadingMembers = false);
     }
   }
