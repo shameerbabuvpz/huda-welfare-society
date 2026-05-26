@@ -202,14 +202,19 @@ class _MemberTile extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: isActive ? null : Colors.grey.shade200,
-          backgroundImage: member.photoUrl != null && member.photoUrl!.isNotEmpty
-              ? NetworkImage(member.photoUrl!)
+        leading: GestureDetector(
+          onTap: member.photoUrl != null && member.photoUrl!.isNotEmpty
+              ? () => _showPhotoDialog(context)
               : null,
-          child: member.photoUrl == null || member.photoUrl!.isEmpty
-              ? Text(member.name.isNotEmpty ? member.name[0].toUpperCase() : '?', style: TextStyle(color: isActive ? null : Colors.grey))
-              : null,
+          child: CircleAvatar(
+            backgroundColor: isActive ? null : Colors.grey.shade200,
+            backgroundImage: member.photoUrl != null && member.photoUrl!.isNotEmpty
+                ? NetworkImage(member.photoUrl!)
+                : null,
+            child: member.photoUrl == null || member.photoUrl!.isEmpty
+                ? Text(member.name.isNotEmpty ? member.name[0].toUpperCase() : '?', style: TextStyle(color: isActive ? null : Colors.grey))
+                : null,
+          ),
         ),
         title: Row(
           children: [
@@ -488,6 +493,43 @@ class _MemberTile extends StatelessWidget {
                     ),
                   ),
                 ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showPhotoDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: GestureDetector(
+          onTap: () => Navigator.pop(ctx),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Image.network(
+                  member.photoUrl!,
+                  width: 280,
+                  height: 280,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => Container(
+                    width: 280,
+                    height: 280,
+                    color: Colors.grey.shade300,
+                    child: const Icon(Icons.broken_image, size: 48),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                member.name,
+                style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600),
               ),
             ],
           ),
