@@ -774,31 +774,112 @@ class _MembersTab extends StatelessWidget {
   }
 }
 
-class _WinnersTab extends StatelessWidget {
+class _WinnersTab extends StatefulWidget {
   final KuriGroup group;
   const _WinnersTab({required this.group});
 
   @override
-  Widget build(BuildContext context) {
-    final winners = group.winners ?? [];
-    if (winners.isEmpty) return const Center(child: Text('No winners yet'));
+  State<_WinnersTab> createState() => _WinnersTabState();
+}
 
-    return ListView.builder(
-      itemCount: winners.length,
-      itemBuilder: (ctx, i) {
-        final w = winners[i];
-        return ListTile(
-          leading: CircleAvatar(
-            backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
-            child: const Icon(Icons.emoji_events, color: AppTheme.accent),
+class _WinnersTabState extends State<_WinnersTab> {
+  int? _selectedMonthNumber; // null = all months
+
+  List<KuriWinner> get _filteredWinners {
+    final winners = widget.group.winners ?? [];
+    if (_selectedMonthNumber == null) return winners;
+    return winners.where((w) => w.monthNumber == _selectedMonthNumber).toList();
+  }
+
+  String _monthLabel(int monthNumber) {
+    const names = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    try {
+      final start = DateTime.parse(widget.group.startDate);
+      final targetDate = DateTime(start.year, start.month + monthNumber - 1);
+      return '${names[targetDate.month - 1]} ${targetDate.year}';
+    } catch (_) {
+      final year = 2025 + ((monthNumber - 1) ~/ 12);
+      final month = ((monthNumber - 1) % 12);
+      return '${names[month]} $year';
+    }
+  }
+
+  List<DropdownMenuItem<int?>> _buildFilterItems() {
+    final winners = widget.group.winners ?? [];
+    final months = winners.map((w) => w.monthNumber).toSet().toList()..sort();
+    return [
+      const DropdownMenuItem(value: null, child: Text('All Months')),
+      ...months.map((m) => DropdownMenuItem(value: m, child: Text(_monthLabel(m)))),
+    ];
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final winners = _filteredWinners;
+
+    return Column(
+      children: [
+        // Month filter bar
+        Container(
+          margin: const EdgeInsets.all(12),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey.shade300),
+            borderRadius: BorderRadius.circular(8),
           ),
-          title: Text(w.memberName ?? 'Member'),
-          subtitle: Text('Month ${w.monthNumber} • ${w.wonDate}'),
-          trailing: w.payoutAmount != null
-              ? Text('₹${w.payoutAmount!.toStringAsFixed(0)}', style: const TextStyle(fontWeight: FontWeight.w600, color: AppTheme.primary))
-              : const Text('Pending', style: TextStyle(color: AppTheme.accent)),
-        );
-      },
+          child: Row(
+            children: [
+              const Icon(Icons.filter_list, size: 20),
+              const SizedBox(width: 8),
+              Expanded(
+                child: DropdownButton<int?>(
+                  value: _selectedMonthNumber,
+                  isExpanded: true,
+                  underline: const SizedBox(),
+                  items: _buildFilterItems(),
+                  onChanged: (val) {
+                    setState(() => _selectedMonthNumber = val);
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+        if (winners.isEmpty)
+          Expanded(
+            child: Center(
+              child: Text(_selectedMonthNumber == null
+                  ? 'No winners yet'
+                  : 'No winner for selected month'),
+            ),
+          )
+        else
+          Expanded(
+            child: ListView.builder(
+              itemCount: winners.length,
+              itemBuilder: (ctx, i) {
+                final w = winners[i];
+                return Card(
+                  margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                  child: ListTile(
+                    leading: CircleAvatar(
+                      backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
+                      child: Text(
+                        '${w.monthNumber}',
+                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                    title: Text(w.memberName ?? 'Member'),
+                    subtitle: Text('${_monthLabel(w.monthNumber)} • ${w.wonDate.split('T')[0]}'),
+                    trailing: w.payoutAmount != null
+                        ? Text('₹${w.payoutAmount!.toStringAsFixed(0)}', style: const TextStyle(fontWeight: FontWeight.w600, color: AppTheme.primary))
+                        : const Text('Pending', style: TextStyle(color: AppTheme.accent)),
+                  ),
+                );
+              },
+            ),
+          ),
+      ],
     );
   }
 }
