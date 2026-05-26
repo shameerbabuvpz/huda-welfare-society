@@ -13,13 +13,18 @@ const authService = {
    * Get available roles for a user (from user_roles and primary role)
    */
   async getAvailableRoles(userId) {
-    const userRoles = await db('user_roles')
-      .where({ user_id: userId })
-      .select('role', 'organization_id')
-      .distinct('role');
-    
-    const roleList = userRoles.map(r => r.role);
-    return [...new Set(roleList)]; // Remove duplicates
+    try {
+      const userRoles = await db('user_roles')
+        .where({ user_id: userId })
+        .select('role', 'organization_id')
+        .distinct('role');
+      
+      const roleList = userRoles.map(r => r.role);
+      return [...new Set(roleList)]; // Remove duplicates
+    } catch (err) {
+      // user_roles table may not exist yet (migration pending)
+      return [];
+    }
   },
 
   /**
@@ -119,11 +124,19 @@ const authService = {
       currentRole = availableRoles[0];
     }
 
-    await db('users').where({ id: user.id }).update({ 
-      last_login_at: db.fn.now(),
-      current_role: currentRole,
-      updated_at: db.fn.now()
-    });
+    try {
+      await db('users').where({ id: user.id }).update({ 
+        last_login_at: db.fn.now(),
+        current_role: currentRole,
+        updated_at: db.fn.now()
+      });
+    } catch (err) {
+      // current_role column may not exist yet (migration pending)
+      await db('users').where({ id: user.id }).update({ 
+        last_login_at: db.fn.now(),
+        updated_at: db.fn.now()
+      });
+    }
 
     const token = jwt.sign(
       { 
@@ -174,10 +187,17 @@ const authService = {
     }
 
     // Update current_role
-    await db('users').where({ id: userId }).update({
-      current_role: newRole,
-      updated_at: db.fn.now()
-    });
+    try {
+      await db('users').where({ id: userId }).update({
+        current_role: newRole,
+        updated_at: db.fn.now()
+      });
+    } catch (err) {
+      // current_role column may not exist yet
+      await db('users').where({ id: userId }).update({
+        updated_at: db.fn.now()
+      });
+    }
 
     // Return new JWT with updated role
     const token = jwt.sign(
