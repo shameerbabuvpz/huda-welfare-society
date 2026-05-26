@@ -22,8 +22,9 @@ const authService = {
 
       // 2. Check if user has a linked member record (by phone or user_id)
       if (user.phone) {
+        const phone = user.phone.trim();
         const memberByPhone = await db('members')
-          .where({ phone: user.phone, status: 'active' })
+          .whereRaw("TRIM(phone) = ? AND status = 'active'", [phone])
           .first();
         if (memberByPhone) {
           roles.add('member');
