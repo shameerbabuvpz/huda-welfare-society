@@ -1,2 +1,2 @@
 #!/bin/bash
-cd backend && npm start
+cd backend && npm run migrate && npm start
