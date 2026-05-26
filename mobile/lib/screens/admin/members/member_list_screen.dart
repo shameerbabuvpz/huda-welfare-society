@@ -240,33 +240,40 @@ class _MemberTile extends StatelessWidget {
             ],
           ],
         ),
-        subtitle: Row(
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (member.phone != null && member.phone!.isNotEmpty)
-              Expanded(
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        '${member.phone}${member.ayalkoottamName != null ? ' • ${member.ayalkoottamName}' : ''}',
-                        overflow: TextOverflow.ellipsis,
-                      ),
+            Row(
+              children: [
+                if (member.phone != null && member.phone!.isNotEmpty) ...[
+                  Expanded(
+                    child: Text(
+                      member.phone!,
+                      style: const TextStyle(fontSize: 13),
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(width: 8),
-                    IconButton(
-                      icon: const Icon(Icons.call, size: 18),
+                  ),
+                  SizedBox(
+                    width: 28,
+                    height: 28,
+                    child: IconButton(
+                      icon: const Icon(Icons.call, size: 16),
                       onPressed: () => _makeCall(member.phone!),
                       padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                      constraints: const BoxConstraints(),
                       tooltip: 'Call ${member.name}',
                     ),
-                  ],
-                ),
-              )
-            else
-              Expanded(
+                  ),
+                ] else
+                  const Text('No phone', style: TextStyle(fontSize: 13, color: Colors.grey)),
+              ],
+            ),
+            if (member.ayalkoottamName != null && member.ayalkoottamName!.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 2),
                 child: Text(
-                  member.ayalkoottamName ?? 'No contact info',
+                  shortAkName(member.ayalkoottamName!),
+                  style: TextStyle(fontSize: 12, color: AppTheme.primary.withValues(alpha: 0.8)),
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
