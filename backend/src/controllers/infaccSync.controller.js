@@ -1,9 +1,21 @@
 const infaccSyncService = require('../services/infaccSync.service');
 
 const infaccSyncController = {
+  async preview(req, res, next) {
+    try {
+      const result = await infaccSyncService.preview(req.organizationId);
+      if (!result.success) {
+        const status = result.error === 'LOGIN_FAILED' ? 401 : 400;
+        return res.status(status).json(result);
+      }
+      res.json(result);
+    } catch (err) { next(err); }
+  },
+
   async sync(req, res, next) {
     try {
-      const result = await infaccSyncService.sync(req.organizationId);
+      const { selectedTypes } = req.body; // ['members', 'ayalkoottams'] or ['members']
+      const result = await infaccSyncService.sync(req.organizationId, selectedTypes);
       if (!result.success) {
         const status = result.error === 'LOGIN_FAILED' ? 401 : 400;
         return res.status(status).json(result);

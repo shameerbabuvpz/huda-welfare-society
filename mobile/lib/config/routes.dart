@@ -1,6 +1,7 @@
 class AppRoutes {
   static const String splash = '/';
   static const String login = '/login';
+  static const String roleSwitcher = '/role-switcher';
   static const String superAdminDashboard = '/super-admin/dashboard';
   static const String adminDashboard = '/admin/dashboard';
   static const String memberDashboard = '/member/dashboard';

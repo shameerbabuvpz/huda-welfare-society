@@ -97,6 +97,18 @@ class KuriProvider extends ChangeNotifier {
     }
   }
 
+  Future<bool> addGuestMember(int groupId, {required String name, String? phone}) async {
+    try {
+      await KuriService.addGuestMember(groupId, name: name, phone: phone);
+      await loadGroupDetail(groupId);
+      return true;
+    } catch (e) {
+      _error = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }
+
   Future<bool> removeMember(int groupId, int memberId) async {
     try {
       await KuriService.removeMember(groupId, memberId);

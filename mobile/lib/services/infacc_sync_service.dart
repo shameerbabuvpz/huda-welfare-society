@@ -14,8 +14,15 @@ class InfaccSyncService {
     return Map<String, dynamic>.from(res);
   }
 
-  static Future<Map<String, dynamic>> sync() async {
-    final res = await ApiService.post('/infacc-sync/sync', {});
+  static Future<Map<String, dynamic>> preview() async {
+    final res = await ApiService.post('/infacc-sync/preview', {});
+    return Map<String, dynamic>.from(res);
+  }
+
+  static Future<Map<String, dynamic>> sync({List<String> selectedTypes = const ['members', 'ayalkoottams']}) async {
+    final res = await ApiService.post('/infacc-sync/sync', {
+      'selectedTypes': selectedTypes,
+    });
     return Map<String, dynamic>.from(res);
   }
 }

@@ -161,7 +161,8 @@ class _MemberDashboardState extends State<MemberDashboard> {
 
   @override
   Widget build(BuildContext context) {
-    final user = context.watch<AuthProvider>().user;
+    final auth = context.watch<AuthProvider>();
+    final user = auth.user;
     final data = _data;
     final latestNotification = data?.notifications.isNotEmpty == true ? data!.notifications.first : null;
 
@@ -191,6 +192,13 @@ class _MemberDashboardState extends State<MemberDashboard> {
                               activeCount: data?.notifications.length ?? 0,
                               onTap: _openNotifications,
                             ),
+                            if (auth.hasMultipleRoles) ...[
+                              const SizedBox(width: 8),
+                              _HeaderAction(
+                                icon: Icons.security,
+                                onTap: () => Navigator.pushNamed(context, AppRoutes.roleSwitcher),
+                              ),
+                            ],
                             const SizedBox(width: 8),
                             _HeaderAction(
                               icon: Icons.logout_rounded,

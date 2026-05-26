@@ -56,6 +56,10 @@ class AssetService {
     await ApiService.post('/assets/$assetId/return', body);
   }
 
+  static Future<void> delete(int assetId) async {
+    await ApiService.delete('/assets/$assetId');
+  }
+
   static Future<List<AssetTransaction>> myAssets() async {
     final data = await ApiService.get('/assets/my-assets');
     return (data as List).map((a) => AssetTransaction.fromJson(a)).toList();

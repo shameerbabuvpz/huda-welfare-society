@@ -97,6 +97,13 @@ const assetController = {
       res.json(assets);
     } catch (err) { next(err); }
   },
+
+  async delete(req, res, next) {
+    try {
+      await assetService.delete(req.organizationId, parseInt(req.params.id, 10), req.user.id);
+      res.json({ message: 'Asset deleted successfully' });
+    } catch (err) { next(err); }
+  },
 };
 
 module.exports = assetController;

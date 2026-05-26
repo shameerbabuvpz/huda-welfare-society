@@ -51,6 +51,11 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void _onPhoneChanged(String value) {
+    // Clear error when user edits
+    final auth = context.read<AuthProvider>();
+    if (auth.error != null) {
+      auth.resetOtp();
+    }
     if (value.length == 10) {
       // Auto-send OTP when 10 digits entered
       _requestOtp();
@@ -208,6 +213,29 @@ class _LoginScreenState extends State<LoginScreen> {
                               return null;
                             },
                           ),
+                          if (auth.error != null && !auth.otpSent) ...[
+                            const SizedBox(height: 12),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                              decoration: BoxDecoration(
+                                color: AppTheme.error.withValues(alpha: 0.08),
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(color: AppTheme.error.withValues(alpha: 0.3)),
+                              ),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.error_outline, color: AppTheme.error, size: 20),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: Text(
+                                      auth.error!,
+                                      style: const TextStyle(color: AppTheme.error, fontSize: 13),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                           const SizedBox(height: 24),
                           if (auth.loading) const CircularProgressIndicator(),
                         ],

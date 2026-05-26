@@ -21,6 +21,16 @@ const authController = {
     } catch (err) { next(err); }
   },
 
+  async switchRole(req, res, next) {
+    try {
+      const { newRole } = req.body;
+      if (!newRole) throw ApiError.badRequest('newRole is required');
+
+      const result = await authService.switchRole(req.user.id, newRole, req.user.organizationId);
+      res.json(result);
+    } catch (err) { next(err); }
+  },
+
   async updateFcmToken(req, res, next) {
     try {
       await authService.updateFcmToken(req.user.id, req.body.fcm_token);
@@ -31,6 +41,8 @@ const authController = {
   async me(req, res, next) {
     try {
       const user = await db('users').where({ id: req.user.id }).first();
+      const availableRoles = await authService.getAvailableRoles(user.id);
+      
       let orgInfo = null;
       if (user.organization_id) {
         const org = await db('organizations').where({ id: user.organization_id }).first();
@@ -43,7 +55,8 @@ const authController = {
           id: user.id,
           name: user.name,
           phone: user.phone,
-          role: user.role,
+          role: user.current_role || user.role,
+          roles: availableRoles.length > 0 ? availableRoles : [user.role],
           organizationId: user.organization_id,
           photoUrl: user.photo_url,
           lastLoginAt: user.last_login_at,

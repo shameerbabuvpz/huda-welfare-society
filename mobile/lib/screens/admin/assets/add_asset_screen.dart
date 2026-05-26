@@ -4,9 +4,11 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../../config/theme.dart';
 import '../../../providers/asset_provider.dart';
+import '../../../models/asset.dart';
 
 class AddAssetScreen extends StatefulWidget {
-  const AddAssetScreen({super.key});
+  final Asset? assetToEdit;
+  const AddAssetScreen({super.key, this.assetToEdit});
 
   @override
   State<AddAssetScreen> createState() => _AddAssetScreenState();
@@ -20,6 +22,21 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
   final _costController = TextEditingController();
   DateTime? _purchaseDate;
   bool _saving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.assetToEdit != null) {
+      final asset = widget.assetToEdit!;
+      _nameController.text = asset.name;
+      _descController.text = asset.description ?? '';
+      _categoryController.text = asset.category ?? '';
+      _costController.text = asset.cost?.toString() ?? '';
+      if (asset.purchaseDate != null) {
+        _purchaseDate = DateTime.tryParse(asset.purchaseDate!);
+      }
+    }
+  }
 
   @override
   void dispose() {
@@ -52,12 +69,19 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
       if (_costController.text.isNotEmpty) 'cost': double.tryParse(_costController.text.trim()),
     };
 
-    final success = await context.read<AssetProvider>().createAsset(data);
+    bool success;
+    if (widget.assetToEdit != null) {
+      success = await context.read<AssetProvider>().updateAsset(widget.assetToEdit!.id, data);
+    } else {
+      success = await context.read<AssetProvider>().createAsset(data);
+    }
+
     setState(() => _saving = false);
 
     if (!mounted) return;
     if (success) {
-      ScaffoldMessenger.of(context).showSnackBar(AppTheme.successSnackBar('Asset added'));
+      final message = widget.assetToEdit != null ? 'Item updated' : 'Item added';
+      ScaffoldMessenger.of(context).showSnackBar(AppTheme.successSnackBar(message));
       Navigator.pop(context);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -68,8 +92,9 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isEditing = widget.assetToEdit != null;
     return Scaffold(
-      appBar: AppBar(title: const Text('Add Item')),
+      appBar: AppBar(title: Text(isEditing ? 'Edit Item' : 'Add Item')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Form(
@@ -117,7 +142,7 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: _saving ? null : _save,
-                  child: _saving ? const CircularProgressIndicator(strokeWidth: 2) : const Text('Add Item'),
+                  child: _saving ? const CircularProgressIndicator(strokeWidth: 2) : Text(isEditing ? 'Update Item' : 'Add Item'),
                 ),
               ),
             ],

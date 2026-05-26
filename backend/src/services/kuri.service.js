@@ -56,6 +56,7 @@ const kuriService = {
         'members.name as member_name',
         'members.member_code',
         'members.phone as member_phone',
+        'members.is_guest',
         'ayalkoottams.name as ayalkoottam_name',
       );
 
@@ -103,6 +104,40 @@ const kuriService = {
     }).returning('*');
 
     return km;
+  },
+
+  async addGuestMember(orgId, groupId, { name, phone }, actorId) {
+    const group = await db('kuri_groups').where({ id: groupId, organization_id: orgId }).first();
+    if (!group) throw ApiError.notFound('Kuri group not found');
+
+    const currentCount = await db('kuri_members').where({ kuri_group_id: groupId }).count('id as count').first();
+    if (parseInt(currentCount.count, 10) >= group.total_members) {
+      throw ApiError.conflict('Kuri group is full');
+    }
+
+    // Create a guest member record
+    const guestCode = `GUEST-${Date.now().toString(36).toUpperCase()}`;
+    const [member] = await db('members').insert({
+      organization_id: orgId,
+      member_code: guestCode,
+      name,
+      phone: phone || null,
+      status: 'active',
+      is_guest: true,
+      created_by: actorId,
+      updated_by: actorId,
+    }).returning('*');
+
+    const slotNumber = parseInt(currentCount.count, 10) + 1;
+    const [km] = await db('kuri_members').insert({
+      organization_id: orgId,
+      kuri_group_id: groupId,
+      member_id: member.id,
+      slot_number: slotNumber,
+      status: 'active',
+    }).returning('*');
+
+    return { ...km, member_name: name, member_phone: phone, is_guest: true };
   },
 
   async removeGroupMember(orgId, groupId, memberId) {

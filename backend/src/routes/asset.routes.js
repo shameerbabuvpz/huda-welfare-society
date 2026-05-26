@@ -51,6 +51,12 @@ router.post(
   ctrl.returnAsset
 );
 
+router.delete(
+  '/:id',
+  authorize('admin', 'super_admin'),
+  ctrl.delete
+);
+
 router.get('/:id/history', authorize('admin', 'super_admin'), ctrl.history);
 
 module.exports = router;

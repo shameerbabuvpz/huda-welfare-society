@@ -10,6 +10,19 @@ const SUPER_ADMIN_OTP = '6543';
 
 const authService = {
   /**
+   * Get available roles for a user (from user_roles and primary role)
+   */
+  async getAvailableRoles(userId) {
+    const userRoles = await db('user_roles')
+      .where({ user_id: userId })
+      .select('role', 'organization_id')
+      .distinct('role');
+    
+    const roleList = userRoles.map(r => r.role);
+    return [...new Set(roleList)]; // Remove duplicates
+  },
+
+  /**
    * Request OTP - validates phone exists and "sends" OTP
    * In production, this would send via WhatsApp/SMS
    */
@@ -94,11 +107,31 @@ const authService = {
 
     const previousLogin = user.last_login_at;
 
-    // Update last_login_at
-    await db('users').where({ id: user.id }).update({ last_login_at: db.fn.now() });
+    // Get available roles for this user
+    const availableRoles = await this.getAvailableRoles(user.id);
+    if (availableRoles.length === 0) {
+      availableRoles.push(user.role); // Fallback to primary role
+    }
+
+    // Set current_role if not already set, or if it's not in available roles
+    let currentRole = user.current_role || user.role;
+    if (!availableRoles.includes(currentRole)) {
+      currentRole = availableRoles[0];
+    }
+
+    await db('users').where({ id: user.id }).update({ 
+      last_login_at: db.fn.now(),
+      current_role: currentRole,
+      updated_at: db.fn.now()
+    });
 
     const token = jwt.sign(
-      { userId: user.id, role: user.role, organizationId: user.organization_id },
+      { 
+        userId: user.id, 
+        role: currentRole, 
+        organizationId: user.organization_id,
+        availableRoles: availableRoles
+      },
       JWT_SECRET,
       { expiresIn: JWT_EXPIRES_IN }
     );
@@ -117,12 +150,58 @@ const authService = {
         id: user.id,
         name: user.name,
         phone: user.phone,
-        role: user.role,
+        role: currentRole,
+        roles: availableRoles,
         organizationId: user.organization_id,
         photoUrl: user.photo_url,
         lastLoginAt: previousLogin,
       },
       organization: orgInfo,
+    };
+  },
+
+  /**
+   * Switch current role for a user
+   */
+  async switchRole(userId, newRole, organizationId) {
+    const user = await db('users').where({ id: userId }).first();
+    if (!user) throw ApiError.notFound('User not found');
+
+    // Check if user has this role
+    const availableRoles = await this.getAvailableRoles(userId);
+    if (!availableRoles.includes(newRole)) {
+      throw ApiError.forbidden('User does not have this role');
+    }
+
+    // Update current_role
+    await db('users').where({ id: userId }).update({
+      current_role: newRole,
+      updated_at: db.fn.now()
+    });
+
+    // Return new JWT with updated role
+    const token = jwt.sign(
+      { 
+        userId: user.id, 
+        role: newRole, 
+        organizationId: organizationId || user.organization_id,
+        availableRoles: availableRoles
+      },
+      JWT_SECRET,
+      { expiresIn: JWT_EXPIRES_IN }
+    );
+
+    return {
+      token,
+      user: {
+        id: user.id,
+        name: user.name,
+        phone: user.phone,
+        role: newRole,
+        roles: availableRoles,
+        organizationId: user.organization_id,
+        photoUrl: user.photo_url,
+      },
     };
   },
 

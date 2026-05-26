@@ -321,6 +321,17 @@ class _AddMemberSheetState extends State<_AddMemberSheet> {
   final Set<int> _addedMemberIds = {};
   bool _adding = false;
   int _addedCount = 0;
+  bool _guestMode = false;
+  final _guestNameController = TextEditingController();
+  final _guestPhoneController = TextEditingController();
+  bool _addingGuest = false;
+
+  @override
+  void dispose() {
+    _guestNameController.dispose();
+    _guestPhoneController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -370,6 +381,64 @@ class _AddMemberSheetState extends State<_AddMemberSheet> {
             ),
             const Divider(height: 1),
             const SizedBox(height: 12),
+            // Toggle: Members / Guest
+            Row(
+              children: [
+                Expanded(
+                  child: SegmentedButton<bool>(
+                    segments: const [
+                      ButtonSegment(value: false, label: Text('Members'), icon: Icon(Icons.people, size: 18)),
+                      ButtonSegment(value: true, label: Text('Guest'), icon: Icon(Icons.person_add_alt, size: 18)),
+                    ],
+                    selected: {_guestMode},
+                    onSelectionChanged: (v) => setState(() => _guestMode = v.first),
+                    style: SegmentedButton.styleFrom(visualDensity: VisualDensity.compact),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            if (_guestMode) ...[
+              // Guest add form
+              TextField(
+                controller: _guestNameController,
+                decoration: const InputDecoration(
+                  labelText: 'Guest Name *',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.person),
+                ),
+                textCapitalization: TextCapitalization.words,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _guestPhoneController,
+                decoration: const InputDecoration(
+                  labelText: 'Phone (optional)',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.phone),
+                ),
+                keyboardType: TextInputType.phone,
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: ElevatedButton.icon(
+                  onPressed: _addingGuest || _guestNameController.text.trim().isEmpty
+                      ? null
+                      : _addGuest,
+                  icon: _addingGuest
+                      ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                      : const Icon(Icons.person_add),
+                  label: Text(_addingGuest ? 'Adding...' : 'Add Guest to Kuri'),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'Guests are people outside the Ayalkoottam who participate only in this Kuri.',
+                style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+              ),
+            ] else ...[
             DropdownButtonFormField<int>(
               decoration: const InputDecoration(labelText: 'Filter by Ayalkoottam', border: OutlineInputBorder()),
               value: _selectedAyalkoottamId,
@@ -467,8 +536,9 @@ class _AddMemberSheetState extends State<_AddMemberSheet> {
                 ),
               ),
             ],
+            ], // end else (members mode)
             // Bottom action bar
-            if (_selectedMemberIds.isNotEmpty)
+            if (!_guestMode && _selectedMemberIds.isNotEmpty)
               SafeArea(
                 child: Padding(
                   padding: const EdgeInsets.only(top: 8),
@@ -485,7 +555,7 @@ class _AddMemberSheetState extends State<_AddMemberSheet> {
                   ),
                 ),
               ),
-            if (_addedCount > 0 && _selectedMemberIds.isEmpty)
+            if (_addedCount > 0 && (_guestMode || _selectedMemberIds.isEmpty))
               SafeArea(
                 child: Padding(
                   padding: const EdgeInsets.only(top: 8),
@@ -554,6 +624,32 @@ class _AddMemberSheetState extends State<_AddMemberSheet> {
       }
     }
   }
+
+  Future<void> _addGuest() async {
+    final name = _guestNameController.text.trim();
+    if (name.isEmpty) return;
+    setState(() => _addingGuest = true);
+    final success = await context.read<KuriProvider>().addGuestMember(
+      widget.groupId,
+      name: name,
+      phone: _guestPhoneController.text.trim(),
+    );
+    if (mounted) {
+      setState(() => _addingGuest = false);
+      if (success) {
+        _guestNameController.clear();
+        _guestPhoneController.clear();
+        _addedCount += 1;
+        ScaffoldMessenger.of(context).showSnackBar(
+          AppTheme.successSnackBar('Guest "$name" added to Kuri'),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          AppTheme.errorSnackBar(context.read<KuriProvider>().error ?? 'Failed to add guest'),
+        );
+      }
+    }
+  }
 }
 
 class _InfoTab extends StatelessWidget {
@@ -617,6 +713,7 @@ class _MembersTab extends StatelessWidget {
       itemBuilder: (ctx, i) {
         final m = members[i];
         final subtitle = [
+          if (m.isGuest) 'Guest',
           if (m.ayalkoottamName != null && m.ayalkoottamName!.isNotEmpty) m.ayalkoottamName!,
           if (m.memberPhone != null && m.memberPhone!.isNotEmpty) m.memberPhone!,
         ].join(' • ');

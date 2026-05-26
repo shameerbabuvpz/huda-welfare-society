@@ -16,6 +16,7 @@ import 'providers/privilege_offer_provider.dart';
 import 'providers/banner_provider.dart';
 import 'screens/auth/splash_screen.dart';
 import 'screens/auth/login_screen.dart';
+import 'screens/auth/role_switcher_screen.dart';
 import 'screens/admin/admin_dashboard.dart';
 import 'screens/admin/members/member_list_screen.dart';
 import 'screens/admin/members/add_member_screen.dart';
@@ -83,6 +84,7 @@ class AyalkoottamApp extends StatelessWidget {
         routes: {
           AppRoutes.splash: (_) => const SplashScreen(),
           AppRoutes.login: (_) => const LoginScreen(),
+          AppRoutes.roleSwitcher: (_) => const RoleSwitcherScreen(),
           // Super Admin
           AppRoutes.superAdminDashboard: (_) => const SuperAdminDashboard(),
           // Admin

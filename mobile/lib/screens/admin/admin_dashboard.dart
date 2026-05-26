@@ -286,6 +286,20 @@ void _showProfileSheet(BuildContext context) {
             Text(user?.phone ?? '',
                 style: TextStyle(color: Colors.grey.shade600)),
             const SizedBox(height: 20),
+            if (auth.hasMultipleRoles) ...[
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    Navigator.pushNamed(context, AppRoutes.roleSwitcher);
+                  },
+                  icon: const Icon(Icons.security),
+                  label: const Text('Switch Role'),
+                ),
+              ),
+              const SizedBox(height: 12),
+            ],
             SizedBox(
               width: double.infinity,
               child: OutlinedButton.icon(
@@ -378,12 +392,6 @@ class _DashboardCard extends StatelessWidget {
                   textAlign: TextAlign.center,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 8),
-                Icon(
-                  Icons.arrow_forward_rounded,
-                  size: 16,
-                  color: AppTheme.ink.withValues(alpha: 0.46),
                 ),
               ],
             ),

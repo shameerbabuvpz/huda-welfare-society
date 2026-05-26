@@ -24,7 +24,10 @@ class _SplashScreenState extends State<SplashScreen> {
     if (!mounted) return;
 
     if (auth.isLoggedIn) {
-      if (auth.isSuperAdmin) {
+      // If user has multiple roles, show role switcher
+      if (auth.hasMultipleRoles) {
+        Navigator.pushReplacementNamed(context, AppRoutes.roleSwitcher);
+      } else if (auth.isSuperAdmin) {
         Navigator.pushReplacementNamed(context, AppRoutes.superAdminDashboard);
       } else if (auth.isAdmin) {
         Navigator.pushReplacementNamed(context, AppRoutes.adminDashboard);

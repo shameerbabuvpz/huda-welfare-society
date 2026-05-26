@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../config/theme.dart';
 import '../../../services/infacc_sync_service.dart';
+import 'infacc_sync_preview_screen.dart';
 
 class InfaccSyncScreen extends StatefulWidget {
   const InfaccSyncScreen({super.key});
@@ -85,32 +86,15 @@ class _InfaccSyncScreenState extends State<InfaccSyncScreen> {
   }
 
   Future<void> _triggerSync() async {
-    setState(() {
-      _syncing = true;
-      _syncResult = null;
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const InfaccSyncPreviewScreen(),
+      ),
+    ).then((_) {
+      // Reload status after syncing
+      _loadStatus();
     });
-    try {
-      final result = await InfaccSyncService.sync();
-      if (result['success'] == true) {
-        final stats = result['stats'] as Map<String, dynamic>?;
-        setState(() {
-          _syncResult =
-              'Synced ${stats?['membersCreated'] ?? 0} new, updated ${stats?['membersUpdated'] ?? 0} members. '
-              '${stats?['ayalkoottamsCreated'] ?? 0} new ayalkoottams.';
-          _lastSync = DateTime.now().toIso8601String();
-        });
-      } else {
-        setState(() {
-          _syncResult = 'Sync failed: ${result['message'] ?? 'Unknown error'}';
-        });
-      }
-    } catch (e) {
-      setState(() {
-        _syncResult = 'Sync failed: ${e.toString()}';
-      });
-    } finally {
-      setState(() => _syncing = false);
-    }
   }
 
   @override
@@ -233,14 +217,8 @@ class _InfaccSyncScreenState extends State<InfaccSyncScreen> {
                     onPressed: _hasCredentials && !_syncing
                         ? _triggerSync
                         : null,
-                    icon: _syncing
-                        ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(Icons.sync),
-                    label: Text(_syncing ? 'Syncing...' : 'Sync Now'),
+                    icon: const Icon(Icons.preview),
+                    label: const Text('Preview & Sync'),
                     style: FilledButton.styleFrom(
                       backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
                       foregroundColor: Theme.of(context).colorScheme.onSecondaryContainer,

@@ -269,6 +269,26 @@ const assetService = {
       missing: parseInt(missing.count, 10),
     };
   },
+
+  async delete(orgId, assetId, actorId) {
+    // Check if asset can be deleted (must not be issued)
+    const asset = await db('assets').where({ id: assetId, organization_id: orgId }).first();
+    if (!asset) throw ApiError.notFound('Asset not found');
+    if (asset.status === 'issued') throw ApiError.conflict('Cannot delete asset that is currently issued');
+
+    // Delete the asset
+    await db('assets').where({ id: assetId, organization_id: orgId }).del();
+
+    // Log the action
+    await auditService.log({
+      organizationId: orgId,
+      actorId,
+      action: 'asset.delete',
+      entityType: 'asset',
+      entityId: assetId,
+      details: { name: asset.name, assetCode: asset.asset_code },
+    });
+  },
 };
 
 module.exports = assetService;

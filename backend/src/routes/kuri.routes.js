@@ -37,6 +37,13 @@ router.post(
   validate,
   ctrl.addMember
 );
+router.post(
+  '/:id/guests',
+  authorize('admin', 'super_admin'),
+  [body('name').notEmpty().trim(), body('phone').optional().trim()],
+  validate,
+  ctrl.addGuestMember
+);
 router.delete('/:id/members/:memberId', authorize('admin', 'super_admin'), ctrl.removeMember);
 
 // Admin – collections

@@ -38,6 +38,18 @@ const kuriController = {
     } catch (err) { next(err); }
   },
 
+  async addGuestMember(req, res, next) {
+    try {
+      const km = await kuriService.addGuestMember(
+        req.organizationId,
+        parseInt(req.params.id, 10),
+        { name: req.body.name, phone: req.body.phone },
+        req.user.id
+      );
+      res.status(201).json(km);
+    } catch (err) { next(err); }
+  },
+
   async removeMember(req, res, next) {
     try {
       const km = await kuriService.removeGroupMember(req.organizationId, parseInt(req.params.id, 10), parseInt(req.params.memberId, 10));

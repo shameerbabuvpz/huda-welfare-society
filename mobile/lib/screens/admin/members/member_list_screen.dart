@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../config/theme.dart';
 import '../../../providers/member_provider.dart';
 import '../../../providers/ayalkoottam_provider.dart';
@@ -239,7 +240,38 @@ class _MemberTile extends StatelessWidget {
             ],
           ],
         ),
-        subtitle: Text('${member.phone ?? ''}${member.ayalkoottamName != null ? ' • ${member.ayalkoottamName}' : ''}'),
+        subtitle: Row(
+          children: [
+            if (member.phone != null && member.phone!.isNotEmpty)
+              Expanded(
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        '${member.phone}${member.ayalkoottamName != null ? ' • ${member.ayalkoottamName}' : ''}',
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    IconButton(
+                      icon: const Icon(Icons.call, size: 18),
+                      onPressed: () => _makeCall(member.phone!),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                      tooltip: 'Call ${member.name}',
+                    ),
+                  ],
+                ),
+              )
+            else
+              Expanded(
+                child: Text(
+                  member.ayalkoottamName ?? 'No contact info',
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+          ],
+        ),
         trailing: PopupMenuButton(
           itemBuilder: (_) => [
             const PopupMenuItem(value: 'edit', child: Text('Edit')),
@@ -247,6 +279,7 @@ class _MemberTile extends StatelessWidget {
               value: 'toggle_status',
               child: Text(isActive ? 'Deactivate' : 'Activate'),
             ),
+            const PopupMenuItem(value: 'reset_code', child: Text('Reset Code')),
             const PopupMenuItem(value: 'delete', child: Text('Remove', style: TextStyle(color: AppTheme.error))),
           ],
           onSelected: (v) {
@@ -254,6 +287,8 @@ class _MemberTile extends StatelessWidget {
               _showEditDialog(context);
             } else if (v == 'toggle_status') {
               _confirmToggle(context);
+            } else if (v == 'reset_code') {
+              _resetMemberCode(context);
             } else if (v == 'delete') {
               _confirmDelete(context);
             }
@@ -293,6 +328,68 @@ class _MemberTile extends StatelessWidget {
             context.read<MemberProvider>().updateMember(member.id, {'status': isActive ? 'inactive' : 'active'});
           },
           child: Text(isActive ? 'Deactivate' : 'Activate'),
+        ),
+      ],
+    );
+  }
+
+  void _resetMemberCode(BuildContext context) {
+    showAppSheet(
+      context: context,
+      title: 'Reset Member Code',
+      initialChildSize: 0.35,
+      body: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Column(
+          children: [
+            Text('Reset ${member.name}\'s login code to default (6789)?'),
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.orange.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: const Text(
+                'They will need to use code 6789 to log in next time.',
+                style: TextStyle(fontSize: 12),
+              ),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        OutlinedButton(
+          onPressed: () => Navigator.pop(context),
+          style: OutlinedButton.styleFrom(
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          ),
+          child: const Text('Cancel'),
+        ),
+        FilledButton(
+          style: FilledButton.styleFrom(
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          ),
+          onPressed: () async {
+            Navigator.pop(context);
+            try {
+              await context.read<MemberProvider>().resetMemberCodeToDefault(member.id);
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  AppTheme.successSnackBar('Code reset to 6789'),
+                );
+              }
+            } catch (e) {
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  AppTheme.errorSnackBar('Failed to reset code'),
+                );
+              }
+            }
+          },
+          child: const Text('Reset Code'),
         ),
       ],
     );
@@ -390,5 +487,12 @@ class _MemberTile extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _makeCall(String phoneNumber) async {
+    final uri = Uri(scheme: 'tel', path: phoneNumber);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
+    }
   }
 }

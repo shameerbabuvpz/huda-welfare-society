@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/member.dart';
 import '../services/member_service.dart';
+import '../services/api_service.dart';
+import '../services/storage_service.dart';
 
 class MemberProvider extends ChangeNotifier {
   List<Member> _members = [];
@@ -94,6 +97,101 @@ class MemberProvider extends ChangeNotifier {
       _error = e.toString();
       notifyListeners();
       return false;
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // Member Authentication Methods (for member login with code)
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  String? _memberToken;
+  Map<String, dynamic>? _memberProfile;
+
+  String? get memberToken => _memberToken;
+  Map<String, dynamic>? get memberProfile => _memberProfile;
+
+  /// Set member token (from login)
+  Future<void> setMemberToken(String token) async {
+    _memberToken = token;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('member_token', token);
+    // Also save to storage service for API calls
+    await StorageService.saveToken(token);
+    notifyListeners();
+  }
+
+  /// Get saved member token
+  Future<String?> getMemberToken() async {
+    if (_memberToken != null) return _memberToken;
+    final prefs = await SharedPreferences.getInstance();
+    _memberToken = prefs.getString('member_token');
+    return _memberToken;
+  }
+
+  /// Clear member token (logout)
+  Future<void> clearMemberToken() async {
+    _memberToken = null;
+    _memberProfile = null;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('member_token');
+    notifyListeners();
+  }
+
+  /// Change member login code
+  Future<Map<String, dynamic>> changeCode(String currentCode, String newCode) async {
+    try {
+      final response = await ApiService.post(
+        '/member-auth/change-code',
+        {
+          'currentCode': currentCode,
+          'newCode': newCode,
+        },
+
+      );
+      return response;
+    } catch (e) {
+      throw Exception('Failed to change code: $e');
+    }
+  }
+
+  /// Get member profile
+  Future<Map<String, dynamic>> getMemberProfile() async {
+    try {
+      final response = await ApiService.get('/member-auth/profile');
+      if (response['success'] == true) {
+        _memberProfile = response['member'];
+        notifyListeners();
+      }
+      return response;
+    } catch (e) {
+      throw Exception('Failed to get profile: $e');
+    }
+  }
+
+  /// Reset member's code to default (Admin function)
+  Future<Map<String, dynamic>> resetMemberCodeToDefault(int memberId) async {
+    try {
+      final response = await ApiService.post(
+        '/member-auth/reset-code',
+        {'memberId': memberId},
+      );
+      // Reload members list after reset
+      await loadMembers(page: _currentPage, search: _currentSearch, ayalkoottamId: _currentAyalkoottamId);
+      return response;
+    } catch (e) {
+      throw Exception('Failed to reset code: $e');
+    }
+  }
+
+  /// Get member code status (Admin view)
+  Future<Map<String, dynamic>> getMemberCodeStatus(int memberId) async {
+    try {
+      final response = await ApiService.get(
+        '/member-auth/code-status/$memberId',
+      );
+      return response;
+    } catch (e) {
+      throw Exception('Failed to get code status: $e');
     }
   }
 }

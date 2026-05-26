@@ -21,6 +21,8 @@ class AuthProvider extends ChangeNotifier {
   bool get isAdmin => _user?.isAdmin ?? false;
   bool get isSuperAdmin => _user?.isSuperAdmin ?? false;
   bool get otpSent => _otpSent;
+  List<String> get availableRoles => _user?.roles ?? [];
+  bool get hasMultipleRoles => _user?.hasMultipleRoles ?? false;
 
   Future<bool> requestOtp(String phone) async {
     _loading = true;
@@ -49,6 +51,24 @@ class AuthProvider extends ChangeNotifier {
       _user = result['user'] as User;
       _organization = result['organization'] as Organization?;
       _otpSent = false;
+      _loading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _error = e.toString();
+      _loading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> switchRole(String newRole) async {
+    _loading = true;
+    _error = null;
+    notifyListeners();
+    try {
+      final result = await AuthService.switchRole(newRole);
+      _user = result['user'] as User;
       _loading = false;
       notifyListeners();
       return true;

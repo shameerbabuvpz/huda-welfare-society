@@ -73,12 +73,111 @@ class _SuperAdminDashboardState extends State<SuperAdminDashboard> {
     }
   }
 
+  void _showHostingDetails() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+        decoration: BoxDecoration(
+          color: AppTheme.surface,
+          borderRadius: BorderRadius.circular(24),
+        ),
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 40, height: 4,
+                decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(2)),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Icon(Icons.dns_rounded, color: AppTheme.primary, size: 24),
+                const SizedBox(width: 10),
+                Text('Hosting & Infrastructure', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.primaryDark)),
+              ],
+            ),
+            const Divider(height: 24),
+            _hostingRow(Icons.cloud, 'Hosting Platform', 'Railway'),
+            _hostingRow(Icons.link, 'Backend URL', 'brilliant-kindness-production-e55a.up.railway.app'),
+            _hostingRow(Icons.api, 'API Path', '/api/v1'),
+            _hostingRow(Icons.storage, 'Database', 'PostgreSQL (Railway)'),
+            _hostingRow(Icons.code, 'Backend Stack', 'Node.js + Express.js'),
+            _hostingRow(Icons.phone_android, 'Mobile', 'Flutter (Android)'),
+            _hostingRow(Icons.security, 'Auth', 'Phone OTP + JWT'),
+            _hostingRow(Icons.photo_library, 'File Storage', 'Server uploads/ directory'),
+            const Divider(height: 24),
+            Text('Admin Phones', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.grey.shade700)),
+            const SizedBox(height: 6),
+            Wrap(
+              spacing: 8,
+              runSpacing: 4,
+              children: [
+                _phoneChip('9496717816'),
+                _phoneChip('8590864144'),
+                _phoneChip('9656550933'),
+                _phoneChip('9645802310'),
+                _phoneChip('9495003602'),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Text('Full API URL:', style: TextStyle(fontSize: 11, color: Colors.grey.shade500)),
+            const SizedBox(height: 4),
+            SelectableText(
+              'https://brilliant-kindness-production-e55a.up.railway.app/api/v1',
+              style: TextStyle(fontSize: 12, fontFamily: 'monospace', color: AppTheme.primary),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _hostingRow(IconData icon, String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 5),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 18, color: Colors.grey.shade600),
+          const SizedBox(width: 10),
+          SizedBox(
+            width: 110,
+            child: Text(label, style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+          ),
+          Expanded(
+            child: Text(value, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _phoneChip(String phone) {
+    return Chip(
+      label: Text(phone, style: const TextStyle(fontSize: 12, fontFamily: 'monospace')),
+      visualDensity: VisualDensity.compact,
+      padding: EdgeInsets.zero,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Super Admin'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.dns_outlined),
+            tooltip: 'Hosting Details',
+            onPressed: _showHostingDetails,
+          ),
           IconButton(icon: const Icon(Icons.logout), onPressed: _logout),
         ],
       ),

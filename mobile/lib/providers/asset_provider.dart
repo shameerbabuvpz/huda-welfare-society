@@ -149,4 +149,17 @@ class AssetProvider extends ChangeNotifier {
       return false;
     }
   }
+
+  Future<bool> deleteAsset(int assetId) async {
+    try {
+      await AssetService.delete(assetId);
+      await loadAssets(page: _currentPage, search: _currentSearch);
+      await loadStats();
+      return true;
+    } catch (e) {
+      _error = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }
 }

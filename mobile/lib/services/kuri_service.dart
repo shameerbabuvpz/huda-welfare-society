@@ -23,6 +23,12 @@ class KuriService {
     await ApiService.post('/kuri/$groupId/members', {'member_id': memberId});
   }
 
+  static Future<void> addGuestMember(int groupId, {required String name, String? phone}) async {
+    final body = <String, dynamic>{'name': name};
+    if (phone != null && phone.isNotEmpty) body['phone'] = phone;
+    await ApiService.post('/kuri/$groupId/guests', body);
+  }
+
   static Future<void> removeMember(int groupId, int memberId) async {
     await ApiService.delete('/kuri/$groupId/members/$memberId');
   }

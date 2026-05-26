@@ -37,6 +37,14 @@ class AuthService {
     return {'user': user, 'organization': org};
   }
 
+  static Future<Map<String, dynamic>> switchRole(String newRole) async {
+    final data = await ApiService.post('/auth/switch-role', {'newRole': newRole});
+    await StorageService.saveToken(data['token']);
+    final user = User.fromJson(data['user']);
+    await StorageService.saveUserInfo(user.id, user.role);
+    return {'user': user};
+  }
+
   static Future<User?> getCurrentUser() async {
     try {
       final data = await ApiService.get('/auth/me');

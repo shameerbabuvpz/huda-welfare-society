@@ -23,6 +23,14 @@ router.post(
   authController.verifyOtp
 );
 
+router.post(
+  '/switch-role',
+  authenticate,
+  [body('newRole').isIn(['super_admin', 'admin', 'member']).withMessage('Invalid role')],
+  validate,
+  authController.switchRole
+);
+
 router.put('/fcm-token', authenticate, [body('fcm_token').notEmpty()], validate, authController.updateFcmToken);
 
 router.get('/me', authenticate, authController.me);

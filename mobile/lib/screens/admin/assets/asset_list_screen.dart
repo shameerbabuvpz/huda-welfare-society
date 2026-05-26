@@ -8,6 +8,8 @@ import '../../../services/asset_service.dart';
 import '../../../services/member_service.dart';
 import '../../../config/routes.dart';
 import '../../../widgets/app_bottom_sheet.dart';
+import '../../../widgets/captcha_dialog.dart';
+import 'add_asset_screen.dart';
 
 class AssetListScreen extends StatefulWidget {
   const AssetListScreen({super.key});
@@ -205,6 +207,11 @@ class _AssetTile extends StatelessWidget {
                 if (asset.status == 'issued')
                   const PopupMenuItem(value: 'return', child: Text('Return')),
                 const PopupMenuItem(value: 'condition', child: Text('Change Condition')),
+                const PopupMenuItem(value: 'edit', child: Text('Edit')),
+                const PopupMenuItem(
+                  value: 'delete',
+                  child: Text('Delete', style: TextStyle(color: AppTheme.error)),
+                ),
               ],
               onSelected: (v) {
                 if (v == 'issue') {
@@ -213,6 +220,10 @@ class _AssetTile extends StatelessWidget {
                   _showReturnDialog(context);
                 } else if (v == 'condition') {
                   _showConditionDialog(context);
+                } else if (v == 'edit') {
+                  _showEditDialog(context);
+                } else if (v == 'delete') {
+                  _showDeleteDialog(context);
                 }
               },
             ),
@@ -356,6 +367,105 @@ class _AssetTile extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  void _showEditDialog(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (ctx) => AddAssetScreen(assetToEdit: asset),
+      ),
+    );
+  }
+
+  void _showDeleteDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete Item?'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Are you sure you want to delete "${asset.name}"?'),
+            const SizedBox(height: 8),
+            if (asset.status == 'issued')
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.red.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.error_outline, color: Colors.red, size: 18),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Cannot delete items that are currently issued.',
+                        style: TextStyle(fontSize: 12, color: Colors.red.shade700),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          if (asset.status != 'issued')
+            FilledButton(
+              style: FilledButton.styleFrom(
+                backgroundColor: AppTheme.error,
+              ),
+              onPressed: () {
+                Navigator.pop(ctx);
+                _showCaptchaAndDelete(context);
+              },
+              child: const Text('Delete'),
+            ),
+        ],
+      ),
+    );
+  }
+
+  void _showCaptchaAndDelete(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => CaptchaDialog(
+        title: 'Confirm Deletion',
+        message: 'Answer the security question to delete this item',
+        onSuccess: () {
+          _performDelete(context);
+        },
+      ),
+    );
+  }
+
+  Future<void> _performDelete(BuildContext context) async {
+    try {
+      final success = await context.read<AssetProvider>().deleteAsset(asset.id);
+      if (!context.mounted) return;
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          AppTheme.successSnackBar('Item deleted successfully'),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          AppTheme.errorSnackBar('Failed to delete item'),
+        );
+      }
+    } catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        AppTheme.errorSnackBar('Error: ${e.toString()}'),
+      );
+    }
   }
 }
 
