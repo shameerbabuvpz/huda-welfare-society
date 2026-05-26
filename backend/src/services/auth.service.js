@@ -6,7 +6,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret';
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
 const STATIC_OTP = process.env.STATIC_OTP || '3456';
 const SUPER_ADMIN_PHONE = '9999999999';
-const SUPER_ADMIN_OTP = '8888';
+const SUPER_ADMIN_OTP = '6543';
 
 const authService = {
   /**
@@ -34,6 +34,19 @@ const authService = {
 
     const user = await db('users').where({ phone, status: 'active' }).first();
     if (!user) throw ApiError.notFound('No account found with this phone number');
+
+    // For member-role users, ensure they have a linked member profile
+    if (user.role === 'member') {
+      const member = await db('members')
+        .where(function() {
+          this.where({ user_id: user.id }).orWhere({ phone, status: 'active' });
+        })
+        .where({ organization_id: user.organization_id })
+        .first();
+      if (!member) {
+        throw ApiError.notFound('No member profile linked to this number. Contact your admin.');
+      }
+    }
 
     // Check org status
     if (user.organization_id) {
