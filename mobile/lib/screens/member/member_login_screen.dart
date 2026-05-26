@@ -57,7 +57,7 @@ class _MemberLoginScreenState extends State<MemberLoginScreen> {
         '/member-auth/login',
         {
           'memberId': memberId,
-          'organizationId': 1, // Default organization, can be made dynamic
+          'organizationId': 2, // Sangamam organization ID
           'code': code,
         },
       );

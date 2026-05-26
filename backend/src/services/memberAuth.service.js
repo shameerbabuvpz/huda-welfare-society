@@ -13,7 +13,7 @@ const memberAuthService = {
   async loginWithCode(organizationId, memberId, code) {
     // Validate inputs
     if (!code || code.length !== 4) {
-      throw new ApiError('Invalid code format. Code must be 4 digits.', 400);
+      throw new ApiError(400, 'Invalid code format. Code must be 4 digits.');
     }
 
     // Get member
@@ -26,12 +26,12 @@ const memberAuthService = {
       .first();
 
     if (!member) {
-      throw new ApiError('Member not found.', 404);
+      throw new ApiError(404, 'Member not found.');
     }
 
     // Verify code
     if (member.login_code !== code) {
-      throw new ApiError('Invalid code.', 401);
+      throw new ApiError(401, 'Invalid code.');
     }
 
     // Generate JWT token
@@ -71,16 +71,16 @@ const memberAuthService = {
   async changeCode(organizationId, memberId, currentCode, newCode) {
     // Validate inputs
     if (!currentCode || currentCode.length !== 4) {
-      throw new ApiError('Invalid current code format.', 400);
+      throw new ApiError(400, 'Invalid current code format.');
     }
     if (!newCode || newCode.length !== 4) {
-      throw new ApiError('Invalid new code format. Code must be 4 digits.', 400);
+      throw new ApiError(400, 'Invalid new code format. Code must be 4 digits.');
     }
     if (!/^\d{4}$/.test(newCode)) {
-      throw new ApiError('Code must contain only digits.', 400);
+      throw new ApiError(400, 'Code must contain only digits.');
     }
     if (currentCode === newCode) {
-      throw new ApiError('New code must be different from current code.', 400);
+      throw new ApiError(400, 'New code must be different from current code.');
     }
 
     // Get member
@@ -93,12 +93,12 @@ const memberAuthService = {
       .first();
 
     if (!member) {
-      throw new ApiError('Member not found.', 404);
+      throw new ApiError(404, 'Member not found.');
     }
 
     // Verify current code
     if (member.login_code !== currentCode) {
-      throw new ApiError('Current code is incorrect.', 401);
+      throw new ApiError(401, 'Current code is incorrect.');
     }
 
     // Update code
@@ -136,7 +136,7 @@ const memberAuthService = {
       .first();
 
     if (!member) {
-      throw new ApiError('Member not found.', 404);
+      throw new ApiError(404, 'Member not found.');
     }
 
     // Reset to default 6789
@@ -173,7 +173,7 @@ const memberAuthService = {
       .first();
 
     if (!member) {
-      throw new ApiError('Member not found.', 404);
+      throw new ApiError(404, 'Member not found.');
     }
 
     return {

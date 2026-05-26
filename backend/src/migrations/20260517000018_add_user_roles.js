@@ -3,7 +3,7 @@ exports.up = async function (knex) {
   const hasCurrentRole = await knex.schema.hasColumn('users', 'current_role');
   if (!hasCurrentRole) {
     await knex.schema.alterTable('users', (t) => {
-      t.enu('current_role', ['super_admin', 'admin', 'member']).notNullable().defaultTo(knex.raw('role'));
+      t.enu('current_role', ['super_admin', 'admin', 'member']).notNullable().defaultTo('admin');
     });
   }
 
