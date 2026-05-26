@@ -189,7 +189,21 @@ class _LoginScreenState extends State<LoginScreen> {
                             color: AppTheme.ink.withValues(alpha: 0.7),
                           ),
                         ),
-                        const SizedBox(height: 32),
+                        const SizedBox(height: 20),
+                        // Member login button
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            TextButton.icon(
+                              onPressed: () {
+                                Navigator.pushReplacementNamed(context, AppRoutes.memberLogin);
+                              },
+                              icon: const Icon(Icons.card_membership, size: 18),
+                              label: const Text('Login as Member'),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
                         if (!auth.otpSent) ...[
                           TextFormField(
                             controller: _phoneController,

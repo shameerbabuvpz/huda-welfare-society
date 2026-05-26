@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../config/theme.dart';
-import '../../../providers/member_provider.dart';
-import '../../../services/api_service.dart';
+import '../../config/theme.dart';
+import '../../config/routes.dart';
+import '../../providers/member_provider.dart';
+import '../../services/api_service.dart';
 
 class MemberChangeCodeScreen extends StatefulWidget {
   final bool mustChange;
@@ -83,7 +84,7 @@ class _MemberChangeCodeScreenState extends State<MemberChangeCodeScreen> {
             AppTheme.successSnackBar('Code changed successfully'),
           );
           // Navigate to member dashboard
-          Navigator.of(context).pushReplacementNamed('/member-dashboard');
+          Navigator.of(context).pushReplacementNamed(AppRoutes.memberDashboard);
         }
       } else {
         setState(() => _error = response['message'] ?? 'Failed to change code');

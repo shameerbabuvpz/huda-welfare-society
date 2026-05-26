@@ -46,6 +46,8 @@ import 'screens/member/member_offers_screen.dart';
 import 'screens/admin/banners/banner_list_screen.dart';
 import 'screens/admin/infacc_sync_screen.dart';
 import 'screens/super_admin/super_admin_dashboard.dart';
+import 'screens/member/member_login_screen.dart';
+import 'screens/member/member_change_code_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -84,6 +86,11 @@ class AyalkoottamApp extends StatelessWidget {
         routes: {
           AppRoutes.splash: (_) => const SplashScreen(),
           AppRoutes.login: (_) => const LoginScreen(),
+          AppRoutes.memberLogin: (_) => const MemberLoginScreen(),
+          AppRoutes.memberChangeCode: (context) {
+            final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+            return MemberChangeCodeScreen(mustChange: args?['mustChange'] ?? false);
+          },
           AppRoutes.roleSwitcher: (_) => const RoleSwitcherScreen(),
           // Super Admin
           AppRoutes.superAdminDashboard: (_) => const SuperAdminDashboard(),
