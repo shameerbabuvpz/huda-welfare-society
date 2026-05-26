@@ -10,51 +10,29 @@ const SUPER_ADMIN_OTP = '6543';
 
 const authService = {
   /**
-   * Get available roles for a user (from user_roles, primary role, and member linkage)
+   * Get available roles for a user
+   * Simply checks: is phone in users table (admin)? Is phone in members table (member)?
    */
   async getAvailableRoles(userId) {
-    const roles = new Set();
+    const roles = [];
 
-    // 1. Get user's primary role
     const user = await db('users').where({ id: userId }).first();
-    if (user) {
-      roles.add(user.role);
+    if (!user) return roles;
 
-      // 2. Check if user has a linked member record (by phone or user_id)
-      if (user.phone) {
-        const phone = user.phone.trim();
-        const memberByPhone = await db('members')
-          .whereRaw("TRIM(phone) = ? AND status = 'active'", [phone])
-          .first();
-        if (memberByPhone) {
-          roles.add('member');
-          // Link the member to user if not already linked
-          if (!memberByPhone.user_id) {
-            await db('members').where({ id: memberByPhone.id }).update({ user_id: userId });
-          }
-        }
-      }
+    // Always add primary role
+    roles.push(user.role);
 
-      const memberByUserId = await db('members')
-        .where({ user_id: userId, status: 'active' })
+    // If user is admin, check if same phone exists in members table
+    if (user.phone && user.role !== 'member') {
+      const memberExists = await db('members')
+        .where({ phone: user.phone, status: 'active' })
         .first();
-      if (memberByUserId) {
-        roles.add('member');
+      if (memberExists) {
+        roles.push('member');
       }
     }
 
-    // 3. Also check user_roles table for additional roles
-    try {
-      const userRoles = await db('user_roles')
-        .where({ user_id: userId })
-        .select('role')
-        .distinct('role');
-      userRoles.forEach(r => roles.add(r.role));
-    } catch (err) {
-      // user_roles table may not exist yet
-    }
-
-    return [...roles];
+    return roles;
   },
 
   /**
