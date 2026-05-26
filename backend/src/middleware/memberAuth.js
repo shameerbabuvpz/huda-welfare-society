@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const AppError = require('../utils/AppError');
+const ApiError = require('../utils/ApiError');
 
 /**
  * Middleware to verify member JWT token
@@ -10,7 +10,7 @@ const memberAuth = (req, res, next) => {
     const authHeader = req.headers.authorization;
     
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return next(new AppError('No token provided', 401));
+      return next(new ApiError('No token provided', 401));
     }
 
     const token = authHeader.slice(7); // Remove 'Bearer ' prefix
@@ -18,7 +18,7 @@ const memberAuth = (req, res, next) => {
 
     // Verify this is a member token
     if (decoded.type !== 'member') {
-      return next(new AppError('Invalid token type', 401));
+      return next(new ApiError('Invalid token type', 401));
     }
 
     // Set member info in request
@@ -30,10 +30,10 @@ const memberAuth = (req, res, next) => {
     next();
   } catch (err) {
     if (err.name === 'TokenExpiredError') {
-      return next(new AppError('Token expired', 401));
+      return next(new ApiError('Token expired', 401));
     }
     if (err.name === 'JsonWebTokenError') {
-      return next(new AppError('Invalid token', 401));
+      return next(new ApiError('Invalid token', 401));
     }
     next(err);
   }
