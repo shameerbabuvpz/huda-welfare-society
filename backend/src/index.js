@@ -18,7 +18,7 @@ app.use(express.json({ limit: '10mb' }));
 app.use(morgan('combined'));
 
 // Health check
-app.get('/health', (_req, res) => res.json({ status: 'ok' }));
+app.get('/health', (_req, res) => res.json({ status: 'ok', version: 'v2026-05-27a' }));
 
 // Static uploads
 app.use('/uploads', express.static(uploadsRoot, {
