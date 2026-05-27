@@ -1,3 +1,5 @@
+import 'package:ayalkoottam/widgets/skeleton_loaders.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../../../config/theme.dart';
 import '../../../services/api_service.dart';
@@ -211,7 +213,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('Reports & Export')),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const ListSkeletonLoader()
           : Stack(
               children: [
                 ListView(
@@ -301,7 +303,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              CircularProgressIndicator(),
+                              CupertinoActivityIndicator(),
                               SizedBox(height: 16),
                               Text('Generating report...'),
                             ],

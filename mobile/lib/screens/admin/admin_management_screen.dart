@@ -1,3 +1,5 @@
+import 'package:ayalkoottam/widgets/skeleton_loaders.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -76,7 +78,7 @@ class _AdminManagementScreenState extends State<AdminManagementScreen> {
           // Admin list
           Expanded(
             child: provider.loading
-                ? const Center(child: CircularProgressIndicator())
+                ? const ListSkeletonLoader()
                 : provider.error != null
                     ? Center(
                         child: Column(
@@ -123,7 +125,7 @@ class _AdminManagementScreenState extends State<AdminManagementScreen> {
                                   if (index == provider.admins.length) {
                                     return const Padding(
                                       padding: EdgeInsets.all(16),
-                                      child: Center(child: CircularProgressIndicator()),
+                                      child: Center(child: CupertinoActivityIndicator()),
                                     );
                                   }
                                   final admin = provider.admins[index];
@@ -502,7 +504,7 @@ class _AdminFormSheetState extends State<_AdminFormSheet> {
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                       ),
                       child: _saving
-                          ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                          ? const SizedBox(width: 20, height: 20, child: CupertinoActivityIndicator())
                           : Text(isEdit ? 'Update' : 'Add'),
                     ),
                   ),

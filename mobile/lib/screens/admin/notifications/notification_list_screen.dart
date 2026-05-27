@@ -1,3 +1,4 @@
+import 'package:ayalkoottam/widgets/skeleton_loaders.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../config/theme.dart';
@@ -130,7 +131,7 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
         ],
       ),
       body: provider.loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const ListSkeletonLoader()
           : provider.adminNotifications.isEmpty
               ? Center(
                   child: Column(

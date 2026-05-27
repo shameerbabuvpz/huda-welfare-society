@@ -1,10 +1,14 @@
+import 'package:ayalkoottam/widgets/skeleton_loaders.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
 import '../../config/theme.dart';
 import '../../models/member.dart';
 import '../../providers/auth_provider.dart';
+import '../../services/api_service.dart';
 import '../../services/member_service.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -34,6 +38,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _pickAndUpload(ImageSource source) async {
+    debugPrint('[ProfilePhoto] _pickAndUpload called with source: $source');
     try {
       final pickedFile = await _imagePicker.pickImage(
         source: source,
@@ -41,24 +46,45 @@ class _ProfileScreenState extends State<ProfileScreen> {
         imageQuality: 85,
       );
 
+      debugPrint('[ProfilePhoto] pickImage returned: ${pickedFile?.path}');
       if (pickedFile == null || !mounted) return;
 
       setState(() => _uploadingPhoto = true);
-      final authProvider = context.read<AuthProvider>();
-      final success = await authProvider.updatePhoto(pickedFile);
+
+      final bytes = await pickedFile.readAsBytes();
+      final fileName =
+          pickedFile.name.isNotEmpty ? pickedFile.name : 'profile-photo.jpg';
+
+      debugPrint('[ProfilePhoto] Uploading file: $fileName (${bytes.length} bytes)');
+
+      final response = await ApiService.multipart(
+        'PUT',
+        '/member-auth/photo',
+        files: [
+          http.MultipartFile.fromBytes('photo', bytes, filename: fileName),
+        ],
+      );
+
+      debugPrint('[ProfilePhoto] Upload response: $response');
 
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            success
-                ? 'Profile photo updated successfully.'
-                : (authProvider.error ?? 'Unable to update profile photo.'),
-          ),
-        ),
-      );
-    } catch (e) {
+      if (response['success'] == true) {
+        // Reload profile to get updated photo URL
+        await _load();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Profile photo updated successfully.')),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text(
+                  response['message'] ?? 'Unable to update profile photo.')),
+        );
+      }
+    } catch (e, stackTrace) {
+      debugPrint('[ProfilePhoto] ERROR: $e');
+      debugPrint('[ProfilePhoto] StackTrace: $stackTrace');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Unable to pick image: $e')),
@@ -70,6 +96,36 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  void _showPhotoOptions() {
+    debugPrint('[ProfilePhoto] _showPhotoOptions called');
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.camera_alt),
+              title: const Text('Take Photo'),
+              onTap: () {
+                Navigator.pop(context);
+                _pickAndUpload(ImageSource.camera);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library),
+              title: const Text('Choose from Gallery'),
+              onTap: () {
+                Navigator.pop(context);
+                _pickAndUpload(ImageSource.gallery);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final user = context.watch<AuthProvider>().user;
@@ -78,7 +134,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       backgroundColor: AppTheme.background,
       appBar: AppBar(title: const Text('My Profile')),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const DetailSkeletonLoader()
           : _member == null
               ? const Center(child: Text('Profile not found'))
               : ListView(
@@ -109,23 +165,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               Positioned(
                                 right: 0,
                                 bottom: 0,
-                                child: Container(
-                                  width: 38,
-                                  height: 38,
-                                  decoration: BoxDecoration(
-                                    color: AppTheme.primaryDark,
-                                    borderRadius: BorderRadius.circular(14),
-                                    border: Border.all(color: Colors.white, width: 3),
+                                child: GestureDetector(
+                                  onTap: _uploadingPhoto ? null : _showPhotoOptions,
+                                  child: Container(
+                                    width: 38,
+                                    height: 38,
+                                    decoration: BoxDecoration(
+                                      color: AppTheme.primaryDark,
+                                      borderRadius: BorderRadius.circular(14),
+                                      border: Border.all(
+                                          color: Colors.white, width: 3),
+                                    ),
+                                    child: _uploadingPhoto
+                                        ? const Padding(
+                                            padding: EdgeInsets.all(9),
+                                            child: CupertinoActivityIndicator(
+                                              color: Colors.white,
+                                            ),
+                                          )
+                                        : const Icon(Icons.camera_alt_outlined,
+                                            color: Colors.white, size: 18),
                                   ),
-                                  child: _uploadingPhoto
-                                      ? const Padding(
-                                          padding: EdgeInsets.all(9),
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 2,
-                                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                                          ),
-                                        )
-                                      : const Icon(Icons.camera_alt_outlined, color: Colors.white, size: 18),
                                 ),
                               ),
                             ],
@@ -143,13 +203,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           const SizedBox(height: 6),
                           Text(
                             _member!.memberCode,
-                            style: TextStyle(fontSize: 14, color: Colors.grey.shade700),
+                            style: TextStyle(
+                                fontSize: 14, color: Colors.grey.shade700),
                           ),
                           if (_member!.ayalkoottamName != null) ...[
                             const SizedBox(height: 6),
                             Text(
                               _member!.ayalkoottamName!,
-                              style: TextStyle(fontSize: 14, color: Colors.grey.shade700),
+                              style: TextStyle(
+                                  fontSize: 14, color: Colors.grey.shade700),
                             ),
                           ],
                           const SizedBox(height: 18),
@@ -157,7 +219,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             children: [
                               Expanded(
                                 child: FilledButton.icon(
-                                  onPressed: _uploadingPhoto ? null : () => _pickAndUpload(ImageSource.camera),
+                                  onPressed: _uploadingPhoto
+                                      ? null
+                                      : () =>
+                                          _pickAndUpload(ImageSource.camera),
                                   icon: const Icon(Icons.camera_alt_outlined),
                                   label: const Text('Take Selfie'),
                                 ),
@@ -169,8 +234,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             children: [
                               Expanded(
                                 child: OutlinedButton.icon(
-                                  onPressed: _uploadingPhoto ? null : () => _pickAndUpload(ImageSource.gallery),
-                                  icon: const Icon(Icons.photo_library_outlined),
+                                  onPressed: _uploadingPhoto
+                                      ? null
+                                      : () =>
+                                          _pickAndUpload(ImageSource.gallery),
+                                  icon:
+                                      const Icon(Icons.photo_library_outlined),
                                   label: const Text('Upload from Gallery'),
                                 ),
                               ),
@@ -189,15 +258,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                       child: Column(
                         children: [
-                          _profileRow(Icons.phone_outlined, 'Phone', _member!.phone ?? 'N/A'),
-                          _profileRow(Icons.email_outlined, 'Email', _member!.email ?? 'N/A'),
+                          _profileRow(Icons.phone_outlined, 'Phone',
+                              _member!.phone ?? 'N/A'),
+                          _profileRow(Icons.email_outlined, 'Email',
+                              _member!.email ?? 'N/A'),
                           if ((_member!.designation ?? '').isNotEmpty)
-                            _profileRow(Icons.badge_outlined, 'Designation', _member!.designation!),
+                            _profileRow(Icons.badge_outlined, 'Designation',
+                                _member!.designation!),
                           if ((_member!.ayalkoottamName ?? '').isNotEmpty)
-                            _profileRow(Icons.groups_2_outlined, 'Ayalkoottam', _member!.ayalkoottamName!),
-                          _profileRow(Icons.location_on_outlined, 'Address', _member!.address ?? 'N/A'),
-                          _profileRow(Icons.calendar_today_outlined, 'Joined', _member!.joinDate ?? 'N/A'),
-                          _profileRow(Icons.verified_outlined, 'Status', _member!.status.toUpperCase()),
+                            _profileRow(Icons.groups_2_outlined, 'Ayalkoottam',
+                                _member!.ayalkoottamName!),
+                          _profileRow(Icons.location_on_outlined, 'Address',
+                              _member!.address ?? 'N/A'),
+                          _profileRow(Icons.calendar_today_outlined, 'Joined',
+                              _member!.joinDate ?? 'N/A'),
+                          _profileRow(Icons.verified_outlined, 'Status',
+                              _member!.status.toUpperCase()),
                         ],
                       ),
                     ),
@@ -218,7 +294,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label, style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+                Text(label,
+                    style:
+                        TextStyle(fontSize: 12, color: Colors.grey.shade600)),
                 const SizedBox(height: 2),
                 Text(value, style: const TextStyle(fontSize: 16)),
               ],
@@ -256,7 +334,8 @@ class _ProfileAvatar extends StatelessWidget {
             ? Image.network(
                 photoUrl!,
                 fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => _ProfileAvatarFallback(name: name),
+                errorBuilder: (_, __, ___) =>
+                    _ProfileAvatarFallback(name: name),
               )
             : _ProfileAvatarFallback(name: name),
       ),

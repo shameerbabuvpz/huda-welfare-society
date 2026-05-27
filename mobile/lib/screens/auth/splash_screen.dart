@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../config/routes.dart';
@@ -90,7 +91,7 @@ class _SplashScreenState extends State<SplashScreen> {
                     ),
                   ),
                   const SizedBox(height: 26),
-                  const CircularProgressIndicator(),
+                  const CupertinoActivityIndicator(),
                 ],
               ),
             ),

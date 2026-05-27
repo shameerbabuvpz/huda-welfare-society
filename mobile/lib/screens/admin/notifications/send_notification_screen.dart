@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../config/theme.dart';
@@ -86,7 +87,7 @@ class _SendNotificationScreenState extends State<SendNotificationScreen> {
                 width: double.infinity,
                 child: ElevatedButton.icon(
                   onPressed: _sending ? null : _send,
-                  icon: _sending ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.send),
+                  icon: _sending ? const SizedBox(height: 20, width: 20, child: CupertinoActivityIndicator()) : const Icon(Icons.send),
                   label: const Text('Send Notification'),
                 ),
               ),

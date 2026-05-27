@@ -1,3 +1,5 @@
+import 'package:ayalkoottam/widgets/skeleton_loaders.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../../../config/theme.dart';
 import '../../../services/infacc_sync_service.dart';
@@ -88,7 +90,7 @@ class _InfaccSyncPreviewScreenState extends State<InfaccSyncPreviewScreen> {
         centerTitle: true,
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const ListSkeletonLoader()
           : _error != null
               ? Center(
                   child: Column(
@@ -222,7 +224,7 @@ class _InfaccSyncPreviewScreenState extends State<InfaccSyncPreviewScreen> {
                                   ? const SizedBox(
                                       height: 20,
                                       width: 20,
-                                      child: CircularProgressIndicator(strokeWidth: 2),
+                                      child: CupertinoActivityIndicator(),
                                     )
                                   : const Text('Sync Now'),
                             ),

@@ -1,3 +1,4 @@
+import 'package:ayalkoottam/widgets/skeleton_loaders.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../config/theme.dart';
@@ -71,7 +72,7 @@ class _AyalkoottamDetailScreenState extends State<AyalkoottamDetailScreen> {
           const Text('Members', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),
           if (memberProvider.loading)
-            const Center(child: CircularProgressIndicator())
+            const DetailSkeletonLoader()
           else if (memberProvider.members.isEmpty)
             const Card(child: Padding(padding: EdgeInsets.all(24), child: Center(child: Text('No members in this ayalkoottam'))))
           else

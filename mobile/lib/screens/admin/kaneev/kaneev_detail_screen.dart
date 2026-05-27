@@ -1,3 +1,5 @@
+import 'package:ayalkoottam/widgets/skeleton_loaders.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../config/theme.dart';
@@ -52,7 +54,7 @@ class _KaneevDetailScreenState extends State<KaneevDetailScreen>
     if (provider.loading || group == null) {
       return Scaffold(
         appBar: AppBar(title: const Text('Kaniv')),
-        body: const Center(child: CircularProgressIndicator()),
+        body: const DetailSkeletonLoader(),
       );
     }
 
@@ -1270,7 +1272,7 @@ class _AddMemberSheetState extends State<_AddMemberSheet> {
                 const Center(
                     child: Padding(
                         padding: EdgeInsets.all(16),
-                        child: CircularProgressIndicator()))
+                        child: CupertinoActivityIndicator()))
               else
                 Expanded(
                   child: _filteredMembers.isEmpty

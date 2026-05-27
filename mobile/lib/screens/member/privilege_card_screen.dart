@@ -1,3 +1,4 @@
+import 'package:ayalkoottam/widgets/skeleton_loaders.dart';
 import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
@@ -90,7 +91,7 @@ class _PrivilegeCardScreenState extends State<PrivilegeCardScreen> {
       backgroundColor: AppTheme.background,
       appBar: AppBar(title: const Text('Privilege Card')),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const DetailSkeletonLoader()
           : _card == null
               ? Center(
                   child: Column(

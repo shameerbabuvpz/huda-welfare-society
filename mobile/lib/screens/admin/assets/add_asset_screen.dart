@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
@@ -142,7 +143,7 @@ class _AddAssetScreenState extends State<AddAssetScreen> {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: _saving ? null : _save,
-                  child: _saving ? const CircularProgressIndicator(strokeWidth: 2) : Text(isEditing ? 'Update Item' : 'Add Item'),
+                  child: _saving ? const CupertinoActivityIndicator() : Text(isEditing ? 'Update Item' : 'Add Item'),
                 ),
               ),
             ],

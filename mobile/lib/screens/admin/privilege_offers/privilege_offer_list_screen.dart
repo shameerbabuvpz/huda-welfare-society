@@ -1,3 +1,4 @@
+import 'package:ayalkoottam/widgets/skeleton_loaders.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../config/theme.dart';
@@ -39,7 +40,7 @@ class _PrivilegeOfferListScreenState extends State<PrivilegeOfferListScreen> {
         label: const Text('Add Offer'),
       ),
       body: provider.loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const ListSkeletonLoader()
           : provider.error != null
               ? Center(child: Text(provider.error!))
               : provider.offers.isEmpty

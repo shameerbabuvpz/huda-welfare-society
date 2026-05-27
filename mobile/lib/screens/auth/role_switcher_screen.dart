@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../config/routes.dart';
@@ -131,8 +132,8 @@ class _RoleSwitcherScreenState extends State<RoleSwitcherScreen> {
                                         children: [
                                           Text(
                                             _getRoleDisplayName(role),
-                                            style: textTheme.titleMedium
-                                                ?.copyWith(
+                                            style:
+                                                textTheme.titleMedium?.copyWith(
                                               fontWeight: FontWeight.w600,
                                               color: isCurrent
                                                   ? AppTheme.primary
@@ -178,9 +179,7 @@ class _RoleSwitcherScreenState extends State<RoleSwitcherScreen> {
                                     const SizedBox(
                                       width: 20,
                                       height: 20,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                      ),
+                                      child: CupertinoActivityIndicator(),
                                     ),
                                   ] else ...[
                                     Icon(
@@ -204,7 +203,8 @@ class _RoleSwitcherScreenState extends State<RoleSwitcherScreen> {
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
                           color: Colors.red.withValues(alpha: 0.1),
-                          border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
+                          border: Border.all(
+                              color: Colors.red.withValues(alpha: 0.3)),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Row(

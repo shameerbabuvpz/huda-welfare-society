@@ -1,3 +1,4 @@
+import 'package:ayalkoottam/widgets/skeleton_loaders.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
@@ -219,7 +220,7 @@ class _SuperAdminOrgDetailScreenState extends State<SuperAdminOrgDetailScreen> {
         ],
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const DetailSkeletonLoader()
           : SingleChildScrollView(
               padding: const EdgeInsets.all(16),
               child: Column(

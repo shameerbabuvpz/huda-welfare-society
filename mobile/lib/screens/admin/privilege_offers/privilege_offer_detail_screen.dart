@@ -1,3 +1,4 @@
+import 'package:ayalkoottam/widgets/skeleton_loaders.dart';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
@@ -108,7 +109,7 @@ class _PrivilegeOfferDetailScreenState extends State<PrivilegeOfferDetailScreen>
         ],
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const DetailSkeletonLoader()
           : _error != null
               ? Center(child: Text(_error!))
               : _offer == null

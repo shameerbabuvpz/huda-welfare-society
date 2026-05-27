@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../config/theme.dart';
@@ -71,7 +72,7 @@ class _AddAyalkoottamScreenState extends State<AddAyalkoottamScreen> {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: _saving ? null : _save,
-                  child: _saving ? const CircularProgressIndicator(strokeWidth: 2) : const Text('Add Ayalkoottam'),
+                  child: _saving ? const CupertinoActivityIndicator() : const Text('Add Ayalkoottam'),
                 ),
               ),
             ],

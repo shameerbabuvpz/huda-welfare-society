@@ -1,3 +1,5 @@
+import 'package:ayalkoottam/widgets/skeleton_loaders.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -171,7 +173,7 @@ class _MemberListScreenState extends State<MemberListScreen> {
         child: const Icon(Icons.add),
       ),
       body: provider.loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const ListSkeletonLoader()
           : provider.members.isEmpty
               ? const Center(child: Text('No members found'))
               : ListView.builder(
@@ -181,7 +183,7 @@ class _MemberListScreenState extends State<MemberListScreen> {
                     if (i == provider.members.length) {
                       return const Padding(
                         padding: EdgeInsets.all(16),
-                        child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                        child: Center(child: CupertinoActivityIndicator()),
                       );
                     }
                     final m = provider.members[i];

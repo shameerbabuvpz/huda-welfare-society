@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../config/routes.dart';
@@ -242,9 +243,31 @@ void _showProfileSheet(BuildContext context) {
             // Avatar
             GestureDetector(
               onTap: () {
-                // TODO: implement image picker
-                ScaffoldMessenger.of(context).showSnackBar(
-                  AppTheme.infoSnackBar('Photo upload coming soon'),
+                showModalBottomSheet(
+                  context: ctx,
+                  builder: (sheetCtx) => SafeArea(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        ListTile(
+                          leading: const Icon(Icons.camera_alt),
+                          title: const Text('Take Photo'),
+                          onTap: () {
+                            Navigator.pop(sheetCtx);
+                            _pickAndUploadAdminPhoto(context, ImageSource.camera);
+                          },
+                        ),
+                        ListTile(
+                          leading: const Icon(Icons.photo_library),
+                          title: const Text('Choose from Gallery'),
+                          onTap: () {
+                            Navigator.pop(sheetCtx);
+                            _pickAndUploadAdminPhoto(context, ImageSource.gallery);
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
                 );
               },
               child: Stack(
@@ -336,6 +359,38 @@ void _showProfileSheet(BuildContext context) {
       );
     },
   );
+}
+
+Future<void> _pickAndUploadAdminPhoto(BuildContext context, ImageSource source) async {
+  final picker = ImagePicker();
+  try {
+    final pickedFile = await picker.pickImage(
+      source: source,
+      maxWidth: 1600,
+      imageQuality: 85,
+    );
+    if (pickedFile == null || !context.mounted) return;
+
+    final auth = context.read<AuthProvider>();
+    final success = await auth.updatePhoto(pickedFile);
+
+    if (!context.mounted) return;
+    if (success) {
+      Navigator.of(context).pop(); // Close the profile bottom sheet
+      ScaffoldMessenger.of(context).showSnackBar(
+        AppTheme.successSnackBar('Profile photo updated'),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        AppTheme.errorSnackBar(auth.error ?? 'Failed to update photo'),
+      );
+    }
+  } catch (e) {
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      AppTheme.errorSnackBar('Unable to pick image: $e'),
+    );
+  }
 }
 
 class _DashboardCard extends StatelessWidget {

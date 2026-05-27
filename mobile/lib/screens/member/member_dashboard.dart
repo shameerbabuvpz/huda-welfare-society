@@ -1,3 +1,4 @@
+import 'package:ayalkoottam/widgets/skeleton_loaders.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -170,7 +171,7 @@ class _MemberDashboardState extends State<MemberDashboard> {
       backgroundColor: AppTheme.background,
       body: SafeArea(
         child: _loading && data == null
-            ? const Center(child: CircularProgressIndicator())
+            ? const DashboardSkeletonLoader()
             : _error != null && data == null
                 ? _DashboardErrorState(message: _error!, onRetry: _load)
                 : RefreshIndicator(

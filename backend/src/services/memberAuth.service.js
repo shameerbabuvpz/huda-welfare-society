@@ -217,6 +217,82 @@ const memberAuthService = {
 
     return member;
   },
+
+  /**
+   * Request OTP for member phone login
+   * @param {string} phone - Phone number (10 digits)
+   * @returns {Object} { message, phone }
+   */
+  async requestPhoneOtp(phone) {
+    if (!/^\d{10}$/.test(phone)) {
+      throw new ApiError(400, 'Phone must be exactly 10 digits');
+    }
+
+    // Check if a member exists with this phone
+    const member = await knex('members')
+      .where({ phone, status: 'active' })
+      .first();
+
+    if (!member) {
+      throw new ApiError(404, 'No member found with this phone number');
+    }
+
+    // In production: send OTP via WhatsApp/SMS
+    // For now: static OTP is used
+    return { message: 'OTP sent', phone };
+  },
+
+  /**
+   * Login member with phone + OTP
+   * @param {string} phone - Phone number (10 digits)
+   * @param {string} otp - OTP code
+   * @returns {Object} { token, member, mustChangeCode }
+   */
+  async loginWithPhone(phone, otp) {
+    if (!/^\d{10}$/.test(phone)) {
+      throw new ApiError(400, 'Phone must be exactly 10 digits');
+    }
+
+    // Verify OTP (static for now)
+    const STATIC_OTP = process.env.STATIC_OTP || '3456';
+    if (otp !== STATIC_OTP) {
+      throw new ApiError(401, 'Invalid OTP');
+    }
+
+    // Find member by phone
+    const member = await knex('members')
+      .where({ phone, status: 'active' })
+      .first();
+
+    if (!member) {
+      throw new ApiError(404, 'No member found with this phone number');
+    }
+
+    // Generate JWT token (same format as loginWithCode)
+    const token = jwt.sign(
+      {
+        memberId: member.id,
+        organizationId: member.organization_id,
+        type: 'member',
+      },
+      process.env.JWT_SECRET || 'your-secret-key',
+      { expiresIn: '7d' },
+    );
+
+    // Check if member must change their code
+    const mustChangeCode = !member.code_changed;
+
+    return {
+      token,
+      member: {
+        id: member.id,
+        name: member.name,
+        phone: member.phone,
+        memberCode: member.member_code,
+      },
+      mustChangeCode,
+    };
+  },
 };
 
 module.exports = memberAuthService;

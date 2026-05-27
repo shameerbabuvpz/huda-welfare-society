@@ -1,3 +1,4 @@
+import 'package:ayalkoottam/widgets/skeleton_loaders.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../config/theme.dart';
@@ -84,7 +85,7 @@ class _ManageCategoriesScreenState extends State<ManageCategoriesScreen> {
       body: Consumer<FinanceProvider>(
         builder: (context, provider, _) {
           if (provider.loading) {
-            return const Center(child: CircularProgressIndicator());
+            return const ListSkeletonLoader();
           }
 
           final incomeCategories = provider.categories.where((c) => c.type == 'income').toList();

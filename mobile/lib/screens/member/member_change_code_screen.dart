@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../config/theme.dart';
@@ -274,7 +275,7 @@ class _MemberChangeCodeScreenState extends State<MemberChangeCodeScreen> {
                         ? const SizedBox(
                             height: 20,
                             width: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
+                            child: const CupertinoActivityIndicator(),
                           )
                         : const Text('Change Code'),
                   ),

@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -251,7 +252,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           ],
                           const SizedBox(height: 24),
-                          if (auth.loading) const CircularProgressIndicator(),
+                          if (auth.loading) const CupertinoActivityIndicator(),
                         ],
                         if (auth.otpSent) ...[
                           Text(
@@ -302,7 +303,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             }),
                           ),
                           const SizedBox(height: 16),
-                          if (auth.loading) const CircularProgressIndicator(),
+                          if (auth.loading) const CupertinoActivityIndicator(),
                           const SizedBox(height: 8),
                           TextButton.icon(
                             onPressed: _changeNumber,

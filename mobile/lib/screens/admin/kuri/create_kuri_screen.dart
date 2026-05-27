@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../config/theme.dart';
@@ -128,7 +129,7 @@ class _CreateKuriScreenState extends State<CreateKuriScreen> {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: _saving ? null : _save,
-                  child: _saving ? const CircularProgressIndicator(strokeWidth: 2) : const Text('Create Group'),
+                  child: _saving ? const CupertinoActivityIndicator() : const Text('Create Group'),
                 ),
               ),
             ],

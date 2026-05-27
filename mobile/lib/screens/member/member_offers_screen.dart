@@ -1,3 +1,4 @@
+import 'package:ayalkoottam/widgets/skeleton_loaders.dart';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import '../../config/theme.dart';
@@ -139,7 +140,7 @@ class _MemberOffersScreenState extends State<MemberOffersScreen> with SingleTick
         label: const Text('Scan QR'),
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const ListSkeletonLoader()
           : _error != null
               ? Center(child: Text(_error!))
               : TabBarView(

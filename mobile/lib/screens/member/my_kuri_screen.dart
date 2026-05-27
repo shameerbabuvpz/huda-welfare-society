@@ -1,3 +1,4 @@
+import 'package:ayalkoottam/widgets/skeleton_loaders.dart';
 import 'package:flutter/material.dart';
 import '../../config/theme.dart';
 import '../../models/kuri_group.dart';
@@ -32,7 +33,7 @@ class _MyKuriScreenState extends State<MyKuriScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('My Kuri')),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const ListSkeletonLoader()
           : _kuriList.isEmpty
               ? Center(
                   child: Column(

@@ -1,3 +1,4 @@
+import 'package:ayalkoottam/widgets/skeleton_loaders.dart';
 import 'package:flutter/material.dart';
 import '../../config/theme.dart';
 import '../../models/asset.dart';
@@ -32,7 +33,7 @@ class _MyAssetsScreenState extends State<MyAssetsScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('Health Equipments')),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const ListSkeletonLoader()
           : _assets.isEmpty
               ? Center(
                   child: Column(

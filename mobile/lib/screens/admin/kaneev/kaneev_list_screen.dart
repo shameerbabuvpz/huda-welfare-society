@@ -1,3 +1,4 @@
+import 'package:ayalkoottam/widgets/skeleton_loaders.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/kaneev_provider.dart';
@@ -29,7 +30,7 @@ class _KaneevListScreenState extends State<KaneevListScreen> {
         child: const Icon(Icons.add),
       ),
       body: provider.loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const ListSkeletonLoader()
           : provider.groups.isEmpty
               ? const Center(child: Text('No kaneev groups'))
               : ListView.builder(

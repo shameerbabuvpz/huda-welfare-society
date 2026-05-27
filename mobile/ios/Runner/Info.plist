@@ -32,6 +32,10 @@
 	<string>Allow saving selected profile photos from your library.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Allow access to the photo library so members can upload a profile photo.</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+	</array>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

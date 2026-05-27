@@ -1,3 +1,4 @@
+import 'package:ayalkoottam/widgets/skeleton_loaders.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
@@ -210,7 +211,7 @@ class _BannerListScreenState extends State<BannerListScreen> {
         ],
       ),
       body: provider.loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const ListSkeletonLoader()
           : provider.banners.isEmpty
               ? Center(
                   child: Column(

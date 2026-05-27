@@ -1,3 +1,5 @@
+import 'package:ayalkoottam/widgets/skeleton_loaders.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../config/theme.dart';
@@ -199,7 +201,7 @@ class _TransactionList extends StatelessWidget {
     return Consumer<FinanceProvider>(
       builder: (context, provider, _) {
         if (provider.loading) {
-          return const Center(child: CircularProgressIndicator());
+          return const ListSkeletonLoader();
         }
         if (provider.error != null) {
           return Center(child: Text(provider.error!, style: const TextStyle(color: AppTheme.error)));
@@ -223,7 +225,7 @@ class _TransactionList extends StatelessWidget {
               if (index == provider.transactions.length) {
                 return const Center(child: Padding(
                   padding: EdgeInsets.all(16),
-                  child: CircularProgressIndicator(),
+                  child: CupertinoActivityIndicator(),
                 ));
               }
               final txn = provider.transactions[index];

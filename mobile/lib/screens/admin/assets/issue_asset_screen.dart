@@ -1,3 +1,5 @@
+import 'package:ayalkoottam/widgets/skeleton_loaders.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../config/theme.dart';
@@ -214,7 +216,7 @@ class _IssueAssetScreenState extends State<IssueAssetScreen> {
               height: 180,
               decoration: BoxDecoration(border: Border.all(color: Colors.grey.shade300), borderRadius: BorderRadius.circular(8)),
               child: _loadingMembers
-                  ? const Center(child: CircularProgressIndicator())
+                  ? const ListSkeletonLoader()
                   : _filteredMembers.isEmpty
                       ? const Center(child: Text('No members found'))
                       : ListView.builder(
@@ -291,7 +293,7 @@ class _IssueAssetScreenState extends State<IssueAssetScreen> {
               width: double.infinity,
               child: ElevatedButton.icon(
                 onPressed: (_selectedAsset == null || _selectedMember == null || _issuing) ? null : _issueItem,
-                icon: _issuing ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.send),
+                icon: _issuing ? const SizedBox(width: 18, height: 18, child: CupertinoActivityIndicator()) : const Icon(Icons.send),
                 label: Text(_issuing ? 'Issuing...' : 'Issue Item'),
                 style: ElevatedButton.styleFrom(padding: const EdgeInsets.all(14)),
               ),

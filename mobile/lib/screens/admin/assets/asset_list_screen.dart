@@ -1,3 +1,4 @@
+import 'package:ayalkoottam/widgets/skeleton_loaders.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../config/theme.dart';
@@ -25,10 +26,12 @@ class _AssetListScreenState extends State<AssetListScreen> with SingleTickerProv
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
-    final provider = context.read<AssetProvider>();
-    provider.loadAssets();
-    provider.loadStats();
-    provider.loadIssueRegister();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final provider = context.read<AssetProvider>();
+      provider.loadAssets();
+      provider.loadStats();
+      provider.loadIssueRegister();
+    });
   }
 
   @override
@@ -117,7 +120,7 @@ class _ItemsTab extends StatelessWidget {
           ),
         Expanded(
           child: provider.loading
-              ? const Center(child: CircularProgressIndicator())
+              ? const ListSkeletonLoader()
               : provider.assets.isEmpty
                   ? const Center(child: Text('No items found'))
                   : RefreshIndicator(
@@ -550,7 +553,7 @@ class _IssueAssetSheetState extends State<_IssueAssetSheet> {
             ),
             Expanded(
               child: _loading
-                  ? const Center(child: CircularProgressIndicator())
+                  ? const ListSkeletonLoader()
                   : ListView.builder(
                       controller: scrollController,
                       itemCount: _filtered.length,
@@ -613,7 +616,7 @@ class _IssueRegisterTab extends StatelessWidget {
   Widget build(BuildContext context) {
     final provider = context.watch<AssetProvider>();
 
-    if (provider.loading) return const Center(child: CircularProgressIndicator());
+    if (provider.loading) return const ListSkeletonLoader();
     if (provider.issueRegister.isEmpty) return const Center(child: Text('No issue records yet'));
 
     return RefreshIndicator(
@@ -742,7 +745,7 @@ class _DamageReportTabState extends State<_DamageReportTab> {
 
   @override
   Widget build(BuildContext context) {
-    if (_loading) return const Center(child: CircularProgressIndicator());
+    if (_loading) return const ListSkeletonLoader();
     if (_items.isEmpty) {
       return Center(
         child: Column(

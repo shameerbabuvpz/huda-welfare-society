@@ -1,3 +1,5 @@
+import 'package:ayalkoottam/widgets/skeleton_loaders.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../config/theme.dart';
@@ -78,7 +80,7 @@ class _KuriListScreenState extends State<KuriListScreen> {
         child: const Icon(Icons.add),
       ),
       body: provider.loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const ListSkeletonLoader()
           : provider.groups.isEmpty
               ? const Center(child: Text('No kuri groups'))
               : ListView.builder(
@@ -88,7 +90,7 @@ class _KuriListScreenState extends State<KuriListScreen> {
                     if (i == provider.groups.length) {
                       return const Padding(
                         padding: EdgeInsets.all(16),
-                        child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                        child: Center(child: CupertinoActivityIndicator()),
                       );
                     }
                     final g = provider.groups[i];

@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../config/theme.dart';
@@ -200,12 +201,23 @@ class _MemberLoginScreenState extends State<MemberLoginScreen> {
                       ? const SizedBox(
                           height: 20,
                           width: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
+                          child: CupertinoActivityIndicator(),
                         )
                       : const Text('Login'),
                 ),
 
                 const SizedBox(height: 16),
+
+                // Login with phone number - navigate to main login screen
+                TextButton.icon(
+                  onPressed: () {
+                    Navigator.of(context).pushReplacementNamed(AppRoutes.login);
+                  },
+                  icon: const Icon(Icons.phone, size: 18),
+                  label: const Text('Login with Phone Number'),
+                ),
+
+                const SizedBox(height: 8),
 
                 // Help text
                 Text(

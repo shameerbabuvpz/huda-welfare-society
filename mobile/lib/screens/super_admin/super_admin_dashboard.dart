@@ -1,3 +1,4 @@
+import 'package:ayalkoottam/widgets/skeleton_loaders.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
@@ -187,7 +188,7 @@ class _SuperAdminDashboardState extends State<SuperAdminDashboard> {
         label: const Text('New Organization'),
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const DashboardSkeletonLoader()
           : _organizations.isEmpty
               ? Center(
                   child: Padding(

@@ -1,3 +1,5 @@
+import 'package:ayalkoottam/widgets/skeleton_loaders.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../config/theme.dart';
@@ -52,7 +54,7 @@ class _KuriDetailScreenState extends State<KuriDetailScreen> with SingleTickerPr
     if (provider.loading || group == null) {
       return Scaffold(
         appBar: AppBar(title: const Text('Kuri Detail')),
-        body: const Center(child: CircularProgressIndicator()),
+        body: const DetailSkeletonLoader(),
       );
     }
 
@@ -436,7 +438,7 @@ class _AddMemberSheetState extends State<_AddMemberSheet> {
                       ? null
                       : _addGuest,
                   icon: _addingGuest
-                      ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                      ? const SizedBox(width: 18, height: 18, child: CupertinoActivityIndicator(color: Colors.white))
                       : const Icon(Icons.person_add),
                   label: Text(_addingGuest ? 'Adding...' : 'Add Guest to Kuri'),
                 ),
@@ -464,7 +466,7 @@ class _AddMemberSheetState extends State<_AddMemberSheet> {
             ),
             const SizedBox(height: 12),
             if (_loadingMembers)
-              const Expanded(child: Center(child: CircularProgressIndicator()))
+              const Expanded(child: Center(child: CupertinoActivityIndicator()))
             else if (_filteredMembers.isEmpty)
               const Expanded(child: Center(child: Text('No members found')))
             else ...[
@@ -556,7 +558,7 @@ class _AddMemberSheetState extends State<_AddMemberSheet> {
                     child: ElevatedButton.icon(
                       onPressed: _adding ? null : _addSelectedMembers,
                       icon: _adding
-                          ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                          ? const SizedBox(width: 18, height: 18, child: CupertinoActivityIndicator( color: Colors.white))
                           : const Icon(Icons.group_add),
                       label: Text(_adding ? 'Adding...' : 'Add ${_selectedMemberIds.length} Member${_selectedMemberIds.length > 1 ? 's' : ''}'),
                     ),
@@ -1049,7 +1051,7 @@ class _RecordCollectionSheetState extends State<_RecordCollectionSheet> {
                       child: FilledButton.icon(
                         onPressed: _recording ? null : _recordSelected,
                         icon: _recording
-                            ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                            ? const SizedBox(width: 18, height: 18, child: CupertinoActivityIndicator( color: Colors.white))
                             : const Icon(Icons.payments),
                         label: Text(_recording ? 'Recording...' : 'Record ${_selectedMemberIds.length} Payment${_selectedMemberIds.length > 1 ? 's' : ''}'),
                         style: FilledButton.styleFrom(shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))),

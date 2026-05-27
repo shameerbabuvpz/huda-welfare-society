@@ -1,4 +1,5 @@
 import 'dart:typed_data';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
@@ -257,7 +258,7 @@ class _PrivilegeOfferFormScreenState extends State<PrivilegeOfferFormScreen> {
               FilledButton.icon(
                 onPressed: _saving ? null : _save,
                 icon: _saving
-                    ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                    ? const SizedBox(width: 18, height: 18, child: CupertinoActivityIndicator())
                     : const Icon(Icons.save),
                 label: Text(_isEdit ? 'Update Offer' : 'Create Offer'),
               ),

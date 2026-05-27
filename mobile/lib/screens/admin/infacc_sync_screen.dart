@@ -1,3 +1,4 @@
+import 'package:ayalkoottam/widgets/skeleton_loaders.dart';
 import 'package:flutter/material.dart';
 import '../../../config/theme.dart';
 import '../../../services/infacc_sync_service.dart';
@@ -107,7 +108,7 @@ class _InfaccSyncScreenState extends State<InfaccSyncScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('Sync from INFACC')),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const ListSkeletonLoader()
           : SingleChildScrollView(
               padding: const EdgeInsets.all(20),
               child: Column(
