@@ -14,6 +14,7 @@ router.use('/notifications', require('./notification.routes'));
 router.use('/reports', require('./report.routes'));
 router.use('/export', require('./export.routes'));
 router.use('/finance', require('./finance.routes'));
+router.use('/weekly-collections', require('./weeklyCollection.routes'));
 router.use('/admins', require('./admin.routes'));
 router.use('/banners', require('./banner.routes'));
 router.use('/infacc-sync', require('./infaccSync.routes'));

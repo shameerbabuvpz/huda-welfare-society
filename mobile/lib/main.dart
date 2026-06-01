@@ -11,6 +11,7 @@ import 'providers/notification_provider.dart';
 import 'providers/ayalkoottam_provider.dart';
 import 'providers/kaneev_provider.dart';
 import 'providers/finance_provider.dart';
+import 'providers/weekly_collection_provider.dart';
 import 'providers/admin_provider.dart';
 import 'providers/privilege_offer_provider.dart';
 import 'providers/banner_provider.dart';
@@ -40,6 +41,7 @@ import 'screens/admin/ayalkoottam/add_ayalkoottam_screen.dart';
 import 'screens/admin/ayalkoottam/ayalkoottam_detail_screen.dart';
 import 'screens/admin/kaneev/kaneev_detail_screen.dart';
 import 'screens/admin/finance/finance_screen.dart';
+import 'screens/admin/weekly_collection/weekly_collection_screen.dart';
 import 'screens/admin/admin_management_screen.dart';
 import 'screens/admin/privilege_offers/privilege_offer_list_screen.dart';
 import 'screens/member/member_offers_screen.dart';
@@ -74,6 +76,7 @@ class AyalkoottamApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AyalkoottamProvider()),
         ChangeNotifierProvider(create: (_) => KaneevProvider()),
         ChangeNotifierProvider(create: (_) => FinanceProvider()),
+        ChangeNotifierProvider(create: (_) => WeeklyCollectionProvider()),
         ChangeNotifierProvider(create: (_) => AdminProvider()),
         ChangeNotifierProvider(create: (_) => PrivilegeOfferProvider()),
         ChangeNotifierProvider(create: (_) => BannerProvider()),
@@ -112,6 +115,7 @@ class AyalkoottamApp extends StatelessWidget {
           AppRoutes.ayalkoottamDetail: (_) => const AyalkoottamDetailScreen(),
           AppRoutes.manageKaneev: (_) => const KaneevDetailScreen(),
           AppRoutes.finance: (_) => const FinanceScreen(),
+          AppRoutes.weeklyCollection: (_) => const WeeklyCollectionScreen(),
           AppRoutes.manageAdmins: (_) => const AdminManagementScreen(),
           AppRoutes.managePrivilegeOffers: (_) => const PrivilegeOfferListScreen(),
           AppRoutes.manageBanners: (_) => const BannerListScreen(),

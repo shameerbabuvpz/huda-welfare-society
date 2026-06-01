@@ -25,6 +25,7 @@ class AppRoutes {
   static const String ayalkoottamDetail = '/admin/ayalkoottam/detail';
   static const String manageKaneev = '/admin/kaneev';
   static const String finance = '/admin/finance';
+  static const String weeklyCollection = '/admin/weekly-collection';
   static const String manageAdmins = '/admin/admins';
   static const String managePrivilegeOffers = '/admin/privilege-offers';
   static const String manageBanners = '/admin/banners';

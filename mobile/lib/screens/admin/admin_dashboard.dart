@@ -137,6 +137,11 @@ class _DashboardHome extends StatelessWidget {
                   onTap: () => Navigator.pushNamed(context, AppRoutes.finance),
                 ),
                 _DashboardCard(
+                  icon: Icons.calendar_view_week,
+                  label: 'Weekly Collection',
+                  onTap: () => Navigator.pushNamed(context, AppRoutes.weeklyCollection),
+                ),
+                _DashboardCard(
                   icon: Icons.notifications,
                   label: 'Notifications',
                   onTap: () => Navigator.pushNamed(context, AppRoutes.notificationList),
