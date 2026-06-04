@@ -31,7 +31,9 @@ class _IssueAssetScreenState extends State<IssueAssetScreen> {
   @override
   void initState() {
     super.initState();
-    context.read<AssetProvider>().loadAvailableAssets();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<AssetProvider>().loadAvailableAssets();
+    });
     _loadMembers();
   }
 

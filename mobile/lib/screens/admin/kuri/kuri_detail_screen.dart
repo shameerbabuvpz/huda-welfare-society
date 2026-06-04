@@ -35,7 +35,9 @@ class _KuriDetailScreenState extends State<KuriDetailScreen> with SingleTickerPr
       final args = ModalRoute.of(context)?.settings.arguments;
       if (args is int) {
         _loaded = true;
-        context.read<KuriProvider>().loadGroupDetail(args);
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          context.read<KuriProvider>().loadGroupDetail(args);
+        });
       }
     }
   }

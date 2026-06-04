@@ -83,12 +83,15 @@ class _SendNotificationScreenState extends State<SendNotificationScreen> {
                 onSelectionChanged: (s) => setState(() => _audienceType = s.first),
               ),
               const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: _sending ? null : _send,
-                  icon: _sending ? const SizedBox(height: 20, width: 20, child: CupertinoActivityIndicator()) : const Icon(Icons.send),
-                  label: const Text('Send Notification'),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: _sending ? null : _send,
+                    icon: _sending ? const SizedBox(height: 20, width: 20, child: CupertinoActivityIndicator()) : const Icon(Icons.send),
+                    label: const Text('Send Notification'),
+                  ),
                 ),
               ),
             ],

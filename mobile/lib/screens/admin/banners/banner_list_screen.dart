@@ -18,7 +18,9 @@ class _BannerListScreenState extends State<BannerListScreen> {
   @override
   void initState() {
     super.initState();
-    context.read<BannerProvider>().loadBanners();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<BannerProvider>().loadBanners();
+    });
   }
 
   Future<void> _addBanner() async {
@@ -97,8 +99,10 @@ class _BannerListScreenState extends State<BannerListScreen> {
         success ? AppTheme.successSnackBar('Banner added') : AppTheme.errorSnackBar('Failed to add banner'),
       );
     }
-    titleCtrl.dispose();
-    sortCtrl.dispose();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      titleCtrl.dispose();
+      sortCtrl.dispose();
+    });
   }
 
   Future<void> _editBanner(app.Banner banner) async {
@@ -174,8 +178,10 @@ class _BannerListScreenState extends State<BannerListScreen> {
         success ? AppTheme.successSnackBar('Banner updated') : AppTheme.errorSnackBar('Update failed'),
       );
     }
-    titleCtrl.dispose();
-    sortCtrl.dispose();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      titleCtrl.dispose();
+      sortCtrl.dispose();
+    });
   }
 
   Future<void> _deleteBanner(app.Banner banner) async {

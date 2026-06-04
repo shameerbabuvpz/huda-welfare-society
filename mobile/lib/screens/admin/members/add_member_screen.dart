@@ -28,7 +28,9 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
   @override
   void initState() {
     super.initState();
-    context.read<AyalkoottamProvider>().loadDropdown();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<AyalkoottamProvider>().loadDropdown();
+    });
   }
 
   @override

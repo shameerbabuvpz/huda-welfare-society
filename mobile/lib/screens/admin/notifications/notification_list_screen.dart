@@ -18,7 +18,9 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
   @override
   void initState() {
     super.initState();
-    context.read<NotificationProvider>().loadAdminNotifications();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<NotificationProvider>().loadAdminNotifications();
+    });
   }
 
   Future<void> _editNotification(AppNotification notification) async {

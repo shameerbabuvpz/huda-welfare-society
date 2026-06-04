@@ -16,7 +16,9 @@ class _KaneevListScreenState extends State<KaneevListScreen> {
   @override
   void initState() {
     super.initState();
-    context.read<KaneevProvider>().loadGroups();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<KaneevProvider>().loadGroups();
+    });
   }
 
   @override

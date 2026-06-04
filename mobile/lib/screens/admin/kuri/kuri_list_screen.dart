@@ -20,7 +20,9 @@ class _KuriListScreenState extends State<KuriListScreen> {
   @override
   void initState() {
     super.initState();
-    context.read<KuriProvider>().loadGroups();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<KuriProvider>().loadGroups();
+    });
     _scrollController.addListener(_onScroll);
   }
 

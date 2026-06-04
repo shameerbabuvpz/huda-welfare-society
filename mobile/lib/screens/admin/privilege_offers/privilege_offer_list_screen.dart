@@ -18,7 +18,9 @@ class _PrivilegeOfferListScreenState extends State<PrivilegeOfferListScreen> {
   @override
   void initState() {
     super.initState();
-    context.read<PrivilegeOfferProvider>().loadOffers();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<PrivilegeOfferProvider>().loadOffers();
+    });
   }
 
   @override

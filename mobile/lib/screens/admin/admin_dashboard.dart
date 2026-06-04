@@ -53,11 +53,13 @@ class _DashboardHome extends StatelessWidget {
     final auth = context.watch<AuthProvider>();
     final user = auth.user;
     final org = auth.organization;
+    final isTablet = MediaQuery.of(context).size.shortestSide > 600;
 
     return Scaffold(
       appBar: AppBar(
+        toolbarHeight: isTablet ? 96 : kToolbarHeight,
         leading: Padding(
-          padding: const EdgeInsets.all(8),
+          padding: EdgeInsets.all(isTablet ? 12 : 8),
           child: Image.asset('assets/images/ayalkoottam.png'),
         ),
         centerTitle: false,
@@ -66,13 +68,13 @@ class _DashboardHome extends StatelessWidget {
           children: [
             Text(
               'Welcome, ${user?.name ?? 'Admin'}',
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+              style: TextStyle(fontSize: isTablet ? 24 : 18, fontWeight: FontWeight.w700),
             ),
             if (user?.lastLoginAt != null)
               Text(
                 'Last login: ${_formatDate(user!.lastLoginAt!)}',
                 style: TextStyle(
-                  fontSize: 11.5,
+                  fontSize: isTablet ? 14 : 11.5,
                   color: Colors.white.withValues(alpha: 0.76),
                 ),
               ),
@@ -82,9 +84,9 @@ class _DashboardHome extends StatelessWidget {
           GestureDetector(
             onTap: () => _showProfileSheet(context),
             child: Padding(
-              padding: const EdgeInsets.only(right: 12),
+              padding: EdgeInsets.only(right: isTablet ? 24 : 12),
               child: CircleAvatar(
-                radius: 18,
+                radius: isTablet ? 32 : 18,
                 backgroundColor: Theme.of(context).colorScheme.primaryContainer,
                 backgroundImage: user?.photoUrl != null
                     ? NetworkImage(user!.photoUrl!)
@@ -94,6 +96,7 @@ class _DashboardHome extends StatelessWidget {
                         (user?.name ?? 'A')[0].toUpperCase(),
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
+                          fontSize: isTablet ? 22 : null,
                           color: Theme.of(context).colorScheme.primary,
                         ),
                       )
@@ -103,24 +106,111 @@ class _DashboardHome extends StatelessWidget {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(18, 18, 18, 28),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            GridView.count(
-              crossAxisCount: 3,
-              mainAxisSpacing: 14,
-              crossAxisSpacing: 14,
-              childAspectRatio: 0.9,
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final screenShortestSide = MediaQuery.of(context).size.shortestSide;
+          final isLargeTablet = screenShortestSide > 700; // iPad
+          final isSmallTablet = !isLargeTablet && constraints.maxWidth > 600; // 7-inch tablet
+          final isTablet = isLargeTablet;
+          final crossAxisCount = isLargeTablet ? 4 : isSmallTablet ? 4 : 3;
+          final childAspectRatio = isLargeTablet ? 0.95 : isSmallTablet ? 1.2 : 0.9;
+          final gridSpacing = isLargeTablet ? 20.0 : isSmallTablet ? 12.0 : 14.0;
+          final padding = isLargeTablet ? 32.0 : isSmallTablet ? 16.0 : 18.0;
+
+          return Padding(
+            padding: EdgeInsets.fromLTRB(padding, padding, padding, padding + 10),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                _DashboardCard(
-                  icon: Icons.health_and_safety,
-                  label: 'Health',
-                  onTap: () => Navigator.pushNamed(context, AppRoutes.manageAssets),
+                Expanded(
+                  child: GridView.count(
+                    crossAxisCount: crossAxisCount,
+                    mainAxisSpacing: gridSpacing,
+                    crossAxisSpacing: gridSpacing,
+                    childAspectRatio: childAspectRatio,
+                    physics: (isSmallTablet || isLargeTablet) ? const AlwaysScrollableScrollPhysics() : const NeverScrollableScrollPhysics(),
+                    children: [
+                      _DashboardCard(
+                        icon: Icons.health_and_safety,
+                        label: 'Health',
+                        onTap: () => Navigator.pushNamed(context, AppRoutes.manageAssets),
+                        isTablet: isTablet,
+                        isSmallTablet: isSmallTablet,
+                      ),
+                      _DashboardCard(
+                        icon: Icons.favorite,
+                        label: 'Kaniv',
+                        onTap: () => Navigator.pushNamed(context, AppRoutes.manageKaneev),
+                        isTablet: isTablet,
+                        isSmallTablet: isSmallTablet,
+                      ),
+                      _DashboardCard(
+                        icon: Icons.account_balance,
+                        label: 'Kuri Chitts',
+                        onTap: () => Navigator.pushNamed(context, AppRoutes.manageKuri),
+                        isTablet: isTablet,
+                        isSmallTablet: isSmallTablet,
+                      ),
+                      _DashboardCard(
+                        icon: Icons.account_balance_wallet,
+                        label: 'Income & Expense',
+                        onTap: () => Navigator.pushNamed(context, AppRoutes.finance),
+                        isTablet: isTablet,
+                        isSmallTablet: isSmallTablet,
+                      ),
+                      _DashboardCard(
+                        icon: Icons.notifications,
+                        label: 'Notifications',
+                        onTap: () => Navigator.pushNamed(context, AppRoutes.notificationList),
+                        isTablet: isTablet,
+                        isSmallTablet: isSmallTablet,
+                      ),
+                      _DashboardCard(
+                        icon: Icons.groups_2,
+                        label: 'Ayalkoottam',
+                        onTap: () => Navigator.pushNamed(context, AppRoutes.manageAyalkoottam),
+                        isTablet: isTablet,
+                        isSmallTablet: isSmallTablet,
+                      ),
+                      _DashboardCard(
+                        icon: Icons.people,
+                        label: 'Members',
+                        onTap: () => Navigator.pushNamed(context, AppRoutes.manageMembers),
+                        isTablet: isTablet,
+                        isSmallTablet: isSmallTablet,
+                      ),
+                      _DashboardCard(
+                        icon: Icons.bar_chart,
+                        label: 'Reports',
+                        onTap: () => Navigator.pushNamed(context, AppRoutes.reports),
+                        isTablet: isTablet,
+                        isSmallTablet: isSmallTablet,
+                      ),
+                      _DashboardCard(
+                        icon: Icons.card_giftcard,
+                        label: 'Privilege Card',
+                        onTap: () => Navigator.pushNamed(context, AppRoutes.managePrivilegeOffers),
+                        isTablet: isTablet,
+                        isSmallTablet: isSmallTablet,
+                      ),
+                      _DashboardCard(
+                        icon: Icons.photo_library,
+                        label: 'Ad Banners',
+                        onTap: () => Navigator.pushNamed(context, AppRoutes.manageBanners),
+                        isTablet: isTablet,
+                        isSmallTablet: isSmallTablet,
+                      ),
+                      _DashboardCard(
+                        icon: Icons.sync,
+                        label: 'INFACC Sync',
+                        onTap: () => Navigator.pushNamed(context, AppRoutes.infaccSync),
+                        isTablet: isTablet,
+                        isSmallTablet: isSmallTablet,
+                      ),
+                    ],
+                  ),
                 ),
+<<<<<<< Updated upstream
                 _DashboardCard(
                   icon: Icons.favorite,
                   label: 'Kaniv',
@@ -175,35 +265,36 @@ class _DashboardHome extends StatelessWidget {
                   icon: Icons.sync,
                   label: 'INFACC Sync',
                   onTap: () => Navigator.pushNamed(context, AppRoutes.infaccSync),
+=======
+                if (org != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 12),
+                    child: Text(
+                      '${org.name}${org.place != null ? ' • ${org.place}' : ''}',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: isTablet ? 16 : 13.5,
+                        fontWeight: FontWeight.w500,
+                        color: AppTheme.ink.withValues(alpha: 0.72),
+                      ),
+                    ),
+                  ),
+                Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: Text(
+                    'Version 1.0',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: isTablet ? 13 : 11,
+                      color: AppTheme.ink.withValues(alpha: 0.46),
+                    ),
+                  ),
+>>>>>>> Stashed changes
                 ),
               ],
             ),
-            if (org != null)
-              Padding(
-                padding: const EdgeInsets.only(top: 20),
-                child: Text(
-                  '${org.name}${org.place != null ? ' • ${org.place}' : ''}',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 13.5,
-                    fontWeight: FontWeight.w500,
-                    color: AppTheme.ink.withValues(alpha: 0.72),
-                  ),
-                ),
-              ),
-            Padding(
-              padding: const EdgeInsets.only(top: 6),
-              child: Text(
-                'Version 1.0',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 11,
-                  color: AppTheme.ink.withValues(alpha: 0.46),
-                ),
-              ),
-            ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
@@ -402,17 +493,22 @@ class _DashboardCard extends StatelessWidget {
   final IconData icon;
   final String label;
   final VoidCallback onTap;
+  final bool isTablet;
+  final bool isSmallTablet;
 
-  const _DashboardCard({required this.icon, required this.label, required this.onTap});
+  const _DashboardCard({required this.icon, required this.label, required this.onTap, this.isTablet = false, this.isSmallTablet = false});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final iconContainerSize = isTablet ? 68.0 : isSmallTablet ? 44.0 : 52.0;
+    final iconSize = isTablet ? 34.0 : isSmallTablet ? 22.0 : 26.0;
+    final borderRadius = isTablet ? 28.0 : isSmallTablet ? 18.0 : 24.0;
 
     return DecoratedBox(
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(borderRadius),
         border: Border.all(color: AppTheme.outline),
         boxShadow: [
           BoxShadow(
@@ -426,26 +522,27 @@ class _DashboardCard extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(borderRadius),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 14),
+            padding: EdgeInsets.symmetric(horizontal: isTablet ? 14 : isSmallTablet ? 8 : 10, vertical: isTablet ? 18 : isSmallTablet ? 10 : 14),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Container(
-                  width: 52,
-                  height: 52,
+                  width: iconContainerSize,
+                  height: iconContainerSize,
                   decoration: BoxDecoration(
                     color: theme.colorScheme.primaryContainer,
-                    borderRadius: BorderRadius.circular(18),
+                    borderRadius: BorderRadius.circular(isTablet ? 22 : isSmallTablet ? 14 : 18),
                   ),
-                  child: Icon(icon, size: 26, color: theme.colorScheme.primary),
+                  child: Icon(icon, size: iconSize, color: theme.colorScheme.primary),
                 ),
-                const SizedBox(height: 12),
+                SizedBox(height: isTablet ? 16 : isSmallTablet ? 8 : 12),
                 Text(
                   label,
                   style: theme.textTheme.bodySmall?.copyWith(
                     fontWeight: FontWeight.w700,
+                    fontSize: isTablet ? 16 : isSmallTablet ? 12 : null,
                     color: AppTheme.ink,
                     height: 1.25,
                   ),

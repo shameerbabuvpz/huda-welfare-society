@@ -24,7 +24,9 @@ class _AyalkoottamDetailScreenState extends State<AyalkoottamDetailScreen> {
     _ak = ModalRoute.of(context)!.settings.arguments as Ayalkoottam;
     if (!_membersLoaded) {
       _membersLoaded = true;
-      context.read<MemberProvider>().loadMembers(ayalkoottamId: _ak.id);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        context.read<MemberProvider>().loadMembers(ayalkoottamId: _ak.id);
+      });
     }
   }
 

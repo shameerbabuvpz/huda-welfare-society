@@ -28,8 +28,10 @@ class _MemberListScreenState extends State<MemberListScreen> {
   @override
   void initState() {
     super.initState();
-    context.read<MemberProvider>().loadMembers();
-    context.read<AyalkoottamProvider>().loadDropdown();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<MemberProvider>().loadMembers();
+      context.read<AyalkoottamProvider>().loadDropdown();
+    });
     _scrollController.addListener(_onScroll);
   }
 

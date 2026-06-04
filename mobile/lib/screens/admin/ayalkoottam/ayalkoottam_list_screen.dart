@@ -21,7 +21,9 @@ class _AyalkoottamListScreenState extends State<AyalkoottamListScreen> {
   @override
   void initState() {
     super.initState();
-    context.read<AyalkoottamProvider>().load();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<AyalkoottamProvider>().load();
+    });
     _scrollController.addListener(_onScroll);
   }
 
