@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import '../../config/theme.dart';
 import '../../config/routes.dart';
 import '../../providers/member_provider.dart';
-import '../../services/api_service.dart';
 
 class MemberChangeCodeScreen extends StatefulWidget {
   final bool mustChange;

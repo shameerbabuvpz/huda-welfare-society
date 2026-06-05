@@ -36,9 +36,11 @@ import 'screens/member/privilege_card_screen.dart';
 import 'screens/member/my_assets_screen.dart';
 import 'screens/member/my_kuri_screen.dart';
 import 'screens/member/my_notifications_screen.dart';
+import 'screens/member/ayalkoottam_members_screen.dart';
 import 'screens/admin/ayalkoottam/ayalkoottam_list_screen.dart';
 import 'screens/admin/ayalkoottam/add_ayalkoottam_screen.dart';
 import 'screens/admin/ayalkoottam/ayalkoottam_detail_screen.dart';
+import 'screens/admin/ayalkoottam/leaders_directory_screen.dart';
 import 'screens/admin/kaneev/kaneev_detail_screen.dart';
 import 'screens/admin/finance/finance_screen.dart';
 import 'screens/admin/weekly_collection/weekly_collection_screen.dart';
@@ -113,6 +115,7 @@ class AyalkoottamApp extends StatelessWidget {
           AppRoutes.manageAyalkoottam: (_) => const AyalkoottamListScreen(),
           AppRoutes.addAyalkoottam: (_) => const AddAyalkoottamScreen(),
           AppRoutes.ayalkoottamDetail: (_) => const AyalkoottamDetailScreen(),
+          AppRoutes.ayalkoottamLeaders: (_) => const LeadersDirectoryScreen(),
           AppRoutes.manageKaneev: (_) => const KaneevDetailScreen(),
           AppRoutes.finance: (_) => const FinanceScreen(),
           AppRoutes.weeklyCollection: (_) => const WeeklyCollectionScreen(),
@@ -128,6 +131,7 @@ class AyalkoottamApp extends StatelessWidget {
           AppRoutes.myKuri: (_) => const MyKuriScreen(),
           AppRoutes.myNotifications: (_) => const MyNotificationsScreen(),
           AppRoutes.memberOffers: (_) => const MemberOffersScreen(),
+          AppRoutes.ayalkoottamMembers: (_) => const AyalkoottamMembersScreen(),
         },
       ),
     );

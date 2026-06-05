@@ -7,6 +7,7 @@ const { profilePhotoUpload } = require('../middleware/profilePhotoUpload');
 
 // Public member login (no auth required)
 router.post('/login', memberAuthController.loginWithCode);
+router.post('/check-phone', memberAuthController.checkPhone);
 router.post('/request-otp', memberAuthController.requestPhoneOtp);
 router.post('/verify-otp', memberAuthController.verifyPhoneOtp);
 

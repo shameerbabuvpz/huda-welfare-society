@@ -89,4 +89,12 @@ class ExportService {
     if (toDate != null) params['to_date'] = toDate;
     await exportAndShare('/finance/pdf', filename: 'finance-report.pdf', queryParams: params.isNotEmpty ? params : null);
   }
+
+  static Future<void> leadersExcel() async {
+    await exportAndShare('/leaders/excel', filename: 'office-bearers.xlsx');
+  }
+
+  static Future<void> leadersPdf() async {
+    await exportAndShare('/leaders/pdf', filename: 'office-bearers.pdf');
+  }
 }

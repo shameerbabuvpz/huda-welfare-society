@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../config/theme.dart';
+import '../../../config/routes.dart';
 import '../../../providers/ayalkoottam_provider.dart';
 import '../../../models/ayalkoottam.dart';
 import '../../../widgets/app_bottom_sheet.dart';
@@ -51,6 +52,13 @@ class _AyalkoottamListScreenState extends State<AyalkoottamListScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Ayalkoottam'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.badge_outlined),
+            tooltip: 'President & Secretary',
+            onPressed: () => Navigator.pushNamed(context, AppRoutes.ayalkoottamLeaders),
+          ),
+        ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(56),
           child: Padding(

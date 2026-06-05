@@ -14,7 +14,7 @@ class MemberLoginScreen extends StatefulWidget {
 }
 
 class _MemberLoginScreenState extends State<MemberLoginScreen> {
-  late TextEditingController _memberIdController;
+  late TextEditingController _phoneController;
   late TextEditingController _codeController;
   bool _loading = false;
   String? _error;
@@ -23,28 +23,38 @@ class _MemberLoginScreenState extends State<MemberLoginScreen> {
   @override
   void initState() {
     super.initState();
-    _memberIdController = TextEditingController();
+    _phoneController = TextEditingController();
     _codeController = TextEditingController();
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Prefill the phone if it was passed from the main login screen.
+    final args = ModalRoute.of(context)?.settings.arguments;
+    if (args is Map && args['phone'] is String && _phoneController.text.isEmpty) {
+      _phoneController.text = args['phone'] as String;
+    }
+  }
+
+  @override
   void dispose() {
-    _memberIdController.dispose();
+    _phoneController.dispose();
     _codeController.dispose();
     super.dispose();
   }
 
   Future<void> _login() async {
-    final memberId = int.tryParse(_memberIdController.text.trim());
+    final phone = _phoneController.text.replaceAll(RegExp(r'\D'), '');
     final code = _codeController.text.trim();
 
-    if (memberId == null) {
-      setState(() => _error = 'Please enter a valid member ID');
+    if (phone.length < 10) {
+      setState(() => _error = 'Please enter a valid mobile number');
       return;
     }
 
     if (code.length != 4) {
-      setState(() => _error = 'Code must be 4 digits');
+      setState(() => _error = 'PIN must be 4 digits');
       return;
     }
 
@@ -57,7 +67,7 @@ class _MemberLoginScreenState extends State<MemberLoginScreen> {
       final response = await ApiService.post(
         '/member-auth/login',
         {
-          'memberId': memberId,
+          'phone': phone,
           'organizationId': 2, // Sangamam organization ID
           'code': code,
         },
@@ -121,7 +131,7 @@ class _MemberLoginScreenState extends State<MemberLoginScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Enter your member ID and code',
+                  'Enter your mobile number and 4-digit PIN',
                   style: TextStyle(
                     color: Colors.grey.shade600,
                   ),
@@ -130,29 +140,31 @@ class _MemberLoginScreenState extends State<MemberLoginScreen> {
 
                 const SizedBox(height: 32),
 
-                // Member ID
+                // Mobile number
                 TextField(
-                  controller: _memberIdController,
-                  keyboardType: TextInputType.number,
+                  controller: _phoneController,
+                  keyboardType: TextInputType.phone,
+                  maxLength: 10,
                   decoration: InputDecoration(
-                    labelText: 'Member ID',
-                    hintText: 'Enter member ID',
-                    prefixIcon: const Icon(Icons.badge),
+                    labelText: 'Mobile Number',
+                    hintText: 'Enter 10-digit mobile number',
+                    prefixIcon: const Icon(Icons.phone_android),
+                    counterText: '',
                   ),
                   enabled: !_loading,
                 ),
 
                 const SizedBox(height: 16),
 
-                // Code
+                // PIN
                 TextField(
                   controller: _codeController,
                   keyboardType: TextInputType.number,
                   obscureText: !_showPassword,
                   maxLength: 4,
                   decoration: InputDecoration(
-                    labelText: 'Code',
-                    hintText: '4-digit code',
+                    labelText: 'PIN',
+                    hintText: '4-digit PIN',
                     prefixIcon: const Icon(Icons.lock),
                     suffixIcon: IconButton(
                       icon: Icon(
@@ -221,7 +233,7 @@ class _MemberLoginScreenState extends State<MemberLoginScreen> {
 
                 // Help text
                 Text(
-                  'Default code: 6789\nYou will be asked to change it on first login.',
+                  'Default PIN: 6789\nYou will be asked to change it on first login.',
                   style: TextStyle(
                     fontSize: 12,
                     color: Colors.grey.shade600,

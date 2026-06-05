@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 import '../config/theme.dart';
 import '../models/privilege_card.dart';
@@ -412,10 +413,10 @@ class MemberPrivilegeCard extends StatelessWidget {
                                   ),
                                   child: ClipOval(
                                     child: photoUrl != null && photoUrl!.isNotEmpty
-                                        ? Image.network(
-                                            photoUrl!,
+                                        ? CachedNetworkImage(
+                                            imageUrl: photoUrl!,
                                             fit: BoxFit.cover,
-                                            errorBuilder: (_, __, ___) => const Icon(
+                                            errorWidget: (_, __, ___) => const Icon(
                                               Icons.person,
                                               color: Colors.white,
                                               size: 28,

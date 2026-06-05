@@ -3,12 +3,15 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'dart:async';
 import '../../../config/theme.dart';
 import '../../../providers/member_provider.dart';
 import '../../../providers/ayalkoottam_provider.dart';
 import '../../../models/member.dart';
 import '../../../config/routes.dart';
 import '../../../services/export_service.dart';
+import '../../../services/member_service.dart';
 import '../../../utils/ak_name_helper.dart';
 import '../../../widgets/app_bottom_sheet.dart';
 
@@ -24,6 +27,7 @@ class _MemberListScreenState extends State<MemberListScreen> {
   final _scrollController = ScrollController();
   int? _filterAyalkoottamId;
   String? _filterAyalkoottamName;
+  Timer? _searchDebounce;
 
   @override
   void initState() {
@@ -37,6 +41,7 @@ class _MemberListScreenState extends State<MemberListScreen> {
 
   @override
   void dispose() {
+    _searchDebounce?.cancel();
     _searchController.dispose();
     _scrollController.dispose();
     super.dispose();
@@ -49,7 +54,16 @@ class _MemberListScreenState extends State<MemberListScreen> {
   }
 
   void _search(String v) {
-    context.read<MemberProvider>().loadMembers(search: v.isEmpty ? null : v, ayalkoottamId: _filterAyalkoottamId);
+    // Debounce so we fire one request after the user stops typing instead of
+    // one request per keystroke.
+    _searchDebounce?.cancel();
+    _searchDebounce = Timer(const Duration(milliseconds: 350), () {
+      if (!mounted) return;
+      context.read<MemberProvider>().loadMembers(
+            search: v.isEmpty ? null : v,
+            ayalkoottamId: _filterAyalkoottamId,
+          );
+    });
   }
 
   void _applyFilter(int? id, String? name) {
@@ -94,9 +108,13 @@ class _MemberListScreenState extends State<MemberListScreen> {
     );
   }
 
-  void _exportMembers() async {
+  void _exportMembers(bool pdf) async {
     try {
-      await ExportService.membersExcel(ayalkoottamId: _filterAyalkoottamId);
+      if (pdf) {
+        await ExportService.membersPdf(ayalkoottamId: _filterAyalkoottamId);
+      } else {
+        await ExportService.membersExcel(ayalkoottamId: _filterAyalkoottamId);
+      }
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Export failed: $e')));
@@ -119,10 +137,28 @@ class _MemberListScreenState extends State<MemberListScreen> {
             tooltip: 'Filter by Ayalkoottam',
             onPressed: _showFilterSheet,
           ),
-          IconButton(
+          PopupMenuButton<String>(
             icon: const Icon(Icons.file_download_outlined),
-            tooltip: 'Export to Excel',
-            onPressed: _exportMembers,
+            tooltip: 'Export',
+            onSelected: (v) => _exportMembers(v == 'pdf'),
+            itemBuilder: (ctx) => const [
+              PopupMenuItem(
+                value: 'excel',
+                child: ListTile(
+                  leading: Icon(Icons.table_chart, color: AppTheme.success),
+                  title: Text('Export Excel'),
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ),
+              PopupMenuItem(
+                value: 'pdf',
+                child: ListTile(
+                  leading: Icon(Icons.picture_as_pdf, color: AppTheme.error),
+                  title: Text('Export PDF'),
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ),
+            ],
           ),
         ],
         bottom: PreferredSize(
@@ -213,7 +249,7 @@ class _MemberTile extends StatelessWidget {
           child: CircleAvatar(
             backgroundColor: isActive ? null : Colors.grey.shade200,
             backgroundImage: member.photoUrl != null && member.photoUrl!.isNotEmpty
-                ? NetworkImage(member.photoUrl!)
+                ? CachedNetworkImageProvider(member.photoUrl!)
                 : null,
             child: member.photoUrl == null || member.photoUrl!.isEmpty
                 ? Text(member.name.isNotEmpty ? member.name[0].toUpperCase() : '?', style: TextStyle(color: isActive ? null : Colors.grey))
@@ -450,12 +486,15 @@ class _MemberTile extends StatelessWidget {
     final phoneCtrl = TextEditingController(text: member.phone ?? '');
     final addressCtrl = TextEditingController(text: member.address ?? '');
     int? selectedAkId = member.ayalkoottamId;
+    String? selectedDesignation = member.designation;
     final akProvider = context.read<AyalkoottamProvider>();
+    final messenger = ScaffoldMessenger.of(context);
+    final memberProvider = context.read<MemberProvider>();
 
     showAppBottomSheet(
       context: context,
       title: 'Edit Member',
-      initialChildSize: 0.6,
+      initialChildSize: 0.7,
       bodyBuilder: (ctx, sc) => StatefulBuilder(
         builder: (ctx, setSheetState) => SingleChildScrollView(
           controller: sc,
@@ -477,21 +516,90 @@ class _MemberTile extends StatelessWidget {
               TextField(controller: phoneCtrl, decoration: const InputDecoration(labelText: 'Phone', border: OutlineInputBorder()), keyboardType: TextInputType.phone),
               const SizedBox(height: 12),
               TextField(controller: addressCtrl, decoration: const InputDecoration(labelText: 'Address', border: OutlineInputBorder()), maxLines: 2),
-              const SizedBox(height: 20),
+              const SizedBox(height: 16),
+              const Align(
+                alignment: Alignment.centerLeft,
+                child: Text('Designation', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+              ),
+              Row(
+                children: [
+                  Expanded(
+                    child: CheckboxListTile(
+                      title: const Text('President'),
+                      value: selectedDesignation == 'president',
+                      onChanged: (v) => setSheetState(() => selectedDesignation = v == true ? 'president' : null),
+                      controlAffinity: ListTileControlAffinity.leading,
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                  ),
+                  Expanded(
+                    child: CheckboxListTile(
+                      title: const Text('Secretary'),
+                      value: selectedDesignation == 'secretary',
+                      onChanged: (v) => setSheetState(() => selectedDesignation = v == true ? 'secretary' : null),
+                      controlAffinity: ListTileControlAffinity.leading,
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
               Row(
                 children: [
                   Expanded(child: OutlinedButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel'))),
                   const SizedBox(width: 12),
                   Expanded(
                     child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.pop(ctx);
+                      onPressed: () async {
+                        // An office bearer must belong to an ayalkoottam, else
+                        // they won't appear in the Office Bearers report.
+                        if (selectedDesignation != null && selectedAkId == null) {
+                          messenger.showSnackBar(
+                            AppTheme.errorSnackBar('Select an Ayalkoottam before assigning President/Secretary'),
+                          );
+                          return;
+                        }
+                        // If assigning a designation to a different member, confirm replacement.
+                        final designationChanged = selectedDesignation != member.designation;
+                        if (selectedDesignation != null && designationChanged && selectedAkId != null) {
+                          final holder = await MemberService.checkDesignation(selectedAkId!, selectedDesignation!);
+                          if (!ctx.mounted) return;
+                          if (holder != null && holder != member.name) {
+                            final proceed = await showAppSheet<bool>(
+                              context: ctx,
+                              title: '${selectedDesignation == 'president' ? 'President' : 'Secretary'} already exists',
+                              initialChildSize: 0.3,
+                              body: Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 8),
+                                child: Text('$holder is currently the $selectedDesignation. Replace?'),
+                              ),
+                              actions: [
+                                OutlinedButton(
+                                  onPressed: () => Navigator.pop(ctx, false),
+                                  child: const Text('Cancel'),
+                                ),
+                                FilledButton(
+                                  style: FilledButton.styleFrom(backgroundColor: AppTheme.error),
+                                  onPressed: () => Navigator.pop(ctx, true),
+                                  child: const Text('Replace'),
+                                ),
+                              ],
+                            );
+                            if (proceed != true) return;
+                          }
+                        }
+
                         final data = <String, dynamic>{};
                         if (nameCtrl.text.trim().isNotEmpty) data['name'] = nameCtrl.text.trim();
                         if (phoneCtrl.text.trim().isNotEmpty) data['phone'] = phoneCtrl.text.trim();
                         data['address'] = addressCtrl.text.trim();
                         if (selectedAkId != member.ayalkoottamId) data['ayalkoottam_id'] = selectedAkId;
-                        context.read<MemberProvider>().updateMember(member.id, data);
+                        if (designationChanged) data['designation'] = selectedDesignation;
+                        if (ctx.mounted) Navigator.pop(ctx);
+                        final ok = await memberProvider.updateMember(member.id, data);
+                        messenger.showSnackBar(
+                          ok ? AppTheme.successSnackBar('Member updated') : AppTheme.errorSnackBar(memberProvider.error ?? 'Update failed'),
+                        );
                       },
                       child: const Text('Save'),
                     ),
@@ -517,12 +625,12 @@ class _MemberTile extends StatelessWidget {
             children: [
               ClipRRect(
                 borderRadius: BorderRadius.circular(12),
-                child: Image.network(
-                  member.photoUrl!,
+                child: CachedNetworkImage(
+                  imageUrl: member.photoUrl!,
                   width: 280,
                   height: 280,
                   fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => Container(
+                  errorWidget: (_, __, ___) => Container(
                     width: 280,
                     height: 280,
                     color: Colors.grey.shade300,

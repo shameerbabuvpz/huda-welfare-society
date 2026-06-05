@@ -35,11 +35,28 @@ const kaneevService = {
     const group = await db('kaneev_groups').where({ id: groupId, organization_id: orgId }).first();
     if (!group) throw ApiError.notFound('Kaneev group not found');
 
+    // Per-member total paid (sum of paid donations)
+    const paidTotals = await db('kaneev_donations')
+      .where({ kaneev_group_id: groupId, organization_id: orgId, status: 'paid' })
+      .groupBy('member_id')
+      .select('member_id')
+      .sum('amount as total_paid');
+    const paidMap = {};
+    paidTotals.forEach((row) => { paidMap[row.member_id] = parseFloat(row.total_paid) || 0; });
+
     const members = await db('kaneev_members')
       .where({ 'kaneev_members.kaneev_group_id': groupId, 'kaneev_members.organization_id': orgId, 'kaneev_members.status': 'active' })
       .join('members', 'kaneev_members.member_id', 'members.id')
       .leftJoin('ayalkoottams', 'members.ayalkoottam_id', 'ayalkoottams.id')
-      .select('kaneev_members.*', 'members.name as member_name', 'members.member_code', 'ayalkoottams.name as ayalkoottam_name');
+      .select(
+        'kaneev_members.*',
+        'kaneev_members.created_at as joined_date',
+        'members.name as member_name',
+        'members.member_code',
+        'ayalkoottams.name as ayalkoottam_name',
+      );
+
+    members.forEach((m) => { m.total_paid = paidMap[m.member_id] || 0; });
 
     const recipients = await db('kaneev_recipients')
       .where({ 'kaneev_recipients.kaneev_group_id': groupId, 'kaneev_recipients.organization_id': orgId })
@@ -109,9 +126,38 @@ const kaneevService = {
   },
 
   async removeMember(orgId, groupId, memberId) {
+    const existing = await db('kaneev_members')
+      .where({ kaneev_group_id: groupId, member_id: memberId, organization_id: orgId })
+      .first();
+    if (!existing) throw ApiError.notFound('Member not found in this group');
+
+    // If the member has any paid donations, they cannot be deleted —
+    // only deactivated, so their payment history is preserved.
+    const paid = await db('kaneev_donations')
+      .where({ kaneev_group_id: groupId, member_id: memberId, status: 'paid' })
+      .first();
+    if (paid) {
+      throw ApiError.conflict(
+        'This member has already made payments and cannot be deleted. Deactivate the member instead.',
+      );
+    }
+
+    // No payments → safe to hard delete the enrollment.
+    await db('kaneev_members')
+      .where({ id: existing.id })
+      .del();
+
+    return { id: existing.id, member_id: memberId, deleted: true };
+  },
+
+  // ── Activate / deactivate a member (keeps payment history) ──
+  async setMemberStatus(orgId, groupId, memberId, status) {
+    if (!['active', 'withdrawn'].includes(status)) {
+      throw ApiError.badRequest('Invalid status. Use "active" or "withdrawn".');
+    }
     const [km] = await db('kaneev_members')
       .where({ kaneev_group_id: groupId, member_id: memberId, organization_id: orgId })
-      .update({ status: 'withdrawn', updated_at: db.fn.now() })
+      .update({ status, updated_at: db.fn.now() })
       .returning('*');
     if (!km) throw ApiError.notFound('Member not found in this group');
     return km;

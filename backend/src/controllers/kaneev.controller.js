@@ -35,6 +35,19 @@ const kaneevController = {
     } catch (err) { next(err); }
   },
 
+  async setMemberStatus(req, res, next) {
+    try {
+      const group = await kaneevService.getOrCreateGroup(req.organizationId, req.user.id);
+      const km = await kaneevService.setMemberStatus(
+        req.organizationId,
+        group.id,
+        parseInt(req.params.memberId, 10),
+        req.body.status,
+      );
+      res.json(km);
+    } catch (err) { next(err); }
+  },
+
   // Donations
   async recordDonation(req, res, next) {
     try {

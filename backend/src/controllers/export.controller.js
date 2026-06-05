@@ -91,6 +91,24 @@ const exportController = {
       res.send(buffer);
     } catch (err) { next(err); }
   },
+
+  async leadersExcel(req, res, next) {
+    try {
+      const buffer = await exportService.leadersToExcel(req.organizationId);
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      res.setHeader('Content-Disposition', 'attachment; filename=office-bearers.xlsx');
+      res.send(Buffer.from(buffer));
+    } catch (err) { next(err); }
+  },
+
+  async leadersPdf(req, res, next) {
+    try {
+      const buffer = await exportService.leadersToPdf(req.organizationId);
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', 'attachment; filename=office-bearers.pdf');
+      res.send(buffer);
+    } catch (err) { next(err); }
+  },
 };
 
 module.exports = exportController;

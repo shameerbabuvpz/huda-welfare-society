@@ -23,6 +23,13 @@ router.post(
   ctrl.addMember
 );
 router.delete('/members/:memberId', authorize('admin', 'super_admin'), ctrl.removeMember);
+router.patch(
+  '/members/:memberId/status',
+  authorize('admin', 'super_admin'),
+  [body('status').isIn(['active', 'withdrawn'])],
+  validate,
+  ctrl.setMemberStatus,
+);
 
 // Admin – donations
 router.post(

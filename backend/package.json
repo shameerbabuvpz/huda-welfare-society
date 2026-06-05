@@ -5,6 +5,7 @@
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
+    "postinstall": "patch-package",
     "dev": "nodemon src/index.js",
     "migrate": "knex migrate:latest --knexfile knexfile.js",
     "migrate:rollback": "knex migrate:rollback --knexfile knexfile.js",
@@ -23,6 +24,7 @@
     "knex": "^3.1.0",
     "morgan": "^1.10.0",
     "multer": "^2.1.1",
+    "patch-package": "^8.0.1",
     "pdfkit": "^0.18.0",
     "pg": "^8.13.0",
     "qrcode": "^1.5.4",

@@ -42,6 +42,13 @@ const ayalkoottamController = {
       res.json(list);
     } catch (err) { next(err); }
   },
+
+  async leaders(req, res, next) {
+    try {
+      const list = await ayalkoottamService.getLeaders(req.organizationId);
+      res.json({ data: list });
+    } catch (err) { next(err); }
+  },
 };
 
 module.exports = ayalkoottamController;

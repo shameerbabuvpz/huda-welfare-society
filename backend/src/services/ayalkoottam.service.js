@@ -121,6 +121,45 @@ const ayalkoottamService = {
       .select('id', 'name', 'place')
       .orderBy('name');
   },
+
+  /**
+   * Office-bearers directory: every active ayalkoottam with its president and
+   * secretary (name, member code/id and phone).
+   */
+  async getLeaders(orgId) {
+    const ayalkoottams = await db('ayalkoottams')
+      .where({ organization_id: orgId, status: 'active' })
+      .select('id', 'name', 'place')
+      .orderBy('name');
+
+    const leaders = await db('members')
+      .where({ organization_id: orgId, status: 'active' })
+      .whereIn('designation', ['president', 'secretary'])
+      .whereNotNull('ayalkoottam_id')
+      .select('id', 'ayalkoottam_id', 'name', 'member_code', 'phone', 'designation');
+
+    const byAk = {};
+    leaders.forEach((l) => {
+      byAk[l.ayalkoottam_id] = byAk[l.ayalkoottam_id] || {};
+      byAk[l.ayalkoottam_id][l.designation] = l;
+    });
+
+    return ayalkoottams.map((ak) => {
+      const president = byAk[ak.id] && byAk[ak.id].president;
+      const secretary = byAk[ak.id] && byAk[ak.id].secretary;
+      return {
+        ayalkoottam_id: ak.id,
+        ayalkoottam_name: ak.name,
+        place: ak.place || '',
+        president_name: president ? president.name : '',
+        president_code: president ? president.member_code : '',
+        president_phone: president ? president.phone || '' : '',
+        secretary_name: secretary ? secretary.name : '',
+        secretary_code: secretary ? secretary.member_code : '',
+        secretary_phone: secretary ? secretary.phone || '' : '',
+      };
+    });
+  },
 };
 
 module.exports = ayalkoottamService;

@@ -20,6 +20,10 @@ class KaneevService {
     await ApiService.delete('/kaneev/members/$memberId');
   }
 
+  static Future<void> setMemberStatus(int memberId, String status) async {
+    await ApiService.patch('/kaneev/members/$memberId/status', {'status': status});
+  }
+
   // Donations
   static Future<void> recordDonation({
     required int memberId,

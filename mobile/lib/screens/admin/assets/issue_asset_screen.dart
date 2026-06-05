@@ -46,12 +46,27 @@ class _IssueAssetScreenState extends State<IssueAssetScreen> {
 
   Future<void> _loadMembers() async {
     try {
-      final result = await MemberService.list(page: 1);
-      final list = (result['data'] as List).map((m) => Member.fromJson(m)).toList();
+      const pageLimit = 100;
+      final all = <Member>[];
+      var page = 1;
+      while (true) {
+        final result = await MemberService.list(page: page, limit: pageLimit);
+        final list = (result['data'] as List).map((m) => Member.fromJson(m)).toList();
+        all.addAll(list);
+
+        final pagination = result['pagination'] as Map<String, dynamic>?;
+        final totalPages = pagination?['totalPages'] ?? pagination?['total_pages'];
+        if (totalPages is int) {
+          if (page >= totalPages) break;
+        } else if (list.length < pageLimit) {
+          break;
+        }
+        page++;
+      }
       if (mounted) {
         setState(() {
-          _members = list;
-          _filteredMembers = list;
+          _members = all;
+          _filteredMembers = all;
           _loadingMembers = false;
         });
       }
@@ -195,10 +210,12 @@ class _IssueAssetScreenState extends State<IssueAssetScreen> {
               isExpanded: true,
               items: [
                 const DropdownMenuItem<String>(value: null, child: Text('All Ayalkoottams')),
-                ..._members
-                    .map((m) => m.ayalkoottamName)
-                    .whereType<String>()
-                    .toSet()
+                ...(_members
+                        .map((m) => m.ayalkoottamName)
+                        .whereType<String>()
+                        .toSet()
+                        .toList()
+                      ..sort())
                     .map((name) => DropdownMenuItem<String>(value: name, child: Text(name))),
               ],
               onChanged: _onAyalkoottamFilterChanged,

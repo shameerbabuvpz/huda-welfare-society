@@ -64,6 +64,8 @@ class KaneevMemberSlot {
   final String? memberName;
   final String? memberCode;
   final String? ayalkoottamName;
+  final double totalPaid;
+  final String? joinedDate;
 
   KaneevMemberSlot({
     required this.id,
@@ -73,6 +75,8 @@ class KaneevMemberSlot {
     this.memberName,
     this.memberCode,
     this.ayalkoottamName,
+    this.totalPaid = 0,
+    this.joinedDate,
   });
 
   factory KaneevMemberSlot.fromJson(Map<String, dynamic> json) {
@@ -84,6 +88,10 @@ class KaneevMemberSlot {
       memberName: json['member_name'],
       memberCode: json['member_code'],
       ayalkoottamName: json['ayalkoottam_name'],
+      totalPaid: json['total_paid'] != null
+          ? double.tryParse(json['total_paid'].toString()) ?? 0
+          : 0,
+      joinedDate: json['joined_date'] ?? json['created_at'],
     );
   }
 }

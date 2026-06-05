@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../config/routes.dart';
 import '../../config/theme.dart';
 import '../../providers/auth_provider.dart';
+import '../../services/api_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -21,6 +22,8 @@ class _LoginScreenState extends State<LoginScreen> {
   final List<TextEditingController> _otpControllers =
       List.generate(4, (_) => TextEditingController());
   final List<FocusNode> _otpFocusNodes = List.generate(4, (_) => FocusNode());
+
+  bool _detecting = false;
 
   @override
   void dispose() {
@@ -58,9 +61,92 @@ class _LoginScreenState extends State<LoginScreen> {
       auth.resetOtp();
     }
     if (value.length == 10) {
-      // Auto-send OTP when 10 digits entered
-      _requestOtp();
+      // Detect what kind of account this phone belongs to and route.
+      _detectAndRoute(value);
     }
+  }
+
+  /// Looks up the phone number and decides the login flow:
+  /// - both member & admin  -> ask the user which login to use
+  /// - member only          -> open the member PIN login
+  /// - admin only           -> send OTP (admin flow)
+  /// - neither              -> show "no account" error
+  Future<void> _detectAndRoute(String phone) async {
+    setState(() => _detecting = true);
+    try {
+      final result = await ApiService.post('/member-auth/check-phone', {'phone': phone});
+      if (!mounted) return;
+
+      final isMember = result['isMember'] == true;
+      final isAdmin = result['isAdmin'] == true;
+
+      if (isMember && isAdmin) {
+        _showRoleChoice(phone);
+      } else if (isMember) {
+        _goToMemberLogin(phone);
+      } else if (isAdmin) {
+        await _requestOtp();
+      } else {
+        context.read<AuthProvider>().setError(
+              'No account found with this phone number',
+            );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      context.read<AuthProvider>().setError('Could not verify number. Please try again.');
+    } finally {
+      if (mounted) setState(() => _detecting = false);
+    }
+  }
+
+  void _goToMemberLogin(String phone) {
+    Navigator.pushReplacementNamed(
+      context,
+      AppRoutes.memberLogin,
+      arguments: {'phone': phone},
+    );
+  }
+
+  void _showRoleChoice(String phone) {
+    showModalBottomSheet(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Padding(
+                padding: EdgeInsets.fromLTRB(20, 4, 20, 12),
+                child: Text(
+                  'How do you want to login?',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                ),
+              ),
+              ListTile(
+                leading: const Icon(Icons.admin_panel_settings_outlined),
+                title: const Text('Login as Admin'),
+                subtitle: const Text('Receive an OTP on your mobile number'),
+                onTap: () {
+                  Navigator.pop(sheetContext);
+                  _requestOtp();
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.card_membership),
+                title: const Text('Login as Member'),
+                subtitle: const Text('Use your 4-digit PIN'),
+                onTap: () {
+                  Navigator.pop(sheetContext);
+                  _goToMemberLogin(phone);
+                },
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   void _onOtpDigitChanged(int index, String value) {
@@ -252,7 +338,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           ],
                           const SizedBox(height: 24),
-                          if (auth.loading) const CupertinoActivityIndicator(),
+                          if (auth.loading || _detecting) const CupertinoActivityIndicator(),
                         ],
                         if (auth.otpSent) ...[
                           Text(

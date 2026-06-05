@@ -8,20 +8,40 @@ const { compressProfilePhoto } = require('../utils/imageCompression');
 const memberAuthController = {
   /**
    * Member login with code
-   * Body: { memberId, organizationId, code }
+   * Body: { phone, organizationId, code } (preferred)
+   *   or: { memberId, organizationId, code } (legacy)
    */
   async loginWithCode(req, res, next) {
     try {
-      const { memberId, organizationId, code } = req.body;
-      
-      if (!memberId || !organizationId || !code) {
+      const { memberId, phone, organizationId, code } = req.body;
+
+      if (!organizationId || !code || (!phone && !memberId)) {
         return res.status(400).json({
           success: false,
-          message: 'Missing required fields: memberId, organizationId, code',
+          message: 'Missing required fields: phone (or memberId), organizationId, code',
         });
       }
 
-      const result = await memberAuthService.loginWithCode(organizationId, memberId, code);
+      const result = phone
+        ? await memberAuthService.loginWithPhoneCode(organizationId, phone, code)
+        : await memberAuthService.loginWithCode(organizationId, memberId, code);
+      res.json({ success: true, ...result });
+    } catch (err) {
+      next(err);
+    }
+  },
+
+  /**
+   * Check whether a phone belongs to a member and/or admin (no auth).
+   * Body: { phone }
+   */
+  async checkPhone(req, res, next) {
+    try {
+      const { phone } = req.body;
+      if (!phone) {
+        return res.status(400).json({ success: false, message: 'Missing required field: phone' });
+      }
+      const result = await memberAuthService.checkPhone(phone);
       res.json({ success: true, ...result });
     } catch (err) {
       next(err);

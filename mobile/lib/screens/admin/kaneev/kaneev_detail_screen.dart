@@ -2,6 +2,7 @@ import 'package:ayalkoottam/widgets/skeleton_loaders.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
 import '../../../config/theme.dart';
 import '../../../providers/kaneev_provider.dart';
 import '../../../providers/ayalkoottam_provider.dart';
@@ -10,6 +11,7 @@ import '../../../models/kaneev_group.dart';
 import '../../../models/member.dart';
 import '../../../utils/ak_name_helper.dart';
 import '../../../services/kaneev_service.dart';
+import '../../../services/export_service.dart';
 
 class KaneevDetailScreen extends StatefulWidget {
   const KaneevDetailScreen({super.key});
@@ -1574,6 +1576,9 @@ class _MembersTabState extends State<_MembersTab> {
         const SizedBox(height: 4),
         const Divider(height: 1),
 
+        // Total paid summary + export
+        _buildTotalsHeader(filtered),
+
         // Member list (grouped or flat)
         Expanded(
           child: filtered.isEmpty
@@ -1584,6 +1589,89 @@ class _MembersTabState extends State<_MembersTab> {
         ),
       ],
     );
+  }
+
+  Widget _buildTotalsHeader(List<KaneevMemberSlot> filtered) {
+    final totalPaid =
+        filtered.fold<double>(0, (sum, m) => sum + m.totalPaid);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      color: AppTheme.primary.withOpacity(0.06),
+      child: Row(
+        children: [
+          const Icon(Icons.payments_outlined, size: 18, color: AppTheme.primary),
+          const SizedBox(width: 8),
+          Text('Total Paid: ',
+              style: TextStyle(fontSize: 13, color: Colors.grey.shade700)),
+          Text('₹${totalPaid.toStringAsFixed(0)}',
+              style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: AppTheme.primary)),
+          const Spacer(),
+          OutlinedButton.icon(
+            onPressed: _exportTotals,
+            icon: const Icon(Icons.download, size: 16),
+            label: const Text('Export', style: TextStyle(fontSize: 12)),
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              visualDensity: VisualDensity.compact,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _exportTotals() {
+    showModalBottomSheet(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Padding(
+              padding: EdgeInsets.all(16),
+              child: Text('Export Member Totals',
+                  style:
+                      TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+            ),
+            ListTile(
+              leading: const Icon(Icons.table_chart, color: Colors.green),
+              title: const Text('Excel (.xlsx)'),
+              onTap: () async {
+                Navigator.pop(ctx);
+                await _runExport(() => ExportService.kaneevExcel());
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.picture_as_pdf, color: Colors.red),
+              title: const Text('PDF'),
+              onTap: () async {
+                Navigator.pop(ctx);
+                await _runExport(() => ExportService.kaneevPdf());
+              },
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _runExport(Future<void> Function() task) async {
+    try {
+      await task();
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(AppTheme.successSnackBar('Export ready'));
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(AppTheme.errorSnackBar('Export failed'));
+      }
+    }
   }
 
   Widget _buildFilterChip(String label, String value) {
@@ -1663,6 +1751,20 @@ class _MembersTabState extends State<_MembersTab> {
 
   Widget _buildMemberTile(KaneevMemberSlot m, Set<int> recipientMemberIds) {
     final hasReceived = recipientMemberIds.contains(m.memberId);
+    final joined = _formatJoinedDate(m.joinedDate);
+    final subtitleLines = <Widget>[];
+    if (!_groupByAyalkoottam && m.ayalkoottamName != null) {
+      subtitleLines.add(Text(m.ayalkoottamName!,
+          style: const TextStyle(fontSize: 11, color: AppTheme.primary)));
+    } else if (m.memberCode != null) {
+      subtitleLines.add(Text(m.memberCode!,
+          style: TextStyle(fontSize: 11, color: Colors.grey.shade600)));
+    }
+    subtitleLines.add(Text(
+      'Joined: ${joined ?? '-'}  ·  Paid: ₹${m.totalPaid.toStringAsFixed(0)}',
+      style: TextStyle(fontSize: 11, color: Colors.grey.shade700),
+    ));
+
     return ListTile(
       dense: true,
       leading: CircleAvatar(
@@ -1675,13 +1777,10 @@ class _MembersTabState extends State<_MembersTab> {
       ),
       title: Text(m.memberName ?? 'Member #${m.memberId}',
           style: const TextStyle(fontSize: 14)),
-      subtitle: !_groupByAyalkoottam && m.ayalkoottamName != null
-          ? Text(m.ayalkoottamName!,
-              style: const TextStyle(fontSize: 11, color: AppTheme.primary))
-          : (m.memberCode != null
-              ? Text(m.memberCode!,
-                  style: TextStyle(fontSize: 11, color: Colors.grey.shade600))
-              : null),
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: subtitleLines,
+      ),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -1703,14 +1802,83 @@ class _MembersTabState extends State<_MembersTab> {
               ),
               child: const Text('Pending', style: TextStyle(fontSize: 10)),
             ),
-          const SizedBox(width: 4),
-          IconButton(
-            icon: const Icon(Icons.remove_circle_outline,
-                size: 18, color: AppTheme.error),
-            tooltip: 'Remove Member',
-            onPressed: () => _confirmRemoveMember(context, m),
-            constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-            padding: EdgeInsets.zero,
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert, size: 18),
+            tooltip: 'Options',
+            onSelected: (value) {
+              if (value == 'deactivate') {
+                _confirmSetStatus(context, m, 'withdrawn');
+              } else if (value == 'delete') {
+                _confirmRemoveMember(context, m);
+              }
+            },
+            itemBuilder: (ctx) => [
+              const PopupMenuItem(
+                value: 'deactivate',
+                child: Row(
+                  children: [
+                    Icon(Icons.block, size: 18, color: Colors.orange),
+                    SizedBox(width: 10),
+                    Text('Deactivate'),
+                  ],
+                ),
+              ),
+              const PopupMenuItem(
+                value: 'delete',
+                child: Row(
+                  children: [
+                    Icon(Icons.delete_outline, size: 18, color: AppTheme.error),
+                    SizedBox(width: 10),
+                    Text('Delete'),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  String? _formatJoinedDate(String? raw) {
+    if (raw == null || raw.isEmpty) return null;
+    final dt = DateTime.tryParse(raw);
+    if (dt == null) return null;
+    return DateFormat('dd MMM yyyy').format(dt.toLocal());
+  }
+
+  void _confirmSetStatus(
+      BuildContext context, KaneevMemberSlot member, String status) {
+    final deactivating = status == 'withdrawn';
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(deactivating ? 'Deactivate Member' : 'Activate Member'),
+        content: Text(deactivating
+            ? 'Set ${member.memberName ?? 'this member'} as inactive? Their payment history will be kept.'
+            : 'Set ${member.memberName ?? 'this member'} as active?'),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cancel')),
+          FilledButton(
+            onPressed: () async {
+              Navigator.pop(ctx);
+              final provider = context.read<KaneevProvider>();
+              final success =
+                  await provider.setMemberStatus(member.memberId, status);
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  success
+                      ? AppTheme.successSnackBar(deactivating
+                          ? 'Member deactivated'
+                          : 'Member activated')
+                      : AppTheme.errorSnackBar(
+                          provider.error ?? 'Failed to update member'),
+                );
+              }
+            },
+            child: Text(deactivating ? 'Deactivate' : 'Activate'),
           ),
         ],
       ),
@@ -1718,6 +1886,7 @@ class _MembersTabState extends State<_MembersTab> {
   }
 
   void _confirmRemoveMember(BuildContext context, KaneevMemberSlot member) {
+    final hasPayments = member.totalPaid > 0;
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -1739,17 +1908,23 @@ class _MembersTabState extends State<_MembersTab> {
                       color: AppTheme.outline,
                       borderRadius: BorderRadius.circular(99))),
               const SizedBox(height: 20),
-              const Icon(Icons.warning_amber_rounded,
-                  color: AppTheme.error, size: 40),
+              Icon(
+                  hasPayments
+                      ? Icons.info_outline
+                      : Icons.warning_amber_rounded,
+                  color: hasPayments ? Colors.orange : AppTheme.error,
+                  size: 40),
               const SizedBox(height: 12),
-              Text('Remove Member',
+              Text(hasPayments ? 'Cannot Delete' : 'Delete Member',
                   style: Theme.of(ctx)
                       .textTheme
                       .titleMedium
                       ?.copyWith(fontWeight: FontWeight.w700)),
               const SizedBox(height: 8),
               Text(
-                  'Remove ${member.memberName ?? 'this member'} from the Kaneev group?',
+                  hasPayments
+                      ? '${member.memberName ?? 'This member'} has already paid ₹${member.totalPaid.toStringAsFixed(0)}. Members with payments cannot be deleted — you can deactivate them instead.'
+                      : 'Do you want to delete ${member.memberName ?? 'this member'} from the Kaneev group?',
                   textAlign: TextAlign.center,
                   style: TextStyle(color: Colors.grey.shade600)),
               const SizedBox(height: 24),
@@ -1771,23 +1946,39 @@ class _MembersTabState extends State<_MembersTab> {
                       onPressed: () async {
                         Navigator.pop(ctx);
                         final provider = context.read<KaneevProvider>();
-                        final success = await provider.removeMember(member.id);
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            success
-                                ? AppTheme.successSnackBar('Member removed')
-                                : AppTheme.errorSnackBar(
-                                    'Failed to remove member'),
-                          );
+                        if (hasPayments) {
+                          final success = await provider.setMemberStatus(
+                              member.memberId, 'withdrawn');
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              success
+                                  ? AppTheme.successSnackBar(
+                                      'Member deactivated')
+                                  : AppTheme.errorSnackBar(provider.error ??
+                                      'Failed to deactivate member'),
+                            );
+                          }
+                        } else {
+                          final success =
+                              await provider.removeMember(member.memberId);
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              success
+                                  ? AppTheme.successSnackBar('Member deleted')
+                                  : AppTheme.errorSnackBar(provider.error ??
+                                      'Failed to delete member'),
+                            );
+                          }
                         }
                       },
                       style: FilledButton.styleFrom(
-                        backgroundColor: AppTheme.error,
+                        backgroundColor:
+                            hasPayments ? Colors.orange : AppTheme.error,
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(14)),
                       ),
-                      child: const Text('Remove'),
+                      child: Text(hasPayments ? 'Deactivate' : 'Delete'),
                     ),
                   ),
                 ],

@@ -61,6 +61,145 @@ const memberAuthService = {
   },
 
   /**
+   * Member login with phone number and 4-digit code
+   * Provisions/links a `users` row (role 'member') so the member dashboard,
+   * which is protected by the standard user `authenticate` middleware, works.
+   * @param {number} organizationId - Organization ID
+   * @param {string} phone - Member phone number
+   * @param {string} code - Login code (4-digit)
+   * @returns {Object} { token, member, mustChangeCode }
+   */
+  async loginWithPhoneCode(organizationId, phone, code) {
+    // Validate inputs
+    if (!code || code.length !== 4) {
+      throw new ApiError(400, 'Invalid code format. Code must be 4 digits.');
+    }
+
+    // Normalize phone to last 10 digits for matching
+    const normalizedPhone = String(phone).replace(/\D/g, '').slice(-10);
+    if (normalizedPhone.length < 10) {
+      throw new ApiError(400, 'Invalid phone number.');
+    }
+
+    // Find active member by normalized phone within the organization
+    const member = await knex('members')
+      .where({
+        organization_id: organizationId,
+        status: 'active',
+      })
+      .whereRaw("right(regexp_replace(phone, '\\D', '', 'g'), 10) = ?", [normalizedPhone])
+      .first();
+
+    if (!member) {
+      throw new ApiError(404, 'Member not found with this phone number.');
+    }
+
+    // Verify code
+    if (member.login_code !== code) {
+      throw new ApiError(401, 'Invalid code.');
+    }
+
+    // Ensure a linked `users` row exists for this member (role 'member').
+    // The member dashboard endpoints are protected by the standard user
+    // authenticate middleware, so members need a user-shaped JWT.
+    let user = null;
+    if (member.user_id) {
+      user = await knex('users').where({ id: member.user_id }).first();
+    }
+    if (!user) {
+      user = await knex('users')
+        .where({ organization_id: organizationId })
+        .whereRaw("right(regexp_replace(phone, '\\D', '', 'g'), 10) = ?", [normalizedPhone])
+        .first();
+    }
+    if (!user) {
+      const [created] = await knex('users')
+        .insert({
+          organization_id: organizationId,
+          phone: normalizedPhone,
+          name: member.name,
+          role: 'member',
+          status: 'active',
+        })
+        .returning('*');
+      user = created;
+    }
+
+    // Reactivate the user if it was previously deactivated
+    if (user.status !== 'active') {
+      await knex('users').where({ id: user.id }).update({ status: 'active', updated_at: knex.fn.now() });
+    }
+
+    // Link member to user for future lookups
+    if (member.user_id !== user.id) {
+      await knex('members').where({ id: member.id }).update({ user_id: user.id, updated_at: knex.fn.now() });
+    }
+
+    // Generate a user-shaped JWT token (compatible with authenticate middleware)
+    const token = jwt.sign(
+      {
+        userId: user.id,
+        role: 'member',
+        organizationId,
+        availableRoles: ['member'],
+      },
+      process.env.JWT_SECRET || 'dev-secret',
+      { expiresIn: process.env.JWT_EXPIRES_IN || '7d' },
+    );
+
+    // Check if member must change their code
+    const mustChangeCode = !member.code_changed;
+
+    return {
+      token,
+      member: {
+        id: member.id,
+        name: member.name,
+        phone: member.phone,
+        memberCode: member.member_code,
+      },
+      mustChangeCode, // true if still using default code (6789)
+    };
+  },
+
+  /**
+   * Check whether a phone number belongs to an active member and/or an
+   * admin user. Used by the main login screen to route members to the
+   * PIN login flow and admins to the OTP flow. No auth required.
+   * @param {string} phone - Phone number (any format)
+   * @returns {Object} { isMember, isAdmin, name }
+   */
+  async checkPhone(phone) {
+    const normalizedPhone = String(phone).replace(/\D/g, '').slice(-10);
+    if (normalizedPhone.length < 10) {
+      return { isMember: false, isAdmin: false, name: null };
+    }
+
+    // Super admin is provisioned lazily at OTP time; treat as admin-only.
+    if (normalizedPhone === '9999999999') {
+      return { isMember: false, isAdmin: true, organizationId: null, name: 'Super Admin' };
+    }
+
+    const member = await knex('members')
+      .where({ status: 'active' })
+      .whereRaw("right(regexp_replace(phone, '\\D', '', 'g'), 10) = ?", [normalizedPhone])
+      .first();
+
+    const adminUser = await knex('users')
+      .where({ status: 'active' })
+      .whereNot({ role: 'member' })
+      .whereRaw("right(regexp_replace(coalesce(phone, ''), '\\D', '', 'g'), 10) = ?", [normalizedPhone])
+      .first();
+
+    return {
+      isMember: !!member,
+      isAdmin: !!adminUser,
+      organizationId: member ? member.organization_id : (adminUser ? adminUser.organization_id : null),
+      name: member ? member.name : (adminUser ? adminUser.name : null),
+    };
+  },
+
+  /**
    * Change member login code
    * @param {number} organizationId - Organization ID
    * @param {number} memberId - Member ID

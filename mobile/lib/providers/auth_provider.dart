@@ -86,6 +86,11 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void setError(String? message) {
+    _error = message;
+    notifyListeners();
+  }
+
   Future<void> checkAuth() async {
     final token = await StorageService.getToken();
     if (token == null) return;

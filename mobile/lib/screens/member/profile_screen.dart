@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 import '../../config/theme.dart';
 import '../../models/member.dart';
@@ -331,10 +332,10 @@ class _ProfileAvatar extends StatelessWidget {
       ),
       child: ClipOval(
         child: hasPhoto
-            ? Image.network(
-                photoUrl!,
+            ? CachedNetworkImage(
+                imageUrl: photoUrl!,
                 fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) =>
+                errorWidget: (_, __, ___) =>
                     _ProfileAvatarFallback(name: name),
               )
             : _ProfileAvatarFallback(name: name),

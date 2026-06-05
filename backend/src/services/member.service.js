@@ -116,6 +116,26 @@ const memberService = {
     const existingMember = await db('members').where({ id: memberId, organization_id: orgId }).first();
     if (!existingMember) throw ApiError.notFound('Member not found');
 
+    // An office bearer (president/secretary) must always belong to an
+    // ayalkoottam, otherwise they silently vanish from the office-bearers
+    // report. Block any update whose result would be a designated member with
+    // no ayalkoottam.
+    const resultingDesignation = 'designation' in data ? data.designation : existingMember.designation;
+    const resultingAkId = 'ayalkoottam_id' in data ? data.ayalkoottam_id : existingMember.ayalkoottam_id;
+    if (resultingDesignation && !resultingAkId) {
+      throw ApiError.badRequest('Select an ayalkoottam before assigning a president or secretary');
+    }
+
+    // Handle designation (president/secretary) - only one per ayalkoottam.
+    // If a designation is being assigned, clear it from any other active member
+    // in the same ayalkoottam first.
+    if (data.designation) {
+      await db('members')
+        .where({ ayalkoottam_id: resultingAkId, designation: data.designation, status: 'active' })
+        .whereNot({ id: memberId })
+        .update({ designation: null, updated_at: db.fn.now() });
+    }
+
     const [member] = await db('members')
       .where({ id: memberId, organization_id: orgId })
       .update({ ...data, updated_by: actorId, updated_at: db.fn.now() })
@@ -206,6 +226,45 @@ const memberService = {
     }
     if (!member) throw ApiError.notFound('Member profile not found');
     return member;
+  },
+
+  /**
+   * List members of the requesting member's own ayalkoottam.
+   * Only available to the president/secretary of that ayalkoottam.
+   * Returns lightweight contact info (name, code, phone) for calling.
+   */
+  async listMyAyalkoottam(orgId, userId, { search } = {}) {
+    const me = await this.getProfile(orgId, userId);
+
+    if (!['president', 'secretary'].includes(me.designation)) {
+      throw ApiError.forbidden('Only the president or secretary can view the member directory');
+    }
+    if (!me.ayalkoottam_id) {
+      throw ApiError.badRequest('You are not assigned to an ayalkoottam');
+    }
+
+    let query = db('members')
+      .where({
+        organization_id: orgId,
+        ayalkoottam_id: me.ayalkoottam_id,
+        status: 'active',
+      })
+      .select('id', 'member_code', 'name', 'phone', 'photo_url', 'designation');
+
+    if (search) {
+      query = query.andWhere(function () {
+        this.where('name', 'ilike', `%${search}%`)
+          .orWhere('member_code', 'ilike', `%${search}%`)
+          .orWhere('phone', 'ilike', `%${search}%`);
+      });
+    }
+
+    const rows = await query.orderBy('name', 'asc');
+
+    return {
+      ayalkoottam: { id: me.ayalkoottam_id, name: me.ayalkoottam_name || null },
+      data: rows,
+    };
   },
 
   /**

@@ -9,6 +9,7 @@ router.use(authenticate, orgScope);
 
 // Member self-service
 router.get('/profile', authorize('member'), ctrl.profile);
+router.get('/my-ayalkoottam', authorize('member'), ctrl.myAyalkoottamMembers);
 
 // Admin routes
 router.post(
@@ -31,7 +32,10 @@ router.get('/:id', authorize('admin', 'super_admin'), ctrl.getById);
 router.put(
   '/:id',
   authorize('admin', 'super_admin'),
-  [body('name').optional().trim()],
+  [
+    body('name').optional().trim(),
+    body('designation').optional({ nullable: true }).isIn(['president', 'secretary']),
+  ],
   validate,
   ctrl.update
 );

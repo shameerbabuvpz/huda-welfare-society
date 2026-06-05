@@ -23,6 +23,7 @@ class AppRoutes {
   static const String manageAyalkoottam = '/admin/ayalkoottam';
   static const String addAyalkoottam = '/admin/ayalkoottam/add';
   static const String ayalkoottamDetail = '/admin/ayalkoottam/detail';
+  static const String ayalkoottamLeaders = '/admin/ayalkoottam/leaders';
   static const String manageKaneev = '/admin/kaneev';
   static const String finance = '/admin/finance';
   static const String weeklyCollection = '/admin/weekly-collection';
@@ -38,4 +39,5 @@ class AppRoutes {
   static const String myAssets = '/member/my-assets';
   static const String myKuri = '/member/my-kuri';
   static const String myNotifications = '/member/notifications';
+  static const String ayalkoottamMembers = '/member/ayalkoottam-members';
 }

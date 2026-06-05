@@ -43,6 +43,13 @@ const memberController = {
     } catch (err) { next(err); }
   },
 
+  async myAyalkoottamMembers(req, res, next) {
+    try {
+      const result = await memberService.listMyAyalkoottam(req.organizationId, req.user.id, req.query);
+      res.json(result);
+    } catch (err) { next(err); }
+  },
+
   async checkDesignation(req, res, next) {
     try {
       const { ayalkoottam_id, designation } = req.query;

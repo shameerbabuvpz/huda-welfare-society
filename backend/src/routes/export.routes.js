@@ -21,4 +21,8 @@ router.get('/kaneev/pdf', ctrl.kaneevPdf);
 router.get('/finance/excel', ctrl.financeExcel);
 router.get('/finance/pdf', ctrl.financePdf);
 
+// Office-bearers (president/secretary) export
+router.get('/leaders/excel', ctrl.leadersExcel);
+router.get('/leaders/pdf', ctrl.leadersPdf);
+
 module.exports = router;

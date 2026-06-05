@@ -27,15 +27,17 @@ const notificationService = {
       created_by: actorId,
     }).returning('*');
 
-    // Determine targets
-    let targets;
+    // Determine targets — fetch the FCM token in the same query (LEFT JOIN users)
+    // to avoid an N+1 lookup per member.
+    let targetsQuery = db('members')
+      .leftJoin('users', 'members.user_id', 'users.id')
+      .where({ 'members.organization_id': orgId, 'members.status': 'active' })
+      .select('members.id', 'members.user_id', 'users.fcm_token');
+
     if (audienceType === 'specific' && memberIds && memberIds.length) {
-      targets = await db('members')
-        .whereIn('id', memberIds)
-        .andWhere({ organization_id: orgId, status: 'active' });
-    } else {
-      targets = await db('members').where({ organization_id: orgId, status: 'active' });
+      targetsQuery = targetsQuery.whereIn('members.id', memberIds);
     }
+    const targets = await targetsQuery;
 
     // Send and log
     const logs = [];
@@ -45,11 +47,10 @@ const notificationService = {
       let sentAt = null;
 
       if (firebaseAdmin && member.user_id) {
-        const user = await db('users').where({ id: member.user_id }).first();
-        if (user && user.fcm_token) {
+        if (member.fcm_token) {
           try {
             await firebaseAdmin.messaging().send({
-              token: user.fcm_token,
+              token: member.fcm_token,
               notification: { title, body },
             });
             status = 'sent';

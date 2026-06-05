@@ -1,6 +1,13 @@
 const ExcelJS = require('exceljs');
 const PDFDocument = require('pdfkit');
+const path = require('path');
 const db = require('../config/database');
+const ayalkoottamService = require('./ayalkoottam.service');
+
+// Unicode font (Latin + Malayalam) so report titles/data with Malayalam render
+// correctly. PDFKit's built-in Helvetica cannot draw Malayalam glyphs.
+const FONT_REGULAR = path.join(__dirname, '../assets/fonts/NotoSansMalayalam-Regular.ttf');
+const FONT_BOLD = path.join(__dirname, '../assets/fonts/NotoSansMalayalam-Bold.ttf');
 
 const exportService = {
   // ═══════════════════════════════════════════════════════════════
@@ -217,7 +224,36 @@ const exportService = {
       .where({ organization_id: orgId, kaneev_group_id: group.id })
       .orderBy('month_number');
 
-    return { group, donations, recipients, balanceLogs };
+    // Per-member summary: join date + total amount paid
+    const paidTotals = await db('kaneev_donations')
+      .where({ kaneev_group_id: group.id, organization_id: orgId, status: 'paid' })
+      .groupBy('member_id')
+      .select('member_id')
+      .sum('amount as total_paid');
+    const paidMap = {};
+    paidTotals.forEach((row) => { paidMap[row.member_id] = parseFloat(row.total_paid) || 0; });
+
+    const memberRows = await db('kaneev_members')
+      .where({ 'kaneev_members.kaneev_group_id': group.id, 'kaneev_members.organization_id': orgId })
+      .join('members', 'kaneev_members.member_id', 'members.id')
+      .leftJoin('ayalkoottams', 'members.ayalkoottam_id', 'ayalkoottams.id')
+      .select(
+        'kaneev_members.member_id',
+        'kaneev_members.status',
+        'kaneev_members.slot_number',
+        'kaneev_members.created_at as joined_date',
+        'members.name as member_name',
+        'members.member_code',
+        'ayalkoottams.name as ayalkoottam_name',
+      )
+      .orderBy('kaneev_members.slot_number');
+
+    const memberSummary = memberRows.map((m) => ({
+      ...m,
+      total_paid: paidMap[m.member_id] || 0,
+    }));
+
+    return { group, donations, recipients, balanceLogs, memberSummary };
   },
 
   async kaneevToExcel(orgId) {
@@ -225,6 +261,36 @@ const exportService = {
     if (!data) return null;
 
     const workbook = new ExcelJS.Workbook();
+
+    // Member Totals sheet — total amount paid by each member + join date
+    const memSheet = workbook.addWorksheet('Member Totals');
+    memSheet.columns = [
+      { header: 'Sl No', key: 'sl', width: 8 },
+      { header: 'Slot', key: 'slot', width: 8 },
+      { header: 'Member', key: 'member_name', width: 25 },
+      { header: 'Code', key: 'member_code', width: 16 },
+      { header: 'Ayalkoottam', key: 'ayalkoottam_name', width: 20 },
+      { header: 'Joined Date', key: 'joined_date', width: 15 },
+      { header: 'Total Paid', key: 'total_paid', width: 14 },
+      { header: 'Status', key: 'status', width: 12 },
+    ];
+    memSheet.getRow(1).font = { bold: true };
+    let grandTotalPaid = 0;
+    (data.memberSummary || []).forEach((m, i) => {
+      grandTotalPaid += parseFloat(m.total_paid) || 0;
+      memSheet.addRow({
+        sl: i + 1,
+        slot: m.slot_number ?? '',
+        member_name: m.member_name,
+        member_code: m.member_code || '',
+        ayalkoottam_name: m.ayalkoottam_name || '',
+        joined_date: m.joined_date ? new Date(m.joined_date).toLocaleDateString('en-IN') : '',
+        total_paid: parseFloat(m.total_paid) || 0,
+        status: m.status === 'active' ? 'Active' : 'Inactive',
+      });
+    });
+    const totalRow = memSheet.addRow({ member_name: 'TOTAL', total_paid: grandTotalPaid });
+    totalRow.font = { bold: true };
 
     // Donations sheet
     const donSheet = workbook.addWorksheet('Donations');
@@ -294,18 +360,23 @@ const exportService = {
     if (!data) return null;
     const org = await db('organizations').where({ id: orgId }).first();
 
-    const title = `${org.name} - കനീവ് Report`;
-    const rows = data.balanceLogs.map(b => [
-      String(b.month_number),
-      `₹${parseFloat(b.total_collected).toFixed(0)}`,
-      `₹${parseFloat(b.total_distributed).toFixed(0)}`,
-      `₹${parseFloat(b.month_balance).toFixed(0)}`,
-      `₹${parseFloat(b.cumulative_balance).toFixed(0)}`,
-    ]);
+    const title = `${org.name} - കനീവ് Member Totals`;
+    let grandTotal = 0;
+    const rows = (data.memberSummary || []).map((m, i) => {
+      grandTotal += parseFloat(m.total_paid) || 0;
+      return [
+        String(i + 1),
+        m.member_name || '',
+        m.joined_date ? new Date(m.joined_date).toLocaleDateString('en-IN') : '',
+        `₹${(parseFloat(m.total_paid) || 0).toFixed(0)}`,
+        m.status === 'active' ? 'Active' : 'Inactive',
+      ];
+    });
+    rows.push(['', 'TOTAL', '', `₹${grandTotal.toFixed(0)}`, '']);
 
     return this._generateTablePdf(title, {
-      headers: ['Month', 'Collected', 'Distributed', 'Month Bal', 'Cumulative'],
-      widths: [50, 80, 80, 80, 80],
+      headers: ['Sl', 'Member', 'Joined', 'Total Paid', 'Status'],
+      widths: [30, 170, 80, 90, 70],
       rows,
     });
   },
@@ -406,18 +477,124 @@ const exportService = {
   },
 
   // ═══════════════════════════════════════════════════════════════
+  // OFFICE-BEARERS (PRESIDENT / SECRETARY) REPORT
+  // ═══════════════════════════════════════════════════════════════
+  async leadersToExcel(orgId) {
+    const rows = await ayalkoottamService.getLeaders(orgId);
+    const workbook = new ExcelJS.Workbook();
+    const sheet = workbook.addWorksheet('Office Bearers');
+
+    sheet.columns = [
+      { header: 'Sl No', key: 'sl', width: 8 },
+      { header: 'Ayalkoottam', key: 'ayalkoottam_name', width: 28 },
+      { header: 'President Name', key: 'president_name', width: 22 },
+      { header: 'President ID', key: 'president_code', width: 18 },
+      { header: 'President Mobile', key: 'president_phone', width: 16 },
+      { header: 'Secretary Name', key: 'secretary_name', width: 22 },
+      { header: 'Secretary ID', key: 'secretary_code', width: 18 },
+      { header: 'Secretary Mobile', key: 'secretary_phone', width: 16 },
+    ];
+
+    sheet.getRow(1).font = { bold: true };
+    sheet.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE8F5E9' } };
+
+    rows.forEach((r, i) => {
+      sheet.addRow({
+        sl: i + 1,
+        ayalkoottam_name: r.ayalkoottam_name,
+        president_name: r.president_name,
+        president_code: r.president_code,
+        president_phone: r.president_phone,
+        secretary_name: r.secretary_name,
+        secretary_code: r.secretary_code,
+        secretary_phone: r.secretary_phone,
+      });
+    });
+
+    return workbook.xlsx.writeBuffer();
+  },
+
+  async leadersToPdf(orgId) {
+    const rows = await ayalkoottamService.getLeaders(orgId);
+    const org = await db('organizations').where({ id: orgId }).first();
+    const title = `${org.name} - Office Bearers (President / Secretary)`;
+
+    return this._generateTablePdf(title, {
+      headers: ['#', 'Ayalkoottam', 'President', 'Pres. ID', 'Pres. Mobile', 'Secretary', 'Sec. ID', 'Sec. Mobile'],
+      widths: [18, 110, 80, 70, 75, 80, 70, 75],
+      landscape: true,
+      rows: rows.map((r, i) => [
+        String(i + 1),
+        r.ayalkoottam_name || '',
+        r.president_name || '',
+        r.president_code || '',
+        r.president_phone || '',
+        r.secretary_name || '',
+        r.secretary_code || '',
+        r.secretary_phone || '',
+      ]),
+    });
+  },
+
+  // ═══════════════════════════════════════════════════════════════
   // PDF HELPER — Simple table-based PDF
   // ═══════════════════════════════════════════════════════════════
-  _generateTablePdf(title, { headers, widths, rows }) {
+  _generateTablePdf(title, { headers, widths, rows, landscape = false }) {
     return new Promise((resolve, reject) => {
-      const doc = new PDFDocument({ size: 'A4', margin: 40 });
+      const doc = new PDFDocument({ size: 'A4', margin: 40, layout: landscape ? 'landscape' : 'portrait' });
       const chunks = [];
       doc.on('data', chunk => chunks.push(chunk));
       doc.on('end', () => resolve(Buffer.concat(chunks)));
       doc.on('error', reject);
 
+      // Register a Unicode font (Malayalam + ₹) used only for the runs Helvetica
+      // cannot draw. Helvetica stays the default for Latin text. The Malayalam
+      // Noto font has no Latin letters, so we must switch fonts per script run.
+      let haveUni = false;
+      try {
+        doc.registerFont('Mal', FONT_REGULAR);
+        doc.registerFont('MalBold', FONT_BOLD);
+        haveUni = true;
+      } catch (e) {
+        // keep Helvetica-only fallback
+      }
+
+      // A char needs the Unicode font if Helvetica (WinAnsi) cannot render it:
+      // Malayalam block or the ₹ rupee sign.
+      const needsUni = (cp) => haveUni && ((cp >= 0x0d00 && cp <= 0x0d7f) || cp === 0x20b9);
+      const segment = (text) => {
+        const segs = [];
+        let cur = '';
+        let curUni = null;
+        for (const ch of String(text)) {
+          const u = needsUni(ch.codePointAt(0));
+          if (curUni === null) { curUni = u; cur = ch; }
+          else if (u === curUni) { cur += ch; }
+          else { segs.push({ text: cur, uni: curUni }); cur = ch; curUni = u; }
+        }
+        if (cur !== '' || segs.length === 0) segs.push({ text: cur, uni: curUni || false });
+        return segs;
+      };
+      // Draw text that may mix Latin and Malayalam/₹ by switching fonts between
+      // runs using PDFKit's `continued` chaining. `bold` picks the bold variants.
+      const richText = (text, x, y, opts, bold) => {
+        const latin = bold ? 'Helvetica-Bold' : 'Helvetica';
+        const uni = bold ? 'MalBold' : 'Mal';
+        const segs = segment(text);
+        segs.forEach((s, i) => {
+          doc.font(s.uni ? uni : latin);
+          const o = { ...opts, continued: i < segs.length - 1 };
+          if (i === 0 && x != null) doc.text(s.text, x, y, o);
+          else doc.text(s.text, o);
+        });
+      };
+
+      // Bottom threshold for page breaks (A4: 842pt portrait / 595pt landscape height).
+      const pageBottom = (landscape ? 595 : 842) - 50;
+
       // Title
-      doc.fontSize(14).font('Helvetica-Bold').text(title, { align: 'center' });
+      doc.fontSize(14);
+      richText(title, null, null, { align: 'center' }, true);
       doc.moveDown(0.5);
       doc.fontSize(9).font('Helvetica').text(`Generated: ${new Date().toLocaleDateString('en-IN')}`, { align: 'right' });
       doc.moveDown(1);
@@ -426,31 +603,53 @@ const exportService = {
       const rowHeight = 20;
       let y = doc.y;
 
+      // Cell padding inside each column and gap below each row.
+      const cellPadX = 4;
+      const rowGap = 6;
+
+      // Measure the rendered height of a cell, accounting for wrapping at the
+      // column width. Because a cell may mix Latin (Helvetica) and Malayalam
+      // (Noto) which have different metrics, measure with both and take the max
+      // so wrapped rows never overlap.
+      const cellHeight = (text, width, bold) => {
+        const w = Math.max(1, width - cellPadX);
+        doc.font(bold ? 'Helvetica-Bold' : 'Helvetica');
+        let h = doc.heightOfString(String(text || ''), { width: w });
+        if (haveUni) {
+          doc.font(bold ? 'MalBold' : 'Mal');
+          h = Math.max(h, doc.heightOfString(String(text || ''), { width: w }));
+        }
+        return h;
+      };
+
       // Header row
-      doc.font('Helvetica-Bold').fontSize(9);
+      doc.fontSize(9);
       let x = startX;
+      const headerH = Math.max(rowHeight, ...headers.map((h, i) => cellHeight(h, widths[i], true)) ) + rowGap;
       headers.forEach((h, i) => {
-        doc.text(h, x, y, { width: widths[i], align: 'left' });
+        richText(h, x, y, { width: widths[i] - cellPadX, align: 'left' }, true);
         x += widths[i];
       });
-      y += rowHeight;
+      y += headerH;
 
       // Draw line under header
       doc.moveTo(startX, y - 5).lineTo(startX + widths.reduce((a, b) => a + b, 0), y - 5).stroke();
 
       // Data rows
-      doc.font('Helvetica').fontSize(8);
+      doc.fontSize(8);
       rows.forEach(row => {
-        if (y > 750) {
+        // Tallest cell decides the row height so wrapped text never overlaps.
+        const rowH = Math.max(rowHeight, ...row.map((cell, i) => cellHeight(cell, widths[i], false))) + rowGap;
+        if (y + rowH > pageBottom) {
           doc.addPage();
           y = 40;
         }
         x = startX;
         row.forEach((cell, i) => {
-          doc.text(cell || '', x, y, { width: widths[i], align: 'left' });
+          richText(cell || '', x, y, { width: widths[i] - cellPadX, align: 'left' }, false);
           x += widths[i];
         });
-        y += rowHeight;
+        y += rowH;
       });
 
       doc.end();

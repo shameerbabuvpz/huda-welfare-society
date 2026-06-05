@@ -2,6 +2,7 @@ import 'package:ayalkoottam/widgets/skeleton_loaders.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../../config/theme.dart';
 import '../../../models/banner.dart' as app;
 import '../../../providers/banner_provider.dart';
@@ -250,10 +251,10 @@ class _BannerListScreenState extends State<BannerListScreen> {
                           children: [
                             AspectRatio(
                               aspectRatio: 16 / 6,
-                              child: Image.network(
-                                banner.imageUrl,
+                              child: CachedNetworkImage(
+                                imageUrl: banner.imageUrl,
                                 fit: BoxFit.cover,
-                                errorBuilder: (_, __, ___) => Container(
+                                errorWidget: (_, __, ___) => Container(
                                   color: Colors.grey.shade200,
                                   child: const Icon(Icons.broken_image, size: 40),
                                 ),

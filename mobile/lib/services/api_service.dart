@@ -36,6 +36,12 @@ class ApiService {
     return _handleResponse(response);
   }
 
+  static Future<dynamic> patch(String path, Map<String, dynamic> body) async {
+    final uri = Uri.parse('${ApiConfig.baseUrl}$path');
+    final response = await http.patch(uri, headers: await _headers(), body: jsonEncode(body));
+    return _handleResponse(response);
+  }
+
   static Future<dynamic> delete(String path) async {
     final uri = Uri.parse('${ApiConfig.baseUrl}$path');
     final response = await http.delete(uri, headers: await _headers());

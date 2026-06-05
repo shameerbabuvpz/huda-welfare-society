@@ -1,6 +1,7 @@
 import 'package:ayalkoottam/widgets/skeleton_loaders.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 import '../../config/routes.dart';
 import '../../config/theme.dart';
@@ -237,6 +238,15 @@ class _MemberDashboardState extends State<MemberDashboard> {
                         if (data != null)
                           _ServiceSheet(
                             children: [
+                              if (data.profile.designation == 'president' ||
+                                  data.profile.designation == 'secretary')
+                                _ServiceRow(
+                                  icon: Icons.groups_outlined,
+                                  color: AppTheme.primary,
+                                  title: 'Ayalkoottam Members',
+                                  subtitle: 'View & call members of your ayalkoottam',
+                                  onTap: () => Navigator.pushNamed(context, AppRoutes.ayalkoottamMembers),
+                                ),
                               _ServiceRow(
                                 icon: Icons.card_giftcard,
                                 color: AppTheme.accent,
@@ -821,11 +831,11 @@ class _BannerCarouselState extends State<_BannerCarousel> {
               itemCount: banners.length,
               onPageChanged: (i) => setState(() => _currentPage = i),
               itemBuilder: (ctx, i) {
-                return Image.network(
-                  banners[i].imageUrl,
+                return CachedNetworkImage(
+                  imageUrl: banners[i].imageUrl,
                   fit: BoxFit.cover,
                   width: double.infinity,
-                  errorBuilder: (_, __, ___) => Container(
+                  errorWidget: (_, __, ___) => Container(
                     color: Colors.grey.shade200,
                     child: const Center(child: Icon(Icons.broken_image, size: 40)),
                   ),

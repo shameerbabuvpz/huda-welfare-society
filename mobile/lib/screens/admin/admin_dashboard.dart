@@ -159,6 +159,13 @@ class _DashboardHome extends StatelessWidget {
                         isSmallTablet: isSmallTablet,
                       ),
                       _DashboardCard(
+                        icon: Icons.calendar_view_week,
+                        label: 'Weekly Collection',
+                        onTap: () => Navigator.pushNamed(context, AppRoutes.weeklyCollection),
+                        isTablet: isTablet,
+                        isSmallTablet: isSmallTablet,
+                      ),
+                      _DashboardCard(
                         icon: Icons.notifications,
                         label: 'Notifications',
                         onTap: () => Navigator.pushNamed(context, AppRoutes.notificationList),
@@ -169,6 +176,13 @@ class _DashboardHome extends StatelessWidget {
                         icon: Icons.groups_2,
                         label: 'Ayalkoottam',
                         onTap: () => Navigator.pushNamed(context, AppRoutes.manageAyalkoottam),
+                        isTablet: isTablet,
+                        isSmallTablet: isSmallTablet,
+                      ),
+                      _DashboardCard(
+                        icon: Icons.badge,
+                        label: 'Office Bearers',
+                        onTap: () => Navigator.pushNamed(context, AppRoutes.ayalkoottamLeaders),
                         isTablet: isTablet,
                         isSmallTablet: isSmallTablet,
                       ),
@@ -210,62 +224,6 @@ class _DashboardHome extends StatelessWidget {
                     ],
                   ),
                 ),
-<<<<<<< Updated upstream
-                _DashboardCard(
-                  icon: Icons.favorite,
-                  label: 'Kaniv',
-                  onTap: () => Navigator.pushNamed(context, AppRoutes.manageKaneev),
-                ),
-                _DashboardCard(
-                  icon: Icons.account_balance,
-                  label: 'Kuri Chitts',
-                  onTap: () => Navigator.pushNamed(context, AppRoutes.manageKuri),
-                ),
-                _DashboardCard(
-                  icon: Icons.account_balance_wallet,
-                  label: 'Income & Expense',
-                  onTap: () => Navigator.pushNamed(context, AppRoutes.finance),
-                ),
-                _DashboardCard(
-                  icon: Icons.calendar_view_week,
-                  label: 'Weekly Collection',
-                  onTap: () => Navigator.pushNamed(context, AppRoutes.weeklyCollection),
-                ),
-                _DashboardCard(
-                  icon: Icons.notifications,
-                  label: 'Notifications',
-                  onTap: () => Navigator.pushNamed(context, AppRoutes.notificationList),
-                ),
-                _DashboardCard(
-                  icon: Icons.groups_2,
-                  label: 'Ayalkoottam',
-                  onTap: () => Navigator.pushNamed(context, AppRoutes.manageAyalkoottam),
-                ),
-                _DashboardCard(
-                  icon: Icons.people,
-                  label: 'Members',
-                  onTap: () => Navigator.pushNamed(context, AppRoutes.manageMembers),
-                ),
-                _DashboardCard(
-                  icon: Icons.bar_chart,
-                  label: 'Reports',
-                  onTap: () => Navigator.pushNamed(context, AppRoutes.reports),
-                ),
-                _DashboardCard(
-                  icon: Icons.card_giftcard,
-                  label: 'Privilege Card',
-                  onTap: () => Navigator.pushNamed(context, AppRoutes.managePrivilegeOffers),
-                ),
-                _DashboardCard(
-                  icon: Icons.photo_library,
-                  label: 'Ad Banners',
-                  onTap: () => Navigator.pushNamed(context, AppRoutes.manageBanners),
-                ),
-                _DashboardCard(
-                  icon: Icons.sync,
-                  label: 'INFACC Sync',
-                  onTap: () => Navigator.pushNamed(context, AppRoutes.infaccSync),
-=======
                 if (org != null)
                   Padding(
                     padding: const EdgeInsets.only(top: 12),
@@ -289,7 +247,6 @@ class _DashboardHome extends StatelessWidget {
                       color: AppTheme.ink.withValues(alpha: 0.46),
                     ),
                   ),
->>>>>>> Stashed changes
                 ),
               ],
             ),

@@ -10,6 +10,9 @@ router.use(authenticate, orgScope);
 // Dropdown list (no pagination — for member creation forms etc.)
 router.get('/all', authorize('admin', 'super_admin'), ctrl.listAll);
 
+// Office-bearers directory (president/secretary of every ayalkoottam)
+router.get('/leaders', authorize('admin', 'super_admin'), ctrl.leaders);
+
 // CRUD
 router.post(
   '/',

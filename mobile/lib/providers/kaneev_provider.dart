@@ -82,6 +82,18 @@ class KaneevProvider extends ChangeNotifier {
     }
   }
 
+  Future<bool> setMemberStatus(int memberId, String status) async {
+    try {
+      await KaneevService.setMemberStatus(memberId, status);
+      await loadKaneev();
+      return true;
+    } catch (e) {
+      _error = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }
+
   Future<bool> recordDonation({required int memberId, required int monthNumber, double? amount}) async {
     try {
       await KaneevService.recordDonation(memberId: memberId, monthNumber: monthNumber, amount: amount);

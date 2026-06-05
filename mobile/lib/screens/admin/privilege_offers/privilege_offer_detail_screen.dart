@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../../config/theme.dart';
 import '../../../models/privilege_offer.dart';
 import '../../../providers/privilege_offer_provider.dart';
@@ -144,12 +145,12 @@ class _PrivilegeOfferDetailScreenState extends State<PrivilegeOfferDetailScreen>
         children: [
           // Banner image
           if (offer.imageUrl != null && offer.imageUrl!.isNotEmpty)
-            Image.network(
-              offer.imageUrl!,
+            CachedNetworkImage(
+              imageUrl: offer.imageUrl!,
               width: double.infinity,
               height: 160,
               fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+              errorWidget: (_, __, ___) => const SizedBox.shrink(),
             ),
           Padding(
             padding: const EdgeInsets.all(20),
@@ -161,7 +162,7 @@ class _PrivilegeOfferDetailScreenState extends State<PrivilegeOfferDetailScreen>
                     if (offer.logoUrl != null && offer.logoUrl!.isNotEmpty) ...[
                       CircleAvatar(
                         radius: 24,
-                        backgroundImage: NetworkImage(offer.logoUrl!),
+                        backgroundImage: CachedNetworkImageProvider(offer.logoUrl!),
                         backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
                       ),
                       const SizedBox(width: 12),
