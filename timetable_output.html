@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Conflict-Free School Timetable</title>
+<style>
+  body{font-family:Arial,sans-serif;font-size:12px;margin:16px;background:#f5f5f5}
+  h1{text-align:center;color:#2c3e50;margin-bottom:4px}
+  h2{text-align:center;color:#555;font-size:13px;margin-top:0}
+  .section{margin-bottom:28px}
+  h3{background:#2c3e50;color:white;padding:6px 12px;border-radius:4px;margin-bottom:0}
+  table{width:100%;border-collapse:collapse;background:white}
+  th{background:#34495e;color:white;padding:6px 4px;text-align:center;border:1px solid #ccc}
+  td{border:1px solid #ccc;padding:5px 4px;text-align:center;vertical-align:middle;min-width:90px}
+  .period-label{background:#ecf0f1;font-weight:bold;color:#333;width:110px}
+  .break-row td{background:#f9e79f;font-style:italic;color:#7d6608;font-weight:bold}
+  .lunch-row td{background:#fad7a0;font-style:italic;color:#784212;font-weight:bold}
+  .subject{font-weight:bold;display:block}
+  .teacher{font-size:10px;color:#666;display:block}
+  .free{color:#aaa;font-style:italic}
+  .ok{color:green;font-weight:bold}
+  .count-table{width:100%;border-collapse:collapse;background:white;margin-top:10px;font-size:11px}
+  .count-table th{background:#7f8c8d;color:white;padding:4px;border:1px solid #ccc}
+  .count-table td{border:1px solid #ccc;padding:3px 6px;text-align:center}
+</style>
+</head>
+<body>
+<h1>📅 Conflict-Free School Weekly Timetable</h1>
+<h2>9:30 AM – 3:30 PM | Monday to Friday | ✅ Verified – No Teacher Double-Booking</h2>
+<div class="section"><h3>Class 1</h3>
+<table>
+<tr><th class="period-label">Time</th><th>Mon</th><th>Tue</th><th>Wed</th><th>Thu</th><th>Fri</th></tr>
+<tr><td class="period-label">P1<br>9:30–10:10</td><td style="background:#ebf5fb"><span class="subject">IT</span><span class="teacher">Shafna</span></td><td style="background:#fdebd0"><span class="subject">EVS</span><span class="teacher">Ramla</span></td><td style="background:#eafaf1"><span class="subject">Hifz</span><span class="teacher">Noora</span></td><td style="background:#d5f5e3"><span class="subject">Maths</span><span class="teacher">Farseena</span></td><td style="background:#d5f5e3"><span class="subject">Maths</span><span class="teacher">Farseena</span></td></tr>
+<tr><td class="period-label">P2<br>10:10–10:50</td><td style="background:#f9ebea"><span class="subject">MS</span><span class="teacher">Farseena</span></td><td style="background:#e8daef"><span class="subject">Malayalam</span><span class="teacher">Ramla</span></td><td style="background:#ebf5fb"><span class="subject">IT</span><span class="teacher">Shafna</span></td><td style="background:#d6eaf8"><span class="subject">English</span><span class="teacher">Shafna</span></td><td style="background:#fbeee6"><span class="subject">Arabic</span><span class="teacher">Noora</span></td></tr>
+<tr class="break-row"><td colspan="6">☕ Morning Break 10:50–11:00</td></tr>
+<tr><td class="period-label">P3<br>11:00–11:40</td><td style="background:#d6eaf8"><span class="subject">English</span><span class="teacher">Shafna</span></td><td style="background:#fdebd0"><span class="subject">EVS</span><span class="teacher">Ramla</span></td><td style="background:#fdedec"><span class="subject">Art</span><span class="teacher">Shafna</span></td><td style="background:#fbeee6"><span class="subject">Arabic</span><span class="teacher">Noora</span></td><td style="background:#f9ebea"><span class="subject">MS</span><span class="teacher">Farseena</span></td></tr>
+<tr><td class="period-label">P4<br>11:40–12:20</td><td style="background:#e8daef"><span class="subject">Malayalam</span><span class="teacher">Ramla</span></td><td style="background:#fdebd0"><span class="subject">EVS</span><span class="teacher">Ramla</span></td><td style="background:#f9ebea"><span class="subject">MS</span><span class="teacher">Farseena</span></td><td style="background:#fef9e7"><span class="subject">Thilavath</span><span class="teacher">Noora</span></td><td style="background:#fef9e7"><span class="subject">Thilavath</span><span class="teacher">Noora</span></td></tr>
+<tr><td class="period-label">P5<br>12:20–1:00</td><td><span class="free">— free —</span></td><td style="background:#f9ebea"><span class="subject">MS</span><span class="teacher">Farseena</span></td><td style="background:#fbeee6"><span class="subject">Arabic</span><span class="teacher">Noora</span></td><td style="background:#fbeee6"><span class="subject">Arabic</span><span class="teacher">Noora</span></td><td style="background:#e8daef"><span class="subject">Malayalam</span><span class="teacher">Ramla</span></td></tr>
+<tr class="lunch-row"><td colspan="6">🍱 Lunch Break 1:00–1:30</td></tr>
+<tr><td class="period-label">P6<br>1:30–2:10</td><td style="background:#d5f5e3"><span class="subject">Maths</span><span class="teacher">Farseena</span></td><td style="background:#e8daef"><span class="subject">Malayalam</span><span class="teacher">Ramla</span></td><td style="background:#d2b4de"><span class="subject">Abacus</span><span class="teacher">—</span></td><td style="background:#aed6f1"><span class="subject">Skating</span><span class="teacher">—</span></td><td style="background:#fdebd0"><span class="subject">EVS</span><span class="teacher">Ramla</span></td></tr>
+<tr><td class="period-label">P7<br>2:10–2:50</td><td style="background:#d6eaf8"><span class="subject">English</span><span class="teacher">Shafna</span></td><td style="background:#d5f5e3"><span class="subject">Maths</span><span class="teacher">Farseena</span></td><td style="background:#d5f5e3"><span class="subject">Maths</span><span class="teacher">Farseena</span></td><td style="background:#fdebd0"><span class="subject">EVS</span><span class="teacher">Ramla</span></td><td style="background:#d6eaf8"><span class="subject">English</span><span class="teacher">Shafna</span></td></tr>
+<tr><td class="period-label">P8<br>2:50–3:30</td><td style="background:#eafaf1"><span class="subject">Hifz</span><span class="teacher">Noora</span></td><td style="background:#d6eaf8"><span class="subject">English</span><span class="teacher">Shafna</span></td><td style="background:#fef9e7"><span class="subject">Thilavath</span><span class="teacher">Noora</span></td><td style="background:#eafaf1"><span class="subject">Hifz</span><span class="teacher">Noora</span></td><td><span class="free">— free —</span></td></tr>
+</table></div>
+<div class="section"><h3>Class 2</h3>
+<table>
+<tr><th class="period-label">Time</th><th>Mon</th><th>Tue</th><th>Wed</th><th>Thu</th><th>Fri</th></tr>
+<tr><td class="period-label">P1<br>9:30–10:10</td><td style="background:#fbeee6"><span class="subject">Arabic</span><span class="teacher">Noora</span></td><td style="background:#d6eaf8"><span class="subject">English</span><span class="teacher">Shafna</span></td><td style="background:#d6eaf8"><span class="subject">English</span><span class="teacher">Shafna</span></td><td style="background:#fbeee6"><span class="subject">Arabic</span><span class="teacher">Noora</span></td><td><span class="free">— free —</span></td></tr>
+<tr><td class="period-label">P2<br>10:10–10:50</td><td style="background:#fdebd0"><span class="subject">EVS</span><span class="teacher">Ramla</span></td><td style="background:#f9ebea"><span class="subject">MS</span><span class="teacher">Farseena</span></td><td style="background:#d5f5e3"><span class="subject">Maths</span><span class="teacher">Farseena</span></td><td style="background:#eafaf1"><span class="subject">Hifz</span><span class="teacher">Noora</span></td><td style="background:#e8daef"><span class="subject">Malayalam</span><span class="teacher">Ramla</span></td></tr>
+<tr class="break-row"><td colspan="6">☕ Morning Break 10:50–11:00</td></tr>
+<tr><td class="period-label">P3<br>11:00–11:40</td><td style="background:#fdebd0"><span class="subject">EVS</span><span class="teacher">Ramla</span></td><td style="background:#fbeee6"><span class="subject">Arabic</span><span class="teacher">Noora</span></td><td style="background:#fef9e7"><span class="subject">Thilavath</span><span class="teacher">Noora</span></td><td style="background:#d6eaf8"><span class="subject">English</span><span class="teacher">Shafna</span></td><td style="background:#fdebd0"><span class="subject">EVS</span><span class="teacher">Ramla</span></td></tr>
+<tr><td class="period-label">P4<br>11:40–12:20</td><td style="background:#d6eaf8"><span class="subject">English</span><span class="teacher">Shafna</span></td><td style="background:#fef9e7"><span class="subject">Thilavath</span><span class="teacher">Noora</span></td><td style="background:#fdebd0"><span class="subject">EVS</span><span class="teacher">Ramla</span></td><td style="background:#e8daef"><span class="subject">Malayalam</span><span class="teacher">Ramla</span></td><td style="background:#f9ebea"><span class="subject">MS</span><span class="teacher">Farseena</span></td></tr>
+<tr><td class="period-label">P5<br>12:20–1:00</td><td style="background:#d6eaf8"><span class="subject">English</span><span class="teacher">Shafna</span></td><td style="background:#e8daef"><span class="subject">Malayalam</span><span class="teacher">Ramla</span></td><td style="background:#fdebd0"><span class="subject">EVS</span><span class="teacher">Ramla</span></td><td style="background:#f9ebea"><span class="subject">MS</span><span class="teacher">Farseena</span></td><td style="background:#d5f5e3"><span class="subject">Maths</span><span class="teacher">Farseena</span></td></tr>
+<tr class="lunch-row"><td colspan="6">🍱 Lunch Break 1:00–1:30</td></tr>
+<tr><td class="period-label">P6<br>1:30–2:10</td><td style="background:#eafaf1"><span class="subject">Hifz</span><span class="teacher">Noora</span></td><td style="background:#ebf5fb"><span class="subject">IT</span><span class="teacher">Shafna</span></td><td style="background:#f9ebea"><span class="subject">MS</span><span class="teacher">Farseena</span></td><td style="background:#f5b7b1"><span class="subject">Karate</span><span class="teacher">—</span></td><td style="background:#fbeee6"><span class="subject">Arabic</span><span class="teacher">Noora</span></td></tr>
+<tr><td class="period-label">P7<br>2:10–2:50</td><td style="background:#d5f5e3"><span class="subject">Maths</span><span class="teacher">Farseena</span></td><td style="background:#fdedec"><span class="subject">Art</span><span class="teacher">Shafna</span></td><td style="background:#d2b4de"><span class="subject">Abacus</span><span class="teacher">—</span></td><td style="background:#fef9e7"><span class="subject">Thilavath</span><span class="teacher">Noora</span></td><td style="background:#eafaf1"><span class="subject">Hifz</span><span class="teacher">Noora</span></td></tr>
+<tr><td class="period-label">P8<br>2:50–3:30</td><td><span class="free">— free —</span></td><td style="background:#d5f5e3"><span class="subject">Maths</span><span class="teacher">Farseena</span></td><td style="background:#e8daef"><span class="subject">Malayalam</span><span class="teacher">Ramla</span></td><td style="background:#d5f5e3"><span class="subject">Maths</span><span class="teacher">Farseena</span></td><td style="background:#ebf5fb"><span class="subject">IT</span><span class="teacher">Shafna</span></td></tr>
+</table></div>
+<div class="section"><h3>Class 3</h3>
+<table>
+<tr><th class="period-label">Time</th><th>Mon</th><th>Tue</th><th>Wed</th><th>Thu</th><th>Fri</th></tr>
+<tr><td class="period-label">P1<br>9:30–10:10</td><td style="background:#d5f5e3"><span class="subject">Maths</span><span class="teacher">Farseena</span></td><td style="background:#fbeee6"><span class="subject">Arabic</span><span class="teacher">Noora</span></td><td><span class="free">— free —</span></td><td style="background:#d6eaf8"><span class="subject">English</span><span class="teacher">Shafna</span></td><td style="background:#e8f8f5"><span class="subject">Hindi</span><span class="teacher">Shafna</span></td></tr>
+<tr><td class="period-label">P2<br>10:10–10:50</td><td style="background:#d6eaf8"><span class="subject">English</span><span class="teacher">Shafna</span></td><td style="background:#fbeee6"><span class="subject">Arabic</span><span class="teacher">Noora</span></td><td style="background:#eafaf1"><span class="subject">Hifz</span><span class="teacher">Noora</span></td><td style="background:#f9ebea"><span class="subject">MS</span><span class="teacher">Farseena</span></td><td style="background:#f9ebea"><span class="subject">MS</span><span class="teacher">Farseena</span></td></tr>
+<tr class="break-row"><td colspan="6">☕ Morning Break 10:50–11:00</td></tr>
+<tr><td class="period-label">P3<br>11:00–11:40</td><td style="background:#f9ebea"><span class="subject">MS</span><span class="teacher">Farseena</span></td><td style="background:#d6eaf8"><span class="subject">English</span><span class="teacher">Shafna</span></td><td style="background:#fdebd0"><span class="subject">EVS</span><span class="teacher">Ramla</span></td><td style="background:#fdebd0"><span class="subject">EVS</span><span class="teacher">Ramla</span></td><td style="background:#fbeee6"><span class="subject">Arabic</span><span class="teacher">Noora</span></td></tr>
+<tr><td class="period-label">P4<br>11:40–12:20</td><td style="background:#fef9e7"><span class="subject">Thilavath</span><span class="teacher">Noora</span></td><td style="background:#f9ebea"><span class="subject">MS</span><span class="teacher">Farseena</span></td><td style="background:#d6eaf8"><span class="subject">English</span><span class="teacher">Shafna</span></td><td style="background:#d5f5e3"><span class="subject">Maths</span><span class="teacher">Farseena</span></td><td style="background:#d6eaf8"><span class="subject">English</span><span class="teacher">Shafna</span></td></tr>
+<tr><td class="period-label">P5<br>12:20–1:00</td><td style="background:#fdebd0"><span class="subject">EVS</span><span class="teacher">Ramla</span></td><td style="background:#eafaf1"><span class="subject">Hifz</span><span class="teacher">Noora</span></td><td style="background:#d5f5e3"><span class="subject">Maths</span><span class="teacher">Farseena</span></td><td style="background:#e8daef"><span class="subject">Malayalam</span><span class="teacher">Ramla</span></td><td style="background:#ebf5fb"><span class="subject">IT</span><span class="teacher">Shafna</span></td></tr>
+<tr class="lunch-row"><td colspan="6">🍱 Lunch Break 1:00–1:30</td></tr>
+<tr><td class="period-label">P6<br>1:30–2:10</td><td style="background:#e8f8f5"><span class="subject">Hindi</span><span class="teacher">Shafna</span></td><td style="background:#fbeee6"><span class="subject">Arabic</span><span class="teacher">Noora</span></td><td style="background:#fdedec"><span class="subject">Art</span><span class="teacher">Shafna</span></td><td style="background:#f9e79f"><span class="subject">Box</span><span class="teacher">—</span></td><td style="background:#d5f5e3"><span class="subject">Maths</span><span class="teacher">Farseena</span></td></tr>
+<tr><td class="period-label">P7<br>2:10–2:50</td><td style="background:#e8daef"><span class="subject">Malayalam</span><span class="teacher">Ramla</span></td><td style="background:#fef9e7"><span class="subject">Thilavath</span><span class="teacher">Noora</span></td><td style="background:#e8daef"><span class="subject">Malayalam</span><span class="teacher">Ramla</span></td><td style="background:#ebf5fb"><span class="subject">IT</span><span class="teacher">Shafna</span></td><td style="background:#d5f5e3"><span class="subject">Maths</span><span class="teacher">Farseena</span></td></tr>
+<tr><td class="period-label">P8<br>2:50–3:30</td><td style="background:#e8daef"><span class="subject">Malayalam</span><span class="teacher">Ramla</span></td><td style="background:#fdebd0"><span class="subject">EVS</span><span class="teacher">Ramla</span></td><td style="background:#d2b4de"><span class="subject">Abacus</span><span class="teacher">—</span></td><td style="background:#fdebd0"><span class="subject">EVS</span><span class="teacher">Ramla</span></td><td><span class="free">— free —</span></td></tr>
+</table></div>
+<div class="section"><h3>✅ Conflict Verification</h3>
+<table class="count-table">
+<tr><th>Day</th><th>Period</th><th>Class 1</th><th>Class 2</th><th>Class 3</th><th>Status</th></tr>
+<tr><td>Mon</td><td>P1</td><td>Shafna</td><td>Noora</td><td>Farseena</td><td>✅</td></tr>
+<tr><td>Mon</td><td>P2</td><td>Farseena</td><td>Ramla</td><td>Shafna</td><td>✅</td></tr>
+<tr><td>Mon</td><td>P3</td><td>Shafna</td><td>Ramla</td><td>Farseena</td><td>✅</td></tr>
+<tr><td>Mon</td><td>P4</td><td>Ramla</td><td>Shafna</td><td>Noora</td><td>✅</td></tr>
+<tr><td>Mon</td><td>P5</td><td>—</td><td>Shafna</td><td>Ramla</td><td>✅</td></tr>
+<tr><td>Mon</td><td>P6</td><td>Farseena</td><td>Noora</td><td>Shafna</td><td>✅</td></tr>
+<tr><td>Mon</td><td>P7</td><td>Shafna</td><td>Farseena</td><td>Ramla</td><td>✅</td></tr>
+<tr><td>Mon</td><td>P8</td><td>Noora</td><td>—</td><td>Ramla</td><td>✅</td></tr>
+<tr><td>Tue</td><td>P1</td><td>Ramla</td><td>Shafna</td><td>Noora</td><td>✅</td></tr>
+<tr><td>Tue</td><td>P2</td><td>Ramla</td><td>Farseena</td><td>Noora</td><td>✅</td></tr>
+<tr><td>Tue</td><td>P3</td><td>Ramla</td><td>Noora</td><td>Shafna</td><td>✅</td></tr>
+<tr><td>Tue</td><td>P4</td><td>Ramla</td><td>Noora</td><td>Farseena</td><td>✅</td></tr>
+<tr><td>Tue</td><td>P5</td><td>Farseena</td><td>Ramla</td><td>Noora</td><td>✅</td></tr>
+<tr><td>Tue</td><td>P6</td><td>Ramla</td><td>Shafna</td><td>Noora</td><td>✅</td></tr>
+<tr><td>Tue</td><td>P7</td><td>Farseena</td><td>Shafna</td><td>Noora</td><td>✅</td></tr>
+<tr><td>Tue</td><td>P8</td><td>Shafna</td><td>Farseena</td><td>Ramla</td><td>✅</td></tr>
+<tr><td>Wed</td><td>P1</td><td>Noora</td><td>Shafna</td><td>—</td><td>✅</td></tr>
+<tr><td>Wed</td><td>P2</td><td>Shafna</td><td>Farseena</td><td>Noora</td><td>✅</td></tr>
+<tr><td>Wed</td><td>P3</td><td>Shafna</td><td>Noora</td><td>Ramla</td><td>✅</td></tr>
+<tr><td>Wed</td><td>P4</td><td>Farseena</td><td>Ramla</td><td>Shafna</td><td>✅</td></tr>
+<tr><td>Wed</td><td>P5</td><td>Noora</td><td>Ramla</td><td>Farseena</td><td>✅</td></tr>
+<tr><td>Wed</td><td>P6</td><td>—</td><td>Farseena</td><td>Shafna</td><td>✅</td></tr>
+<tr><td>Wed</td><td>P7</td><td>Farseena</td><td>—</td><td>Ramla</td><td>✅</td></tr>
+<tr><td>Wed</td><td>P8</td><td>Noora</td><td>Ramla</td><td>—</td><td>✅</td></tr>
+<tr><td>Thu</td><td>P1</td><td>Farseena</td><td>Noora</td><td>Shafna</td><td>✅</td></tr>
+<tr><td>Thu</td><td>P2</td><td>Shafna</td><td>Noora</td><td>Farseena</td><td>✅</td></tr>
+<tr><td>Thu</td><td>P3</td><td>Noora</td><td>Shafna</td><td>Ramla</td><td>✅</td></tr>
+<tr><td>Thu</td><td>P4</td><td>Noora</td><td>Ramla</td><td>Farseena</td><td>✅</td></tr>
+<tr><td>Thu</td><td>P5</td><td>Noora</td><td>Farseena</td><td>Ramla</td><td>✅</td></tr>
+<tr><td>Thu</td><td>P6</td><td>—</td><td>—</td><td>—</td><td>✅</td></tr>
+<tr><td>Thu</td><td>P7</td><td>Ramla</td><td>Noora</td><td>Shafna</td><td>✅</td></tr>
+<tr><td>Thu</td><td>P8</td><td>Noora</td><td>Farseena</td><td>Ramla</td><td>✅</td></tr>
+<tr><td>Fri</td><td>P1</td><td>Farseena</td><td>—</td><td>Shafna</td><td>✅</td></tr>
+<tr><td>Fri</td><td>P2</td><td>Noora</td><td>Ramla</td><td>Farseena</td><td>✅</td></tr>
+<tr><td>Fri</td><td>P3</td><td>Farseena</td><td>Ramla</td><td>Noora</td><td>✅</td></tr>
+<tr><td>Fri</td><td>P4</td><td>Noora</td><td>Farseena</td><td>Shafna</td><td>✅</td></tr>
+<tr><td>Fri</td><td>P5</td><td>Ramla</td><td>Farseena</td><td>Shafna</td><td>✅</td></tr>
+<tr><td>Fri</td><td>P6</td><td>Ramla</td><td>Noora</td><td>Farseena</td><td>✅</td></tr>
+<tr><td>Fri</td><td>P7</td><td>Shafna</td><td>Noora</td><td>Farseena</td><td>✅</td></tr>
+<tr><td>Fri</td><td>P8</td><td>—</td><td>Shafna</td><td>—</td><td>✅</td></tr>
+</table></div>
+<h2 class="ok">✅ ALL PERIODS CONFLICT-FREE</h2>
+</body></html>
