@@ -18,22 +18,17 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _phoneController = TextEditingController();
 
-  // OTP pin controllers (4 boxes)
-  final List<TextEditingController> _otpControllers =
-      List.generate(4, (_) => TextEditingController());
-  final List<FocusNode> _otpFocusNodes = List.generate(4, (_) => FocusNode());
+  // Single OTP controller + focus node (keyboard stays still)
+  final TextEditingController _otpController = TextEditingController();
+  final FocusNode _otpFocusNode = FocusNode();
 
   bool _detecting = false;
 
   @override
   void dispose() {
     _phoneController.dispose();
-    for (final c in _otpControllers) {
-      c.dispose();
-    }
-    for (final f in _otpFocusNodes) {
-      f.dispose();
-    }
+    _otpController.dispose();
+    _otpFocusNode.dispose();
     super.dispose();
   }
 
@@ -45,8 +40,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (!mounted) return;
     if (success) {
-      // Focus first OTP box
-      _otpFocusNodes[0].requestFocus();
+      // Focus the OTP field
+      _otpFocusNode.requestFocus();
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         AppTheme.errorSnackBar(auth.error ?? 'Failed to send OTP'),
@@ -149,37 +144,18 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  void _onOtpDigitChanged(int index, String value) {
-    if (value.isNotEmpty) {
-      // Move to next box
-      if (index < 3) {
-        _otpFocusNodes[index + 1].requestFocus();
-      } else {
-        // Last digit entered - auto verify
-        _otpFocusNodes[index].unfocus();
-        _verifyOtp();
-      }
+  void _onOtpChanged(String value) {
+    setState(() {});
+    if (value.length == 4) {
+      _otpFocusNode.unfocus();
+      _verifyOtp();
     }
   }
 
-  void _onOtpKeyPress(int index, KeyEvent event) {
-    if (event is KeyDownEvent &&
-        event.logicalKey == LogicalKeyboardKey.backspace) {
-      if (_otpControllers[index].text.isEmpty && index > 0) {
-        // Move to previous box and clear it
-        _otpControllers[index - 1].clear();
-        _otpFocusNodes[index - 1].requestFocus();
-      }
-    }
-  }
-
-  String get _otpText =>
-      _otpControllers.map((c) => c.text).join();
+  String get _otpText => _otpController.text;
 
   void _clearOtp() {
-    for (final c in _otpControllers) {
-      c.clear();
-    }
+    _otpController.clear();
   }
 
   Future<void> _verifyOtp() async {
@@ -204,7 +180,7 @@ class _LoginScreenState extends State<LoginScreen> {
       }
     } else {
       _clearOtp();
-      _otpFocusNodes[0].requestFocus();
+      _otpFocusNode.requestFocus();
       ScaffoldMessenger.of(context).showSnackBar(
         AppTheme.errorSnackBar(auth.error ?? 'Invalid OTP'),
       );
@@ -346,47 +322,57 @@ class _LoginScreenState extends State<LoginScreen> {
                             style: textTheme.titleMedium,
                           ),
                           const SizedBox(height: 24),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: List.generate(4, (i) {
-                              return SizedBox(
-                                width: 58,
-                                height: 64,
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 6),
-                                  child: KeyboardListener(
-                                    focusNode: FocusNode(),
-                                    onKeyEvent: (event) => _onOtpKeyPress(i, event),
-                                    child: TextFormField(
-                                      controller: _otpControllers[i],
-                                      focusNode: _otpFocusNodes[i],
+                          GestureDetector(
+                            onTap: () => _otpFocusNode.requestFocus(),
+                            child: Stack(
+                              children: [
+                                // Hidden text field (captures input, keyboard stays still)
+                                Opacity(
+                                  opacity: 0,
+                                  child: SizedBox(
+                                    height: 64,
+                                    child: TextField(
+                                      controller: _otpController,
+                                      focusNode: _otpFocusNode,
                                       keyboardType: TextInputType.number,
-                                      textAlign: TextAlign.center,
-                                      maxLength: 1,
-                                      style: textTheme.headlineSmall?.copyWith(
-                                        fontWeight: FontWeight.w700,
-                                      ),
+                                      maxLength: 4,
+                                      autofocus: false,
                                       inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                                      decoration: InputDecoration(
-                                        counterText: '',
-                                        filled: true,
-                                        fillColor: AppTheme.surfaceWarm,
-                                        contentPadding: const EdgeInsets.symmetric(vertical: 14),
-                                        enabledBorder: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(16),
-                                          borderSide: const BorderSide(color: AppTheme.outline),
-                                        ),
-                                        focusedBorder: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(16),
-                                          borderSide: const BorderSide(color: AppTheme.primary, width: 1.8),
-                                        ),
-                                      ),
-                                      onChanged: (v) => _onOtpDigitChanged(i, v),
+                                      decoration: const InputDecoration(counterText: ''),
+                                      onChanged: _onOtpChanged,
                                     ),
                                   ),
                                 ),
-                              );
-                            }),
+                                // Visual OTP boxes
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: List.generate(4, (i) {
+                                    final hasDigit = _otpController.text.length > i;
+                                    final isActive = _otpController.text.length == i && _otpFocusNode.hasFocus;
+                                    return Container(
+                                      width: 58,
+                                      height: 64,
+                                      margin: const EdgeInsets.symmetric(horizontal: 6),
+                                      decoration: BoxDecoration(
+                                        color: AppTheme.surfaceWarm,
+                                        borderRadius: BorderRadius.circular(16),
+                                        border: Border.all(
+                                          color: isActive ? AppTheme.primary : AppTheme.outline,
+                                          width: isActive ? 1.8 : 1.0,
+                                        ),
+                                      ),
+                                      alignment: Alignment.center,
+                                      child: Text(
+                                        hasDigit ? _otpController.text[i] : '',
+                                        style: textTheme.headlineSmall?.copyWith(
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
+                                    );
+                                  }),
+                                ),
+                              ],
+                            ),
                           ),
                           const SizedBox(height: 16),
                           if (auth.loading) const CupertinoActivityIndicator(),
