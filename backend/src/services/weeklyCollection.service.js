@@ -5,9 +5,9 @@ const auditService = require('./audit.service');
 
 // Net cash movement for a week's collection.
 // Money in:  deposit + loan_repayment
-// Money out: withdrawal + loan
-const computeNet = ({ deposit = 0, withdrawal = 0, loan = 0, loan_repayment = 0 }) =>
-  Number(deposit) - Number(withdrawal) - Number(loan) + Number(loan_repayment);
+// Money out: withdrawal + loan + adjustment (drawn from existing balance)
+const computeNet = ({ deposit = 0, withdrawal = 0, loan = 0, loan_repayment = 0, adjustment = 0 }) =>
+  Number(deposit) - Number(withdrawal) - Number(loan) + Number(loan_repayment) - Number(adjustment);
 
 const toDateStr = (value) => {
   if (!value) return null;
@@ -26,11 +26,27 @@ const weeklyCollectionService = {
     if (!ayalkoottam) throw ApiError.notFound('Ayalkoottam not found');
 
     const week = toDateStr(data.week_start_date);
+    const adjustment = num(data.adjustment);
+    // Validate adjustment does not exceed current balance (exclude the current week if updating)
+    if (adjustment > 0) {
+      const balRow = await db('weekly_collections')
+        .where({ organization_id: orgId, ayalkoottam_id: data.ayalkoottam_id })
+        .andWhere('week_start_date', '<', week)
+        .sum('net_total as total')
+        .first();
+      const currentBalance = num(balRow && balRow.total);
+      if (adjustment > currentBalance) {
+        throw ApiError.badRequest(
+          `Adjustment (${adjustment}) exceeds available balance (${currentBalance.toFixed(2)})`
+        );
+      }
+    }
     const payload = {
       deposit: num(data.deposit),
       withdrawal: num(data.withdrawal),
       loan: num(data.loan),
       loan_repayment: num(data.loan_repayment),
+      adjustment,
       note: data.note || null,
     };
     payload.net_total = computeNet(payload);
@@ -118,7 +134,22 @@ const weeklyCollectionService = {
       withdrawal: data.withdrawal !== undefined ? num(data.withdrawal) : num(existing.withdrawal),
       loan: data.loan !== undefined ? num(data.loan) : num(existing.loan),
       loan_repayment: data.loan_repayment !== undefined ? num(data.loan_repayment) : num(existing.loan_repayment),
+      adjustment: data.adjustment !== undefined ? num(data.adjustment) : num(existing.adjustment || 0),
     };
+    // Re-validate adjustment against balance (exclude this entry itself)
+    if (merged.adjustment > 0) {
+      const balRow = await db('weekly_collections')
+        .where({ organization_id: orgId, ayalkoottam_id: existing.ayalkoottam_id })
+        .andWhere('week_start_date', '<', toDateStr(existing.week_start_date))
+        .sum('net_total as total')
+        .first();
+      const currentBalance = num(balRow && balRow.total);
+      if (merged.adjustment > currentBalance) {
+        throw ApiError.badRequest(
+          `Adjustment (${merged.adjustment}) exceeds available balance (${currentBalance.toFixed(2)})`
+        );
+      }
+    }
     const updates = {
       ...merged,
       net_total: computeNet(merged),
@@ -162,7 +193,7 @@ const weeklyCollectionService = {
       .where({ 'wc.organization_id': orgId })
       .select(
         'wc.id', 'wc.ayalkoottam_id', 'wc.week_start_date',
-        'wc.deposit', 'wc.withdrawal', 'wc.loan', 'wc.loan_repayment', 'wc.net_total',
+        'wc.deposit', 'wc.withdrawal', 'wc.loan', 'wc.loan_repayment', 'wc.adjustment', 'wc.net_total',
         'ak.name as ayalkoottam_name', 'ak.place as ayalkoottam_place'
       );
 
@@ -174,14 +205,15 @@ const weeklyCollectionService = {
 
     const periodMap = new Map();
     const akMap = new Map();
-    const grand = { deposit: 0, withdrawal: 0, loan: 0, loan_repayment: 0, net_total: 0, entry_count: 0 };
+    const grand = { deposit: 0, withdrawal: 0, loan: 0, loan_repayment: 0, adjustment: 0, net_total: 0, entry_count: 0 };
 
-    const emptyTotals = () => ({ deposit: 0, withdrawal: 0, loan: 0, loan_repayment: 0, net_total: 0, entry_count: 0 });
+    const emptyTotals = () => ({ deposit: 0, withdrawal: 0, loan: 0, loan_repayment: 0, adjustment: 0, net_total: 0, entry_count: 0 });
     const addInto = (target, r) => {
       target.deposit += num(r.deposit);
       target.withdrawal += num(r.withdrawal);
       target.loan += num(r.loan);
       target.loan_repayment += num(r.loan_repayment);
+      target.adjustment += num(r.adjustment || 0);
       target.net_total += num(r.net_total);
       target.entry_count += 1;
     };
@@ -266,6 +298,27 @@ const weeklyCollectionService = {
       by_ayalkoottam: byAyalkoottam,
       totals: round2(grand),
     };
+  },
+
+  // ─── Running balance for an ayalkoottam ──────────────────────
+  // Returns the cumulative net_total up to (but not including) a given week.
+  // If no week provided, returns overall balance (all entries).
+  async getBalance(orgId, ayalkoottamId, beforeWeek = null) {
+    const ayalkoottam = await db('ayalkoottams')
+      .where({ id: ayalkoottamId, organization_id: orgId })
+      .select('id', 'name')
+      .first();
+    if (!ayalkoottam) throw ApiError.notFound('Ayalkoottam not found');
+
+    let query = db('weekly_collections')
+      .where({ organization_id: orgId, ayalkoottam_id: ayalkoottamId })
+      .sum('net_total as total');
+    if (beforeWeek) {
+      query = query.andWhere('week_start_date', '<', toDateStr(beforeWeek));
+    }
+    const row = await query.first();
+    const balance = num(row && row.total);
+    return { ayalkoottam_id: ayalkoottamId, ayalkoottam_name: ayalkoottam.name, balance };
   },
 };
 

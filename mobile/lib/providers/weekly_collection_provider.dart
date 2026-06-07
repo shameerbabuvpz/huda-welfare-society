@@ -10,6 +10,10 @@ class WeeklyCollectionProvider extends ChangeNotifier {
   bool _reportLoading = false;
   String? _error;
 
+  // Balance cache: ayalkoottamId -> balance value
+  final Map<int, double> _balanceCache = {};
+  bool _balanceLoading = false;
+
   // Report filters
   String _groupBy = 'week';
   String? _fromDate;
@@ -22,6 +26,8 @@ class WeeklyCollectionProvider extends ChangeNotifier {
   bool get loading => _loading;
   bool get reportLoading => _reportLoading;
   String? get error => _error;
+  bool get balanceLoading => _balanceLoading;
+  double? balanceFor(int ayalkoottamId) => _balanceCache[ayalkoottamId];
   String get groupBy => _groupBy;
   String? get fromDate => _fromDate;
   String? get toDate => _toDate;
@@ -85,6 +91,20 @@ class WeeklyCollectionProvider extends ChangeNotifier {
       notifyListeners();
       return false;
     }
+  }
+
+  /// Fetch and cache the running balance for an ayalkoottam (optionally before a given week).
+  Future<void> fetchBalance(int ayalkoottamId, {String? beforeWeek}) async {
+    _balanceLoading = true;
+    notifyListeners();
+    try {
+      final data = await WeeklyCollectionService.getBalance(ayalkoottamId, beforeWeek: beforeWeek);
+      _balanceCache[ayalkoottamId] = (double.tryParse('${data['balance'] ?? 0}') ?? 0);
+    } catch (_) {
+      _balanceCache[ayalkoottamId] = 0;
+    }
+    _balanceLoading = false;
+    notifyListeners();
   }
 
   // ─── Consolidated report ────────────────────────────────────

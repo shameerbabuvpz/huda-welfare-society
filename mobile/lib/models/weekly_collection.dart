@@ -6,6 +6,7 @@ class WeeklyCollection {
   final double withdrawal;
   final double loan;
   final double loanRepayment;
+  final double adjustment;
   final double netTotal;
   final String? note;
   final String? ayalkoottamName;
@@ -19,6 +20,7 @@ class WeeklyCollection {
     required this.withdrawal,
     required this.loan,
     required this.loanRepayment,
+    required this.adjustment,
     required this.netTotal,
     this.note,
     this.ayalkoottamName,
@@ -35,6 +37,7 @@ class WeeklyCollection {
       withdrawal: d(json['withdrawal']),
       loan: d(json['loan']),
       loanRepayment: d(json['loan_repayment']),
+      adjustment: d(json['adjustment']),
       netTotal: d(json['net_total']),
       note: json['note'],
       ayalkoottamName: json['ayalkoottam_name'],
@@ -52,6 +55,7 @@ class ConsolidationGroup {
   final double withdrawal;
   final double loan;
   final double loanRepayment;
+  final double adjustment;
   final double netTotal;
   final int entryCount;
 
@@ -63,6 +67,7 @@ class ConsolidationGroup {
     required this.withdrawal,
     required this.loan,
     required this.loanRepayment,
+    required this.adjustment,
     required this.netTotal,
     required this.entryCount,
   });
@@ -77,6 +82,7 @@ class ConsolidationGroup {
       withdrawal: d(json['withdrawal']),
       loan: d(json['loan']),
       loanRepayment: d(json['loan_repayment']),
+      adjustment: d(json['adjustment']),
       netTotal: d(json['net_total']),
       entryCount: json['entry_count'] ?? 0,
     );
@@ -92,6 +98,7 @@ class ConsolidationPeriod {
   final double withdrawal;
   final double loan;
   final double loanRepayment;
+  final double adjustment;
   final double netTotal;
   final int entryCount;
   final List<ConsolidationGroup> ayalkoottams;
@@ -104,6 +111,7 @@ class ConsolidationPeriod {
     required this.withdrawal,
     required this.loan,
     required this.loanRepayment,
+    required this.adjustment,
     required this.netTotal,
     required this.entryCount,
     required this.ayalkoottams,
@@ -119,6 +127,7 @@ class ConsolidationPeriod {
       withdrawal: d(json['withdrawal']),
       loan: d(json['loan']),
       loanRepayment: d(json['loan_repayment']),
+      adjustment: d(json['adjustment']),
       netTotal: d(json['net_total']),
       entryCount: json['entry_count'] ?? 0,
       ayalkoottams: (json['ayalkoottams'] as List? ?? [])

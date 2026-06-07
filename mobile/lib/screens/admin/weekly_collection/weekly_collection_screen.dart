@@ -6,6 +6,7 @@ import '../../../models/ayalkoottam.dart';
 import '../../../models/weekly_collection.dart';
 import '../../../providers/ayalkoottam_provider.dart';
 import '../../../providers/weekly_collection_provider.dart';
+import '../../../services/weekly_collection_service.dart';
 
 String _fmtAmount(double v) {
   final isNeg = v < 0;
@@ -210,6 +211,8 @@ class _EntryCard extends StatelessWidget {
                     _MiniStat(label: 'Withdrawal', value: entry.withdrawal, color: AppTheme.error),
                     _MiniStat(label: 'Loan', value: entry.loan, color: AppTheme.accent),
                     _MiniStat(label: 'Repayment', value: entry.loanRepayment, color: AppTheme.primary),
+                    if (entry.adjustment > 0)
+                      _MiniStat(label: 'Adjustment', value: entry.adjustment, color: AppTheme.primaryDark),
                   ],
                 ),
               ],
@@ -278,10 +281,13 @@ class _EntryFormState extends State<_EntryForm> {
   final _withdrawal = TextEditingController();
   final _loan = TextEditingController();
   final _repayment = TextEditingController();
+  final _adjustment = TextEditingController();
   final _note = TextEditingController();
   bool _saving = false;
   bool _lookingUp = false;
   WeeklyCollection? _loaded;
+  double _availableBalance = 0;
+  bool _loadingBalance = false;
 
   @override
   void initState() {
@@ -307,6 +313,7 @@ class _EntryFormState extends State<_EntryForm> {
     _withdrawal.text = e.withdrawal == 0 ? '' : _trim(e.withdrawal);
     _loan.text = e.loan == 0 ? '' : _trim(e.loan);
     _repayment.text = e.loanRepayment == 0 ? '' : _trim(e.loanRepayment);
+    _adjustment.text = e.adjustment == 0 ? '' : _trim(e.adjustment);
     _note.text = e.note ?? '';
   }
 
@@ -315,6 +322,7 @@ class _EntryFormState extends State<_EntryForm> {
     _withdrawal.clear();
     _loan.clear();
     _repayment.clear();
+    _adjustment.clear();
     _note.clear();
   }
 
@@ -323,9 +331,10 @@ class _EntryFormState extends State<_EntryForm> {
   Future<void> _lookup() async {
     if (_ayalkoottamId == null) return;
     setState(() => _lookingUp = true);
-    final found = await context
-        .read<WeeklyCollectionProvider>()
-        .findEntry(_ayalkoottamId!, _isoDate(_collectionDate));
+    final provider = context.read<WeeklyCollectionProvider>();
+    final found = await provider.findEntry(_ayalkoottamId!, _isoDate(_collectionDate));
+    // Fetch the running balance before this week
+    await _refreshBalance();
     if (!mounted) return;
     setState(() {
       if (found != null) {
@@ -339,6 +348,21 @@ class _EntryFormState extends State<_EntryForm> {
     });
   }
 
+  Future<void> _refreshBalance() async {
+    if (_ayalkoottamId == null) return;
+    setState(() => _loadingBalance = true);
+    try {
+      final data = await WeeklyCollectionService.getBalance(
+        _ayalkoottamId!,
+        beforeWeek: _isoDate(_collectionDate),
+      );
+      if (mounted) setState(() => _availableBalance = double.tryParse('${data['balance'] ?? 0}') ?? 0);
+    } catch (_) {
+      if (mounted) setState(() => _availableBalance = 0);
+    }
+    if (mounted) setState(() => _loadingBalance = false);
+  }
+
   String _trim(double v) => v == v.roundToDouble() ? v.toInt().toString() : v.toString();
 
   @override
@@ -347,13 +371,14 @@ class _EntryFormState extends State<_EntryForm> {
     _withdrawal.dispose();
     _loan.dispose();
     _repayment.dispose();
+    _adjustment.dispose();
     _note.dispose();
     super.dispose();
   }
 
   double get _net {
     double d(TextEditingController c) => double.tryParse(c.text.trim()) ?? 0;
-    return d(_deposit) - d(_withdrawal) - d(_loan) + d(_repayment);
+    return d(_deposit) - d(_withdrawal) - d(_loan) + d(_repayment) - d(_adjustment);
   }
 
   Future<void> _pickDate() async {
@@ -386,6 +411,7 @@ class _EntryFormState extends State<_EntryForm> {
       'withdrawal': d(_withdrawal),
       'loan': d(_loan),
       'loan_repayment': d(_repayment),
+      'adjustment': d(_adjustment),
       'note': _note.text.trim(),
     });
     if (!mounted) return;
@@ -486,6 +512,47 @@ class _EntryFormState extends State<_EntryForm> {
               _AmountField(controller: _loan, label: 'Loan (ലോൺ)', icon: Icons.call_made, color: AppTheme.accent, onChanged: () => setState(() {})),
               const SizedBox(height: 10),
               _AmountField(controller: _repayment, label: 'Loan Repayment (ലോൺ തിരിച്ചടവ്)', icon: Icons.call_received, color: AppTheme.primary, onChanged: () => setState(() {})),
+              const SizedBox(height: 10),
+              // ── Adjustment (from savings balance) ──
+              if (_ayalkoottamId != null) ...
+                [
+                  Row(
+                    children: [
+                      const Icon(Icons.account_balance_wallet, size: 15, color: AppTheme.primary),
+                      const SizedBox(width: 6),
+                      Text(
+                        _loadingBalance
+                            ? 'Loading balance...'
+                            : 'Available Balance: ${_fmtAmount(_availableBalance)}',
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w600,
+                          color: _availableBalance > 0 ? AppTheme.primary : AppTheme.ink.withValues(alpha: 0.5),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  TextFormField(
+                    controller: _adjustment,
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}'))],
+                    onChanged: (_) => setState(() {}),
+                    decoration: InputDecoration(
+                      labelText: 'Adjustment (ബാലൻസിൽ നിന്ന്)',
+                      prefixIcon: const Icon(Icons.tune, color: AppTheme.primary),
+                      prefixText: '₹ ',
+                      helperText: 'Amount deducted from this ayalkoottam\'s savings balance',
+                    ),
+                    validator: (v) {
+                      final amt = double.tryParse(v?.trim() ?? '') ?? 0;
+                      if (amt > 0 && amt > _availableBalance) {
+                        return 'Exceeds available balance (${_fmtAmount(_availableBalance)})';
+                      }
+                      return null;
+                    },
+                  ),
+                ],
               const SizedBox(height: 14),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -789,6 +856,11 @@ class _GrandTotalCard extends StatelessWidget {
               _TotalCell('Repayment', totals.loanRepayment),
             ],
           ),
+          if (totals.adjustment > 0) ...
+            [
+              const SizedBox(height: 10),
+              Row(children: [_TotalCell('Adjustment', totals.adjustment)]),
+            ],
         ],
       ),
     );
@@ -867,7 +939,7 @@ class _PeriodCard extends StatelessWidget {
             ),
           ),
           children: [
-            _BreakdownRow(deposit: period.deposit, withdrawal: period.withdrawal, loan: period.loan, repayment: period.loanRepayment),
+            _BreakdownRow(deposit: period.deposit, withdrawal: period.withdrawal, loan: period.loan, repayment: period.loanRepayment, adjustment: period.adjustment),
             const Divider(height: 18),
             ...period.ayalkoottams.map((g) => _AyalkoottamLine(group: g)),
           ],
@@ -878,8 +950,8 @@ class _PeriodCard extends StatelessWidget {
 }
 
 class _BreakdownRow extends StatelessWidget {
-  final double deposit, withdrawal, loan, repayment;
-  const _BreakdownRow({required this.deposit, required this.withdrawal, required this.loan, required this.repayment});
+  final double deposit, withdrawal, loan, repayment, adjustment;
+  const _BreakdownRow({required this.deposit, required this.withdrawal, required this.loan, required this.repayment, required this.adjustment});
 
   @override
   Widget build(BuildContext context) {
@@ -891,6 +963,8 @@ class _BreakdownRow extends StatelessWidget {
         _MiniStat(label: 'Withdrawal', value: withdrawal, color: AppTheme.error),
         _MiniStat(label: 'Loan', value: loan, color: AppTheme.accent),
         _MiniStat(label: 'Repayment', value: repayment, color: AppTheme.primary),
+        if (adjustment > 0)
+          _MiniStat(label: 'Adjustment', value: adjustment, color: AppTheme.primaryDark),
       ],
     );
   }
@@ -952,7 +1026,7 @@ class _AyalkoottamSummaryCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 10),
-          _BreakdownRow(deposit: group.deposit, withdrawal: group.withdrawal, loan: group.loan, repayment: group.loanRepayment),
+          _BreakdownRow(deposit: group.deposit, withdrawal: group.withdrawal, loan: group.loan, repayment: group.loanRepayment, adjustment: group.adjustment),
         ],
       ),
     );

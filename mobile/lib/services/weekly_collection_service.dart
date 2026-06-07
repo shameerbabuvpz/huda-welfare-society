@@ -41,4 +41,11 @@ class WeeklyCollectionService {
     final data = await ApiService.get('/weekly-collections/consolidated', queryParams: params);
     return Map<String, dynamic>.from(data);
   }
+
+  static Future<Map<String, dynamic>> getBalance(int ayalkoottamId, {String? beforeWeek}) async {
+    final params = <String, String>{};
+    if (beforeWeek != null) params['before_week'] = beforeWeek;
+    final data = await ApiService.get('/weekly-collections/balance/$ayalkoottamId', queryParams: params);
+    return Map<String, dynamic>.from(data);
+  }
 }

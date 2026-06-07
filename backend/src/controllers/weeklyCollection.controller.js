@@ -42,6 +42,19 @@ const weeklyCollectionController = {
       res.json(report);
     } catch (err) { next(err); }
   },
+
+  async getBalance(req, res, next) {
+    try {
+      const { ayalkoottam_id } = req.params;
+      const { before_week } = req.query;
+      const result = await weeklyCollectionService.getBalance(
+        req.organizationId,
+        parseInt(ayalkoottam_id, 10),
+        before_week || null
+      );
+      res.json(result);
+    } catch (err) { next(err); }
+  },
 };
 
 module.exports = weeklyCollectionController;

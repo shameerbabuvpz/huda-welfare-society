@@ -27,6 +27,7 @@ router.post(
     body('withdrawal').optional().isFloat({ min: 0 }),
     body('loan').optional().isFloat({ min: 0 }),
     body('loan_repayment').optional().isFloat({ min: 0 }),
+    body('adjustment').optional().isFloat({ min: 0 }),
     body('note').optional().trim(),
   ],
   validate,
@@ -34,6 +35,7 @@ router.post(
 );
 
 router.get('/', authorize('admin', 'super_admin'), ctrl.list);
+router.get('/balance/:ayalkoottam_id', authorize('admin', 'super_admin'), ctrl.getBalance);
 router.get('/:id', authorize('admin', 'super_admin'), ctrl.getById);
 router.put('/:id', authorize('admin', 'super_admin'), ctrl.update);
 router.delete('/:id', authorize('admin', 'super_admin'), ctrl.remove);
