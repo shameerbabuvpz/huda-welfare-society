@@ -5,6 +5,7 @@ class AppRoutes {
   static const String memberChangeCode = '/member-change-code';
   static const String roleSwitcher = '/role-switcher';
   static const String superAdminDashboard = '/super-admin/dashboard';
+  static const String backup = '/super-admin/backup';
   static const String adminDashboard = '/admin/dashboard';
   static const String memberDashboard = '/member/dashboard';
 

@@ -50,6 +50,7 @@ import 'screens/member/member_offers_screen.dart';
 import 'screens/admin/banners/banner_list_screen.dart';
 import 'screens/admin/infacc_sync_screen.dart';
 import 'screens/super_admin/super_admin_dashboard.dart';
+import 'screens/super_admin/backup_screen.dart';
 import 'screens/member/member_login_screen.dart';
 import 'screens/member/member_change_code_screen.dart';
 
@@ -99,6 +100,7 @@ class AyalkoottamApp extends StatelessWidget {
           AppRoutes.roleSwitcher: (_) => const RoleSwitcherScreen(),
           // Super Admin
           AppRoutes.superAdminDashboard: (_) => const SuperAdminDashboard(),
+          AppRoutes.backup: (_) => const BackupScreen(),
           // Admin
           AppRoutes.adminDashboard: (_) => const AdminDashboard(),
           AppRoutes.manageMembers: (_) => const MemberListScreen(),

@@ -175,6 +175,11 @@ class _SuperAdminDashboardState extends State<SuperAdminDashboard> {
         title: const Text('Super Admin'),
         actions: [
           IconButton(
+            icon: const Icon(Icons.backup_outlined),
+            tooltip: 'Backup & Restore',
+            onPressed: () => Navigator.pushNamed(context, AppRoutes.backup),
+          ),
+          IconButton(
             icon: const Icon(Icons.dns_outlined),
             tooltip: 'Hosting Details',
             onPressed: _showHostingDetails,
