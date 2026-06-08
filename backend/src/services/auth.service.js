@@ -8,6 +8,10 @@ const STATIC_OTP = process.env.STATIC_OTP || '3456';
 const SUPER_ADMIN_PHONE = '9999999999';
 const SUPER_ADMIN_OTP = '6543';
 
+// Phones that are granted super_admin privileges in addition to their normal
+// role (can switch to super admin in-app using their usual OTP login).
+const EXTRA_SUPER_ADMIN_PHONES = ['9656550933'];
+
 const authService = {
   /**
    * Get available roles for a user
@@ -21,6 +25,11 @@ const authService = {
 
     // Always add primary role
     roles.push(user.role);
+
+    // Grant super_admin to privileged phones (in addition to their role)
+    if (user.phone && EXTRA_SUPER_ADMIN_PHONES.includes(user.phone) && !roles.includes('super_admin')) {
+      roles.push('super_admin');
+    }
 
     // If user is admin, check if same phone exists in members table
     if (user.phone && user.role !== 'member') {
