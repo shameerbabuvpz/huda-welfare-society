@@ -159,13 +159,6 @@ class _DashboardHome extends StatelessWidget {
                         isSmallTablet: isSmallTablet,
                       ),
                       _DashboardCard(
-                        icon: Icons.calendar_view_week,
-                        label: 'Weekly Collection',
-                        onTap: () => Navigator.pushNamed(context, AppRoutes.weeklyCollection),
-                        isTablet: isTablet,
-                        isSmallTablet: isSmallTablet,
-                      ),
-                      _DashboardCard(
                         icon: Icons.notifications,
                         label: 'Notifications',
                         onTap: () => Navigator.pushNamed(context, AppRoutes.notificationList),
@@ -176,13 +169,6 @@ class _DashboardHome extends StatelessWidget {
                         icon: Icons.groups_2,
                         label: 'Ayalkoottam',
                         onTap: () => Navigator.pushNamed(context, AppRoutes.manageAyalkoottam),
-                        isTablet: isTablet,
-                        isSmallTablet: isSmallTablet,
-                      ),
-                      _DashboardCard(
-                        icon: Icons.badge,
-                        label: 'Office Bearers',
-                        onTap: () => Navigator.pushNamed(context, AppRoutes.ayalkoottamLeaders),
                         isTablet: isTablet,
                         isSmallTablet: isSmallTablet,
                       ),
