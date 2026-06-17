@@ -159,6 +159,13 @@ class _DashboardHome extends StatelessWidget {
                         isSmallTablet: isSmallTablet,
                       ),
                       _DashboardCard(
+                        icon: Icons.event_note,
+                        label: 'Weekly Collection',
+                        onTap: () => Navigator.pushNamed(context, AppRoutes.weeklyCollection),
+                        isTablet: isTablet,
+                        isSmallTablet: isSmallTablet,
+                      ),
+                      _DashboardCard(
                         icon: Icons.notifications,
                         label: 'Notifications',
                         onTap: () => Navigator.pushNamed(context, AppRoutes.notificationList),

@@ -85,6 +85,11 @@ class KuriService {
     return KuriGroup.fromJson(data);
   }
 
+  // Delete group
+  static Future<void> deleteGroup(int id) async {
+    await ApiService.delete('/kuri/$id');
+  }
+
   // Member view
   static Future<List<KuriPaymentStatus>> myKuri() async {
     final data = await ApiService.get('/kuri/my-kuri');

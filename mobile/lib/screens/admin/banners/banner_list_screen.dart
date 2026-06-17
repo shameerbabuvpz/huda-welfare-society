@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:ayalkoottam/widgets/skeleton_loaders.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -27,7 +29,8 @@ class _BannerListScreenState extends State<BannerListScreen> {
   Future<void> _addBanner() async {
     final titleCtrl = TextEditingController();
     final sortCtrl = TextEditingController(text: '0');
-    String? imagePath;
+    Uint8List? imageBytes;
+    String? imageFilename;
     final scaffoldMessenger = ScaffoldMessenger.of(context);
 
     final result = await showAppSheet<bool>(
@@ -55,11 +58,15 @@ class _BannerListScreenState extends State<BannerListScreen> {
                   final picker = ImagePicker();
                   final file = await picker.pickImage(source: ImageSource.gallery, maxWidth: 1920, imageQuality: 70);
                   if (file != null) {
-                    setSheetState(() => imagePath = file.path);
+                    final bytes = await file.readAsBytes();
+                    setSheetState(() {
+                      imageBytes = bytes;
+                      imageFilename = file.name;
+                    });
                   }
                 },
                 icon: const Icon(Icons.image),
-                label: Text(imagePath != null ? 'Image selected' : 'Select Banner Image'),
+                label: Text(imageBytes != null ? 'Image selected' : 'Select Banner Image'),
               ),
             ],
           );
@@ -86,13 +93,14 @@ class _BannerListScreenState extends State<BannerListScreen> {
     );
 
     if (result == true && mounted) {
-      if (titleCtrl.text.trim().isEmpty || imagePath == null) {
+      if (titleCtrl.text.trim().isEmpty || imageBytes == null) {
         scaffoldMessenger.showSnackBar(AppTheme.errorSnackBar('Title and image are required'));
         return;
       }
       final success = await context.read<BannerProvider>().createBanner(
             title: titleCtrl.text.trim(),
-            imagePath: imagePath!,
+            imageBytes: imageBytes!,
+            imageFilename: imageFilename,
             sortOrder: int.tryParse(sortCtrl.text) ?? 0,
           );
       if (!mounted) return;
@@ -109,7 +117,8 @@ class _BannerListScreenState extends State<BannerListScreen> {
   Future<void> _editBanner(app.Banner banner) async {
     final titleCtrl = TextEditingController(text: banner.title);
     final sortCtrl = TextEditingController(text: banner.sortOrder.toString());
-    String? imagePath;
+    Uint8List? imageBytes;
+    String? imageFilename;
     final scaffoldMessenger = ScaffoldMessenger.of(context);
 
     final result = await showAppSheet<bool>(
@@ -137,11 +146,15 @@ class _BannerListScreenState extends State<BannerListScreen> {
                   final picker = ImagePicker();
                   final file = await picker.pickImage(source: ImageSource.gallery, maxWidth: 1920, imageQuality: 70);
                   if (file != null) {
-                    setSheetState(() => imagePath = file.path);
+                    final bytes = await file.readAsBytes();
+                    setSheetState(() {
+                      imageBytes = bytes;
+                      imageFilename = file.name;
+                    });
                   }
                 },
                 icon: const Icon(Icons.image),
-                label: Text(imagePath != null ? 'New image selected' : 'Change Image (optional)'),
+                label: Text(imageBytes != null ? 'New image selected' : 'Change Image (optional)'),
               ),
             ],
           );
@@ -171,7 +184,8 @@ class _BannerListScreenState extends State<BannerListScreen> {
       final success = await context.read<BannerProvider>().updateBanner(
             banner.id,
             title: titleCtrl.text.trim(),
-            imagePath: imagePath,
+            imageBytes: imageBytes,
+            imageFilename: imageFilename,
             sortOrder: int.tryParse(sortCtrl.text) ?? banner.sortOrder,
           );
       if (!mounted) return;

@@ -38,12 +38,14 @@ class _BackupScreenState extends State<BackupScreen> {
     // 1. Pick a .sql backup file
     final picked = await FilePicker.platform.pickFiles(
       type: FileType.any,
-      withData: false,
+      withData: true,
     );
-    if (picked == null || picked.files.single.path == null) return;
-    final path = picked.files.single.path!;
+    if (picked == null) return;
+    final pickedFile = picked.files.single;
+    final bytes = pickedFile.bytes;
+    final name = pickedFile.name;
 
-    if (!path.toLowerCase().endsWith('.sql')) {
+    if (bytes == null || !name.toLowerCase().endsWith('.sql')) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           AppTheme.errorSnackBar('Please choose a .sql backup file'),
@@ -59,7 +61,7 @@ class _BackupScreenState extends State<BackupScreen> {
 
     setState(() => _restoring = true);
     try {
-      final result = await BackupService.restoreBackup(path);
+      final result = await BackupService.restoreBackup(bytes, filename: name);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           AppTheme.successSnackBar(

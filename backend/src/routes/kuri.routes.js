@@ -28,6 +28,7 @@ router.post(
 router.get('/', authorize('admin', 'super_admin'), ctrl.listGroups);
 router.get('/:id', authorize('admin', 'super_admin', 'member'), ctrl.getGroup);
 router.put('/:id', authorize('admin', 'super_admin'), ctrl.updateGroup);
+router.delete('/:id', authorize('admin', 'super_admin'), ctrl.deleteGroup);
 
 // Admin – members
 router.post(

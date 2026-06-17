@@ -78,6 +78,25 @@ const kuriService = {
     return group;
   },
 
+  async deleteGroup(orgId, groupId, actorId) {
+    const group = await db('kuri_groups').where({ id: groupId, organization_id: orgId }).first();
+    if (!group) throw ApiError.notFound('Kuri group not found');
+
+    await db.transaction(async (trx) => {
+      await trx('kuri_payouts').where({ kuri_group_id: groupId, organization_id: orgId }).del();
+      await trx('kuri_winners').where({ kuri_group_id: groupId, organization_id: orgId }).del();
+      await trx('kuri_collections').where({ kuri_group_id: groupId, organization_id: orgId }).del();
+      await trx('kuri_members').where({ kuri_group_id: groupId, organization_id: orgId }).del();
+      await trx('kuri_groups').where({ id: groupId, organization_id: orgId }).del();
+    });
+
+    await auditService.log({
+      organizationId: orgId, actorId, action: 'kuri_group.delete',
+      entityType: 'kuri_group', entityId: groupId, details: { name: group.name },
+    });
+    return { id: groupId, deleted: true };
+  },
+
   // ── Member enrollment ──
   async addMember(orgId, groupId, memberId, actorId) {
     const group = await db('kuri_groups').where({ id: groupId, organization_id: orgId }).first();

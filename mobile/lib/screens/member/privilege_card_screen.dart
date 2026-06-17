@@ -1,15 +1,13 @@
 import 'package:ayalkoottam/widgets/skeleton_loaders.dart';
-import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
-import 'package:share_plus/share_plus.dart';
 
 import '../../config/theme.dart';
+import '../../utils/file_download.dart';
 import '../../models/privilege_card.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/privilege_card_service.dart';
@@ -59,13 +57,17 @@ class _PrivilegeCardScreenState extends State<PrivilegeCardScreen> {
     final bytes = await _captureCardImage();
     if (bytes == null || !mounted) return;
 
-    final dir = await getTemporaryDirectory();
-    final file = File('${dir.path}/privilege_card.png');
-    await file.writeAsBytes(bytes);
+    final path = await saveOrShareBytes(
+      bytes,
+      'privilege_card.png',
+      mimeType: 'image/png',
+    );
 
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      AppTheme.successSnackBar('Card saved! Use Share to send it.'),
+      AppTheme.successSnackBar(
+        path != null ? 'Card saved! Use Share to send it.' : 'Card downloaded',
+      ),
     );
   }
 
@@ -73,13 +75,12 @@ class _PrivilegeCardScreenState extends State<PrivilegeCardScreen> {
     final bytes = await _captureCardImage();
     if (bytes == null || !mounted) return;
 
-    final dir = await getTemporaryDirectory();
-    final file = File('${dir.path}/privilege_card.png');
-    await file.writeAsBytes(bytes);
-
-    await Share.shareXFiles(
-      [XFile(file.path)],
-      text: 'My Privilege Card - ${_card?.organizationName ?? ""}',
+    await saveOrShareBytes(
+      bytes,
+      'privilege_card.png',
+      mimeType: 'image/png',
+      share: true,
+      shareText: 'My Privilege Card - ${_card?.organizationName ?? ""}',
     );
   }
 

@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:http/http.dart' as http;
 import '../models/banner.dart' as app;
 import 'api_service.dart';
@@ -15,7 +17,8 @@ class BannerService {
 
   static Future<app.Banner> create({
     required String title,
-    required String imagePath,
+    required Uint8List imageBytes,
+    String? imageFilename,
     int sortOrder = 0,
   }) async {
     final data = await ApiService.multipart(
@@ -26,7 +29,8 @@ class BannerService {
         'sort_order': sortOrder.toString(),
       },
       files: [
-        await http.MultipartFile.fromPath('image', imagePath),
+        http.MultipartFile.fromBytes('image', imageBytes,
+            filename: imageFilename ?? 'banner.jpg'),
       ],
     );
     return app.Banner.fromJson(data);
@@ -35,7 +39,8 @@ class BannerService {
   static Future<app.Banner> update(
     int id, {
     String? title,
-    String? imagePath,
+    Uint8List? imageBytes,
+    String? imageFilename,
     int? sortOrder,
     bool? isActive,
   }) async {
@@ -45,8 +50,9 @@ class BannerService {
     if (isActive != null) fields['is_active'] = isActive.toString();
 
     final files = <http.MultipartFile>[];
-    if (imagePath != null) {
-      files.add(await http.MultipartFile.fromPath('image', imagePath));
+    if (imageBytes != null) {
+      files.add(http.MultipartFile.fromBytes('image', imageBytes,
+          filename: imageFilename ?? 'banner.jpg'));
     }
 
     final data = await ApiService.multipart(

@@ -8,40 +8,34 @@ const STATIC_OTP = process.env.STATIC_OTP || '3456';
 const SUPER_ADMIN_PHONE = '9999999999';
 const SUPER_ADMIN_OTP = '6543';
 
-// Phones that are granted super_admin privileges in addition to their normal
-// role (can switch to super admin in-app using their usual OTP login).
-const EXTRA_SUPER_ADMIN_PHONES = ['9656550933'];
-
 const authService = {
   /**
-   * Get available roles for a user
-   * Simply checks: is phone in users table (admin)? Is phone in members table (member)?
+   * Get the roles a user genuinely has.
+   * Roles come ONLY from explicit assignments:
+   *   - the user's primary `role` column, and
+   *   - any rows in the `user_roles` junction table (RBAC).
+   * Roles are NOT inferred from phone-number coincidences or hardcoded phone
+   * lists, so the role switcher only ever offers roles the user really holds.
    */
   async getAvailableRoles(userId) {
-    const roles = [];
-
     const user = await db('users').where({ id: userId }).first();
-    if (!user) return roles;
+    if (!user) return [];
 
-    // Always add primary role
-    roles.push(user.role);
+    const roles = new Set();
+    if (user.role) roles.add(user.role);
 
-    // Grant super_admin to privileged phones (in addition to their role)
-    if (user.phone && EXTRA_SUPER_ADMIN_PHONES.includes(user.phone) && !roles.includes('super_admin')) {
-      roles.push('super_admin');
-    }
-
-    // If user is admin, check if same phone exists in members table
-    if (user.phone && user.role !== 'member') {
-      const memberExists = await db('members')
-        .where({ phone: user.phone, status: 'active' })
-        .first();
-      if (memberExists) {
-        roles.push('member');
+    // Explicitly granted extra roles (if the RBAC junction table exists)
+    try {
+      const hasUserRoles = await db.schema.hasTable('user_roles');
+      if (hasUserRoles) {
+        const extra = await db('user_roles').where({ user_id: userId }).select('role');
+        extra.forEach((r) => { if (r.role) roles.add(r.role); });
       }
+    } catch (_) {
+      // ignore — fall back to primary role only
     }
 
-    return roles;
+    return Array.from(roles);
   },
 
   /**

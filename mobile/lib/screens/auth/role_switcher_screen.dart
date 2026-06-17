@@ -14,6 +14,33 @@ class RoleSwitcherScreen extends StatefulWidget {
 
 class _RoleSwitcherScreenState extends State<RoleSwitcherScreen> {
   @override
+  void initState() {
+    super.initState();
+    // Guard: the role switcher is only meaningful for users with more than one
+    // genuine role. If a user has a single role, skip straight to their
+    // dashboard instead of showing (and erroring on) roles they don't have.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final auth = context.read<AuthProvider>();
+      if (auth.availableRoles.length <= 1) {
+        _goToDashboard(auth.user?.role ?? 'member');
+      }
+    });
+  }
+
+  void _goToDashboard(String role) {
+    final String route;
+    if (role == 'super_admin') {
+      route = AppRoutes.superAdminDashboard;
+    } else if (role == 'admin') {
+      route = AppRoutes.adminDashboard;
+    } else {
+      route = AppRoutes.memberDashboard;
+    }
+    Navigator.pushReplacementNamed(context, route);
+  }
+
+  @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
     final textTheme = Theme.of(context).textTheme;
