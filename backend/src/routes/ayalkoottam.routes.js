@@ -35,4 +35,6 @@ router.put(
 
 router.put('/:id/deactivate', authorize('admin', 'super_admin'), ctrl.deactivate);
 
+router.delete('/:id', authorize('admin', 'super_admin'), ctrl.remove);
+
 module.exports = router;

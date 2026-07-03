@@ -10,6 +10,7 @@ import '../../../models/kuri_group.dart';
 import '../../../models/member.dart';
 import '../../../utils/ak_name_helper.dart';
 import '../../../widgets/app_bottom_sheet.dart';
+import '../../../widgets/confirm_delete_sheet.dart';
 
 class KuriDetailScreen extends StatefulWidget {
   const KuriDetailScreen({super.key});
@@ -112,6 +113,30 @@ class _KuriDetailScreenState extends State<KuriDetailScreen> with SingleTickerPr
         return const SizedBox.shrink();
       },
     );
+  }
+
+  void _confirmDeleteGroup(KuriGroup group) async {
+    final confirmed = await showConfirmDeleteSheet(
+      context: context,
+      title: 'Delete Kuri Group',
+      message: '"${group.name}" കുറി ഗ്രൂപ്പും അതിലെ എല്ലാ അംഗങ്ങൾ, പിരിവുകൾ, വിജയികൾ, പേഔട്ടുകൾ എന്നിവയും ശാശ്വതമായി ഡിലീറ്റ് ചെയ്യപ്പെടും. ഈ പ്രവൃത്തി പിന്നോട്ട് ചെയ്യാൻ കഴിയില്ല.',
+      confirmLabel: 'Delete',
+    );
+    if (confirmed != true || !mounted) return;
+
+    final messenger = ScaffoldMessenger.of(context);
+    final navigator = Navigator.of(context);
+    final provider = context.read<KuriProvider>();
+    final ok = await provider.deleteGroup(group.id);
+    if (!mounted) return;
+    if (ok) {
+      messenger.showSnackBar(const SnackBar(content: Text('Kuri group deleted')));
+      navigator.pop();
+    } else {
+      messenger.showSnackBar(
+        SnackBar(content: Text(provider.error ?? 'Failed to delete kuri group'), backgroundColor: AppTheme.error),
+      );
+    }
   }
 
   void _showEditGroupDialog(KuriGroup group) {
@@ -686,6 +711,15 @@ class _InfoTab extends StatelessWidget {
               },
               icon: const Icon(Icons.edit_outlined, size: 18),
               label: const Text('Edit'),
+            ),
+            TextButton.icon(
+              onPressed: () {
+                final state = context.findAncestorStateOfType<_KuriDetailScreenState>();
+                state?._confirmDeleteGroup(group);
+              },
+              style: TextButton.styleFrom(foregroundColor: AppTheme.error),
+              icon: const Icon(Icons.delete_outline, size: 18),
+              label: const Text('Delete'),
             ),
           ],
         ),

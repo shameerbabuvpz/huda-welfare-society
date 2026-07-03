@@ -115,6 +115,32 @@ const ayalkoottamService = {
     return ak;
   },
 
+  async remove(orgId, id, actorId) {
+    const ak = await db('ayalkoottams').where({ id, organization_id: orgId }).first();
+    if (!ak) throw ApiError.notFound('Ayalkoottam not found');
+
+    const linked = await db('members')
+      .where({ ayalkoottam_id: id, organization_id: orgId })
+      .count('id as count')
+      .first();
+    if (parseInt(linked.count, 10) > 0) {
+      throw ApiError.conflict('ഈ അയൽക്കൂട്ടത്തിൽ അംഗങ്ങൾ ഉള്ളതിനാൽ ഇത് ഡിലീറ്റ് ചെയ്യാൻ കഴിയില്ല. ആദ്യം അംഗങ്ങളെ മാറ്റുകയോ നീക്കം ചെയ്യുകയോ ചെയ്യുക.');
+    }
+
+    await db('ayalkoottams').where({ id, organization_id: orgId }).del();
+
+    await auditService.log({
+      organizationId: orgId,
+      actorId,
+      action: 'ayalkoottam.delete',
+      entityType: 'ayalkoottam',
+      entityId: id,
+      details: { name: ak.name },
+    });
+
+    return { id, deleted: true };
+  },
+
   async listAll(orgId) {
     return db('ayalkoottams')
       .where({ organization_id: orgId, status: 'active' })

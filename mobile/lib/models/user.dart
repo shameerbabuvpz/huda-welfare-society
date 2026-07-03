@@ -20,7 +20,18 @@ class User {
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
-    final rolesList = (json['roles'] as List<dynamic>?)?.cast<String>() ?? [];
+    const validRoles = {'super_admin', 'admin', 'member'};
+    final rawRoles = (json['roles'] as List<dynamic>?)?.cast<String>() ?? [];
+    final primaryRole = json['role'] as String?;
+
+    // Keep only known roles, de-duplicated and order-preserving.
+    final rolesList = <String>[];
+    for (final r in [if (primaryRole != null) primaryRole, ...rawRoles]) {
+      if (validRoles.contains(r) && !rolesList.contains(r)) {
+        rolesList.add(r);
+      }
+    }
+
     return User(
       id: json['id'],
       name: json['name'],

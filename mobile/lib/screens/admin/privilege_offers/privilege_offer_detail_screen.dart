@@ -1,13 +1,11 @@
 import 'package:ayalkoottam/widgets/skeleton_loaders.dart';
 import 'dart:convert';
-import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
-import 'package:share_plus/share_plus.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../config/theme.dart';
+import '../../../utils/file_download.dart';
 import '../../../models/privilege_offer.dart';
 import '../../../providers/privilege_offer_provider.dart';
 import '../../../services/api_service.dart';
@@ -382,12 +380,13 @@ class _PrivilegeOfferDetailScreenState extends State<PrivilegeOfferDetailScreen>
   Future<void> _downloadQr(PrivilegeOffer offer) async {
     try {
       final bytes = _qrBytes(offer);
-      final dir = await getApplicationDocumentsDirectory();
-      final file = File('${dir.path}/qr_${offer.companyName.replaceAll(' ', '_')}.png');
-      await file.writeAsBytes(bytes);
+      final filename = 'qr_${offer.companyName.replaceAll(' ', '_')}.png';
+      final path = await saveOrShareBytes(bytes, filename, mimeType: 'image/png');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        AppTheme.successSnackBar('QR saved to ${file.path}'),
+        AppTheme.successSnackBar(
+          path != null ? 'QR saved to $path' : 'QR downloaded',
+        ),
       );
     } catch (e) {
       if (!mounted) return;
@@ -400,12 +399,13 @@ class _PrivilegeOfferDetailScreenState extends State<PrivilegeOfferDetailScreen>
   Future<void> _shareQr(PrivilegeOffer offer) async {
     try {
       final bytes = _qrBytes(offer);
-      final dir = await getTemporaryDirectory();
-      final file = File('${dir.path}/qr_${offer.companyName.replaceAll(' ', '_')}.png');
-      await file.writeAsBytes(bytes);
-      await Share.shareXFiles(
-        [XFile(file.path)],
-        text: '${offer.companyName} - Privilege Offer QR Code',
+      final filename = 'qr_${offer.companyName.replaceAll(' ', '_')}.png';
+      await saveOrShareBytes(
+        bytes,
+        filename,
+        mimeType: 'image/png',
+        share: true,
+        shareText: '${offer.companyName} - Privilege Offer QR Code',
       );
     } catch (e) {
       if (!mounted) return;

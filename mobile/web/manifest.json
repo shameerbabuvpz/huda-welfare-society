@@ -1,12 +1,12 @@
 {
-    "name": "HWS Pottachira",
-    "short_name": "HWS Pottachira",
+    "name": "Sangamam",
+    "short_name": "Sangamam",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
-    "orientation": "portrait-primary",
+    "background_color": "#F5EFE3",
+    "theme_color": "#2D6A45",
+    "description": "Sangamam admin console — member, asset and kuri management",
+    "orientation": "any",
     "prefer_related_applications": false,
     "icons": [
         {

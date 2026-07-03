@@ -7,6 +7,7 @@ import '../../../config/routes.dart';
 import '../../../providers/ayalkoottam_provider.dart';
 import '../../../models/ayalkoottam.dart';
 import '../../../widgets/app_bottom_sheet.dart';
+import '../../../widgets/confirm_delete_sheet.dart';
 
 class AyalkoottamListScreen extends StatefulWidget {
   const AyalkoottamListScreen({super.key});
@@ -169,12 +170,18 @@ class _AyalkoottamTile extends StatelessWidget {
               itemBuilder: (_) => [
                 const PopupMenuItem(value: 'edit', child: Text('Edit')),
                 PopupMenuItem(value: 'toggle', child: Text(isActive ? 'Deactivate' : 'Activate')),
+                const PopupMenuItem(
+                  value: 'delete',
+                  child: Text('Delete', style: TextStyle(color: AppTheme.error)),
+                ),
               ],
               onSelected: (v) {
                 if (v == 'edit') {
                   _showEditDialog(context);
                 } else if (v == 'toggle') {
                   _confirmToggle(context);
+                } else if (v == 'delete') {
+                  _confirmDelete(context);
                 }
               },
             ),
@@ -222,6 +229,27 @@ class _AyalkoottamTile extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  void _confirmDelete(BuildContext context) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final provider = context.read<AyalkoottamProvider>();
+    final confirmed = await showConfirmDeleteSheet(
+      context: context,
+      title: 'Delete Ayalkoottam',
+      message: '"${ak.name}" അയൽക്കൂട്ടം ശാശ്വതമായി ഡിലീറ്റ് ചെയ്യപ്പെടും. ഈ പ്രവൃത്തി പിന്നോട്ട് ചെയ്യാൻ കഴിയില്ല.',
+      confirmLabel: 'Delete',
+    );
+    if (confirmed != true || !context.mounted) return;
+    final ok = await provider.delete(ak.id);
+    if (!context.mounted) return;
+    if (ok) {
+      messenger.showSnackBar(const SnackBar(content: Text('Ayalkoottam deleted')));
+    } else {
+      messenger.showSnackBar(
+        SnackBar(content: Text(provider.error ?? 'Failed to delete'), backgroundColor: AppTheme.error),
+      );
+    }
   }
 
   void _showEditDialog(BuildContext context) {

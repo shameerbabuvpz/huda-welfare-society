@@ -167,4 +167,17 @@ class KuriProvider extends ChangeNotifier {
       return false;
     }
   }
+
+  Future<bool> deleteGroup(int groupId) async {
+    try {
+      await KuriService.deleteGroup(groupId);
+      _selectedGroup = null;
+      await loadGroups(search: _currentSearch);
+      return true;
+    } catch (e) {
+      _error = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }
 }

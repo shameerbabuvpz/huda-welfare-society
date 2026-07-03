@@ -36,6 +36,13 @@ const ayalkoottamController = {
     } catch (err) { next(err); }
   },
 
+  async remove(req, res, next) {
+    try {
+      const result = await ayalkoottamService.remove(req.organizationId, parseInt(req.params.id, 10), req.user.id);
+      res.json(result);
+    } catch (err) { next(err); }
+  },
+
   async listAll(req, res, next) {
     try {
       const list = await ayalkoottamService.listAll(req.organizationId);

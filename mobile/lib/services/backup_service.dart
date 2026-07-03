@@ -1,12 +1,9 @@
 import 'dart:convert';
-import 'dart:io';
-import 'package:flutter/foundation.dart';
+import 'dart:typed_data';
 import 'package:http/http.dart' as http;
-import 'package:path_provider/path_provider.dart';
-import 'package:share_plus/share_plus.dart';
 import '../config/api_config.dart';
+import '../utils/file_download.dart';
 import 'storage_service.dart';
-// ignore_for_file: deprecated_member_use
 
 class BackupService {
   static Future<Map<String, String>> _authHeaders() async {
@@ -18,7 +15,7 @@ class BackupService {
 
   /// Download a full database backup (.sql) and share/save it.
   /// Returns the saved file path.
-  static Future<String> downloadBackup() async {
+  static Future<String?> downloadBackup() async {
     final uri = Uri.parse('${ApiConfig.baseUrl}/backup/download');
     final response = await http.get(uri, headers: await _authHeaders());
 
@@ -32,27 +29,27 @@ class BackupService {
         .substring(0, 19);
     final filename = 'ayalkoottam-backup-$ts.sql';
 
-    final dir = await getTemporaryDirectory();
-    final file = File('${dir.path}/$filename');
-    await file.writeAsBytes(response.bodyBytes);
-
-    if (!kIsWeb) {
-      await Share.shareXFiles(
-        [XFile(file.path, mimeType: 'application/sql')],
-        subject: filename,
-        text: 'Ayalkoottam database backup',
-      );
-    }
-    return file.path;
+    // Mobile: save to a temp file and open the share sheet.
+    // Web: trigger a browser download.
+    return saveOrShareBytes(
+      response.bodyBytes,
+      filename,
+      mimeType: 'application/sql',
+      share: true,
+      shareText: 'Ayalkoottam database backup',
+    );
   }
 
   /// Restore the database from a previously downloaded .sql backup file.
-  static Future<Map<String, dynamic>> restoreBackup(String filePath) async {
+  static Future<Map<String, dynamic>> restoreBackup(
+    Uint8List fileBytes, {
+    required String filename,
+  }) async {
     final uri = Uri.parse('${ApiConfig.baseUrl}/backup/restore');
     final request = http.MultipartRequest('POST', uri)
       ..headers.addAll(await _authHeaders())
       ..fields['confirm'] = 'RESTORE'
-      ..files.add(await http.MultipartFile.fromPath('file', filePath));
+      ..files.add(http.MultipartFile.fromBytes('file', fileBytes, filename: filename));
 
     final streamed = await request.send();
     final body = await streamed.stream.bytesToString();

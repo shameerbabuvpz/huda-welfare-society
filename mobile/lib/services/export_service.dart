@@ -1,11 +1,7 @@
-import 'dart:io';
-import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
-import 'package:path_provider/path_provider.dart';
-import 'package:share_plus/share_plus.dart';
 import '../config/api_config.dart';
+import '../utils/file_download.dart';
 import 'storage_service.dart';
-// ignore_for_file: deprecated_member_use
 
 class ExportService {
   static Future<Map<String, String>> _authHeaders() async {
@@ -29,21 +25,24 @@ class ExportService {
       throw Exception('Export failed: ${response.statusCode}');
     }
 
-    if (kIsWeb) {
-      // Web: trigger browser download
-      _downloadWeb(response.bodyBytes, filename);
-    } else {
-      // Mobile: save to temp and share
-      final dir = await getTemporaryDirectory();
-      final file = File('${dir.path}/$filename');
-      await file.writeAsBytes(response.bodyBytes);
-      await Share.shareXFiles([XFile(file.path)]);
-    }
+    // Mobile: save to a temp file and open the share sheet.
+    // Web: trigger a browser download.
+    await saveOrShareBytes(
+      response.bodyBytes,
+      filename,
+      mimeType: _mimeForFilename(filename),
+      share: true,
+    );
   }
 
-  static void _downloadWeb(Uint8List bytes, String filename) {
-    // For web platform - handled via dart:html (not available on mobile)
-    // This is a no-op fallback; the share dialog handles most cases
+  static String _mimeForFilename(String filename) {
+    final lower = filename.toLowerCase();
+    if (lower.endsWith('.pdf')) return 'application/pdf';
+    if (lower.endsWith('.xlsx')) {
+      return 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+    }
+    if (lower.endsWith('.csv')) return 'text/csv';
+    return 'application/octet-stream';
   }
 
   // ── Convenience methods ──

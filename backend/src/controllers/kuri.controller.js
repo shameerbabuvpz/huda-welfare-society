@@ -30,6 +30,13 @@ const kuriController = {
     } catch (err) { next(err); }
   },
 
+  async deleteGroup(req, res, next) {
+    try {
+      const result = await kuriService.deleteGroup(req.organizationId, parseInt(req.params.id, 10), req.user.id);
+      res.json(result);
+    } catch (err) { next(err); }
+  },
+
   // Members
   async addMember(req, res, next) {
     try {

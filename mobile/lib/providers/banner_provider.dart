@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import '../models/banner.dart' as app;
 import '../services/banner_service.dart';
@@ -35,11 +37,16 @@ class BannerProvider extends ChangeNotifier {
 
   Future<bool> createBanner({
     required String title,
-    required String imagePath,
+    required Uint8List imageBytes,
+    String? imageFilename,
     int sortOrder = 0,
   }) async {
     try {
-      await BannerService.create(title: title, imagePath: imagePath, sortOrder: sortOrder);
+      await BannerService.create(
+          title: title,
+          imageBytes: imageBytes,
+          imageFilename: imageFilename,
+          sortOrder: sortOrder);
       await loadBanners();
       return true;
     } catch (e) {
@@ -49,9 +56,9 @@ class BannerProvider extends ChangeNotifier {
     }
   }
 
-  Future<bool> updateBanner(int id, {String? title, String? imagePath, int? sortOrder, bool? isActive}) async {
+  Future<bool> updateBanner(int id, {String? title, Uint8List? imageBytes, String? imageFilename, int? sortOrder, bool? isActive}) async {
     try {
-      await BannerService.update(id, title: title, imagePath: imagePath, sortOrder: sortOrder, isActive: isActive);
+      await BannerService.update(id, title: title, imageBytes: imageBytes, imageFilename: imageFilename, sortOrder: sortOrder, isActive: isActive);
       await loadBanners();
       return true;
     } catch (e) {

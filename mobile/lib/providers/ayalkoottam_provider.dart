@@ -104,4 +104,16 @@ class AyalkoottamProvider extends ChangeNotifier {
       return false;
     }
   }
+
+  Future<bool> delete(int id) async {
+    try {
+      await AyalkoottamService.delete(id);
+      await load(search: _currentSearch);
+      return true;
+    } catch (e) {
+      _error = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }
 }

@@ -1,0 +1,23 @@
+{
+  "inputs": [
+    {
+      "id": "digitalocean-token",
+      "type": "promptString",
+      "description": "DigitalOcean API Token (with read/write scopes)",
+      "password": true
+    }
+  ],
+  "servers": {
+    "digitalocean": {
+      "command": "npx",
+      "args": [
+        "@digitalocean/mcp",
+        "--services",
+        "apps,databases,spaces"
+      ],
+      "env": {
+        "DIGITALOCEAN_API_TOKEN": "${input:digitalocean-token}"
+      }
+    }
+  }
+}

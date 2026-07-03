@@ -27,6 +27,10 @@ class AyalkoottamService {
     await ApiService.put('/ayalkoottams/$id/deactivate', {});
   }
 
+  static Future<void> delete(int id) async {
+    await ApiService.delete('/ayalkoottams/$id');
+  }
+
   /// Simple list for dropdown selection (no pagination)
   static Future<List<Ayalkoottam>> listAll() async {
     final data = await ApiService.get('/ayalkoottams/all');
